@@ -254,7 +254,6 @@ Data produk air dari Sabah Water Department telah dikumpul dan disimpan dalam:
 - **[DEPLOYMENT_GCP.md](DEPLOYMENT_GCP.md)** - Deploy ke Google Cloud Platform (detailed 45-min guide)
 - **[DEPLOYMENT_CLOUD.md](DEPLOYMENT_CLOUD.md)** - Comparison: Railway vs AWS vs GCP vs Heroku
 - **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Pre/post-deployment verification
-- **[DEPLOYMENT_READY.md](DEPLOYMENT_READY.md)** - Ringkasan sistem ready untuk online
 - `README.md` - Panduan setup, deployment, dan architecture
 - `database/schema.sql` - Skema pangkalan data utama
 - `docs/ERD-SPPA.md` - Dokumen ERD sistem

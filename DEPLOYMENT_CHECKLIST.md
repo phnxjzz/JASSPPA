@@ -232,7 +232,6 @@ System is successfully deployed if:
 - [DEPLOYMENT_RAILWAY.md](DEPLOYMENT_RAILWAY.md) - Railway.app step-by-step (15 min)
 - [DEPLOYMENT_GCP.md](DEPLOYMENT_GCP.md) - Google Cloud Platform step-by-step (45 min)
 - [DEPLOYMENT_CLOUD.md](DEPLOYMENT_CLOUD.md) - Cloud provider comparison & AWS guide
-- [DEPLOYMENT_READY.md](DEPLOYMENT_READY.md) - System readiness summary
 - [PANDUAN_PENGGUNA.md](PANDUAN_PENGGUNA.md) - User guide (Malay)
 - [LANCARKAN_SISTEM.md](LANCARKAN_SISTEM.md) - Local startup guide
 - [.env.example](.env.example) - Environment variables template
