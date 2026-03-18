@@ -1,0 +1,23 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Java / Maven build outputs
+target/
+*.log
+
+# Python virtual environment and caches
+project_env/
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Runtime and local tool bundles
+runtime/
+tools/
+
+# Optional local scripts/cache
+Scripts/
