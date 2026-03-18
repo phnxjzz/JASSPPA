@@ -7,6 +7,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,11 +39,11 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
+        String username = trim(request.getParameter("username"));
+        String password = trim(request.getParameter("password"));
         String selectedRole = normalizeRole(request.getParameter("portal_role"));
 
-        if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+        if (username.isEmpty() || password.isEmpty()) {
             request.setAttribute("error", "Username dan kata laluan diperlukan.");
             request.setAttribute("selected_role", selectedRole);
             request.getRequestDispatcher("/login.jsp").forward(request, response);
@@ -55,13 +58,20 @@ public class LoginServlet extends HttpServlet {
         }
 
         try (Connection conn = DatabaseConfig.getConnection()) {
-            String sql = "SELECT id, username, role, status FROM users WHERE username = ? AND password_hash = SHA2(?, 256)";
+            String sql = "SELECT id, username, role, status, password_hash FROM users WHERE username = ? LIMIT 1";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
-                stmt.setString(2, password);
 
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
+                        String storedPassword = rs.getString("password_hash");
+                        if (!passwordMatches(password, storedPassword)) {
+                            request.setAttribute("error", "Username atau kata laluan tidak sah.");
+                            request.setAttribute("selected_role", selectedRole);
+                            request.getRequestDispatcher("/login.jsp").forward(request, response);
+                            return;
+                        }
+
                         String status = rs.getString("status");
                         if (!"ACTIVE".equals(status)) {
                             request.setAttribute("error", "Akaun anda telah digantung atau tidak aktif.");
@@ -78,17 +88,17 @@ public class LoginServlet extends HttpServlet {
                             return;
                         }
 
+                        if (storedPassword != null && storedPassword.equals(password)) {
+                            migratePasswordHash(conn, rs.getInt("id"), password);
+                        }
+
                         HttpSession session = request.getSession();
                         session.setAttribute("user_id", rs.getInt("id"));
                         session.setAttribute("username", rs.getString("username"));
                         session.setAttribute("role", userRole);
 
                         LOGGER.info("User logged in: " + username);
-                        if ("ADMIN".equals(userRole)) {
-                            response.sendRedirect(request.getContextPath() + "/dashboard");
-                        } else {
-                            response.sendRedirect(request.getContextPath() + "/dashboard");
-                        }
+                        response.sendRedirect(request.getContextPath() + "/dashboard");
                     } else {
                         request.setAttribute("error", "Username atau kata laluan tidak sah.");
                         request.setAttribute("selected_role", selectedRole);
@@ -113,5 +123,45 @@ public class LoginServlet extends HttpServlet {
             return role;
         }
         return null;
+    }
+
+    private String trim(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private boolean passwordMatches(String inputPassword, String storedPassword) {
+        if (storedPassword == null || storedPassword.isBlank()) {
+            return false;
+        }
+
+        String hashedInput = sha256Hex(inputPassword);
+        return storedPassword.equalsIgnoreCase(hashedInput) || storedPassword.equals(inputPassword);
+    }
+
+    private String sha256Hex(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte b : hash) {
+                String part = Integer.toHexString(0xff & b);
+                if (part.length() == 1) {
+                    hex.append('0');
+                }
+                hex.append(part);
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
+    }
+
+    private void migratePasswordHash(Connection conn, int userId, String password) throws SQLException {
+        String updateSql = "UPDATE users SET password_hash = SHA2(?, 256) WHERE id = ?";
+        try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+            updateStmt.setString(1, password);
+            updateStmt.setInt(2, userId);
+            updateStmt.executeUpdate();
+        }
     }
 }
