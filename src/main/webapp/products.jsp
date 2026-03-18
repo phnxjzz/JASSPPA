@@ -93,7 +93,7 @@
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #eff9ff 0%, #f8fbfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 72%, var(--brand-yellow) 180%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 52px; height: 52px; background: white; border-radius: 14px; display: grid; place-items: center; color: var(--brand-navy); font-weight: 800; letter-spacing: 0.08em; }
+        .brand-logo { width: 52px; height: 52px; border-radius: 14px; object-fit: contain; background: white; padding: 4px; }
         .brand h1 { margin: 0; font-size: 20px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
         .nav-links a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; }
@@ -144,7 +144,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
-            <div class="brand-logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
+            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <h1>Senarai Produk Berdaftar</h1>
                 <p>Sistem Pendaftaran Produk Air • Jabatan Air Negeri Sabah</p>
