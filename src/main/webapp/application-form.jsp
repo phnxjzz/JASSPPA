@@ -11,7 +11,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: linear-gradient(180deg, #eff9ff 0%, #f7fbfd 100%); color: #223; }
         .navbar { background: linear-gradient(130deg, #06344f 0%, #0097d9 74%, #fff212 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand img { width: 48px; background: white; border-radius: 14px; padding: 6px; }
+        .brand-logo { width: 48px; height: 48px; background: white; border-radius: 14px; display: grid; place-items: center; color: #06344f; font-weight: 800; letter-spacing: 0.08em; }
         .brand strong { display: block; }
         .brand span { font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; }
@@ -42,13 +42,16 @@
         .btn { border: none; border-radius: 8px; padding: 12px 18px; font-size: 14px; cursor: pointer; text-decoration: none; }
         .btn-secondary { background: #e2e8f0; color: #1e293b; }
         .btn-primary { background: linear-gradient(135deg, #06344f 0%, #0097d9 100%); color: white; }
+        .contact-card { width: 100%; max-width: 420px; border-radius: 12px; border: 1px solid #d8e1ee; background: #f8fbff; padding: 14px; color: #475569; }
+        .contact-card strong { display: block; margin-bottom: 8px; color: #0f172a; }
+        .contact-card p { margin: 4px 0; }
         @media (max-width: 900px) { .hero, .grid, .grid-3, .doc-list { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" alt="Logo Jabatan Air Sabah">
+            <div class="brand-logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
             <div>
                 <strong>SPPA - Permohonan Online PPP1</strong>
                 <span>Jabatan Air Negeri Sabah</span>
@@ -258,7 +261,12 @@
 
         <div class="panel" style="padding:18px;">
             <strong style="display:block;margin-bottom:12px;">Hubungi Jabatan Air Sabah</strong>
-            <img src="${pageContext.request.contextPath}/assets/images/contact-jans.png" alt="Maklumat hubungan Jabatan Air Sabah" style="width:100%;max-width:420px;border-radius:12px;border:1px solid #d8e1ee;">
+            <div class="contact-card" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                <strong>Hubungi JANS</strong>
+                <p>Telefon: 088-326888</p>
+                <p>Email: info@jwater.gov.my</p>
+                <p>Kota Kinabalu, Sabah</p>
+            </div>
         </div>
     </div>
 </body>

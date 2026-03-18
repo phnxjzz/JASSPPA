@@ -69,7 +69,6 @@
     <div class="container">
         <div class="panel">
             <h2>Maklumat Akaun</h2>
-            <p style="color:#60798b;">Kemaskini maklumat pemohon sebenar, termasuk nama paparan, email, gambar profil dari peranti sendiri, dan kata laluan.</p>
 
             <% if (request.getAttribute("error") != null) { %>
                 <div class="message error"><%= request.getAttribute("error") %></div>
@@ -84,10 +83,6 @@
                 <% } else { %>
                     <div class="avatar-placeholder"><%= request.getAttribute("full_name") != null && !String.valueOf(request.getAttribute("full_name")).isBlank() ? String.valueOf(request.getAttribute("full_name")).substring(0, 1).toUpperCase() : "P" %></div>
                 <% } %>
-                <div>
-                    <strong style="display:block;margin-bottom:6px;">Gambar Profil</strong>
-                    <span style="color:#60798b;line-height:1.6;">Muat naik terus dari komputer atau telefon anda. Sistem akan simpan fail imej ini di server dan memaparkannya secara automatik dalam portal.</span>
-                </div>
             </div>
 
             <form method="post" action="${pageContext.request.contextPath}/profile" enctype="multipart/form-data">

@@ -14,10 +14,12 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #06344f 0%, #0097d9 58%, #fff9b8 150%); min-height: 100vh; display: grid; place-items: center; padding: 24px; }
         .login-shell { display: grid; grid-template-columns: 1.05fr 0.95fr; width: 100%; max-width: 1080px; border-radius: 24px; overflow: hidden; box-shadow: 0 24px 60px rgba(6, 52, 79, 0.22); }
         .brand-panel { background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%); color: white; padding: 40px; }
-        .brand-panel img.logo { width: 78px; background: white; border-radius: 18px; padding: 8px; margin-bottom: 18px; }
+        .brand-panel .logo { width: 78px; height: 78px; background: white; border-radius: 18px; margin-bottom: 18px; display: grid; place-items: center; color: var(--brand-navy); font-size: 22px; font-weight: 800; letter-spacing: 0.08em; }
         .brand-panel h1 { font-size: 34px; margin-bottom: 10px; }
         .brand-panel p { max-width: 420px; line-height: 1.7; }
-        .brand-panel img.contact { width: 100%; max-width: 360px; margin-top: 24px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.25); }
+        .brand-panel .contact { width: 100%; max-width: 360px; margin-top: 24px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.25); padding: 14px; background: rgba(6, 52, 79, 0.28); }
+        .brand-panel .contact strong { display: block; margin-bottom: 8px; }
+        .brand-panel .contact p { margin: 4px 0; font-size: 13px; }
         .login-container { background: white; padding: 44px; }
         .login-header { margin-bottom: 30px; }
         .login-header h1 { color: #173040; font-size: 28px; margin-bottom: 8px; }
@@ -43,10 +45,15 @@
     <% if (selectedRole == null) { selectedRole = ""; } %>
     <div class="login-shell">
         <div class="brand-panel">
-            <img class="logo" src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" alt="Logo Jabatan Air Sabah">
+            <div class="logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
             <h1>SPPA</h1>
             <p>Portal rasmi Jabatan Air Negeri Sabah untuk pendaftaran produk air, semakan permohonan, dan rujukan produk yang telah berdaftar.</p>
-            <img class="contact" src="${pageContext.request.contextPath}/assets/images/contact-jans.png" alt="Maklumat hubungan Jabatan Air Sabah">
+            <div class="contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                <strong>Hubungi JANS</strong>
+                <p>Telefon: 088-326888</p>
+                <p>Email: info@jwater.gov.my</p>
+                <p>Kota Kinabalu, Sabah</p>
+            </div>
         </div>
         <div class="login-container">
             <div class="login-header">
