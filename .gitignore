@@ -21,3 +21,6 @@ tools/
 
 # Optional local scripts/cache
 Scripts/
+
+# Local database backups
+database/backups/

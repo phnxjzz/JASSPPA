@@ -76,7 +76,7 @@ DATABASE_PUBLIC_URL (sudah include username:password@host)
 2. Cari **"MySQL"** dari plugin list
 3. Railway setup ✓:
    - Automatic database initialization
-   - Auto-generated password
+   - Password dijana oleh platform
    - Environment variable: `DATABASE_PUBLIC_URL`
 
 **Option B: External MySQL (Cloud)**
