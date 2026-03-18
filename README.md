@@ -153,12 +153,45 @@ python SistemPPA.py
 
 ---
 
-## 🔑 Akaun Default
+## � Lancarkan Sistem (Quick Start)
+
+### **Cara Terpantas**
+```powershell
+# Buka PowerShell sebagai Administrator
+cd p:\ProjectLI
+.\ops-scripts\startup-system.ps1
+```
+
+**Apa yang dilakukan automatik:**
+- Pastikan MySQL 8.0 berjalan
+- Jalankan Tomcat
+- Tunggu sistem siap
+- Buka browser ke sistem
+
+### **Akses Sistem**
+- **Lokal (Komputer Server)**: `http://localhost:8081/sistemppa/`
+- **Jaringan LAN**: `http://192.168.1.52:8081/sistemppa/`
+- **Guna Pengguna**: Username/Password yang terdaftar
+
+### **Tutup Sistem**
+```powershell
+.\ops-scripts\shutdown-system.ps1
+```
+
+**Dokumen Panjang:**
+- 📖 **[PANDUAN_PENGGUNA.md](PANDUAN_PENGGUNA.md)** - Untuk pengguna akhir (login credentials, fitur, troubleshooting)
+- 📖 **[LANCARKAN_SISTEM.md](LANCARKAN_SISTEM.md)** - Untuk admin (cara startup/shutdown, test system, akses jauh)
+
+---
+
+## �🔑 Akaun Default
 
 | Peranan | Username | Kata Laluan | Nota |
 |---------|----------|-------------|------|
 | Pentadbir | admin | admin123 | Tukar selepas log masuk pertama |
 | Pemohon | (Daftar sendiri) | - | Pengguna baharu boleh mendaftar |
+
+> **Catatan**: Sistem berjalan di port **8081** (bukan port default 8080)
 
 ---
 
@@ -207,13 +240,17 @@ Data produk air dari Sabah Water Department telah dikumpul dan disimpan dalam:
 
 ## 📁 Skrip & Dokumen Penting Dalam Repo
 
-### Skrip Operasi
+### Skrip Operasi - Sistem Startup/Shutdown
+- `ops-scripts/startup-system.ps1` - **Lancarkan sistem** (MySQL + Tomcat + browser auto-open)
+- `ops-scripts/shutdown-system.ps1` - **Tutup sistem** (Tomcat + optional MySQL)
 - `ops-scripts/build-and-deploy.ps1` - Build WAR (`mvn clean package`) dan deploy ke Tomcat `webapps`
 - `ops-scripts/smoke-test.ps1` - Ujian pantas endpoint utama sistem
 - `SistemPPA.py` - Skrip pengambilan/kemas kini data produk air
 
 ### Dokumen Penting
-- `README.md` - Panduan setup, deployment, dan troubleshooting
+- **[PANDUAN_PENGGUNA.md](PANDUAN_PENGGUNA.md)** - Panduan untuk pengguna akhir (login, fitur, troubleshooting)
+- **[LANCARKAN_SISTEM.md](LANCARKAN_SISTEM.md)** - Panduan untuk admin (startup, shutdown, network access)
+- `README.md` - Panduan setup, deployment, dan architecture
 - `database/schema.sql` - Skema pangkalan data utama
 - `docs/ERD-SPPA.md` - Dokumen ERD sistem
 - `src/main/webapp/assets/forms/*.pdf` - Borang PPP1/PPP2 dan garis panduan rasmi
