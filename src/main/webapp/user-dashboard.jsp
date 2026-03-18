@@ -23,7 +23,7 @@
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: radial-gradient(circle at top left, #fffcd8 0%, #ebf8ff 34%, #f7fbfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 75%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand img { width: 54px; background: white; border-radius: 16px; padding: 6px; }
+        .brand-logo { width: 54px; height: 54px; background: white; border-radius: 16px; display: grid; place-items: center; color: var(--brand-navy); font-weight: 800; letter-spacing: 0.08em; }
         .brand h1 { margin: 0; font-size: 20px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; }
@@ -61,7 +61,9 @@
         .status-suspended { background: #ffe4d6; color: #9a3412; }
         .status-draft { background: #e2e8f0; color: #334155; }
         .mini-title { margin-top: 0; margin-bottom: 14px; font-size: 20px; }
-        .contact-image { width: 100%; border-radius: 16px; border: 1px solid var(--line); margin-top: 12px; }
+        .contact-image { width: 100%; border-radius: 16px; border: 1px solid var(--line); margin-top: 12px; padding: 14px; background: #f7fbff; }
+        .contact-image strong { display: block; margin-bottom: 8px; color: var(--brand-navy); }
+        .contact-image p { margin: 4px 0; color: var(--muted); font-size: 14px; }
         .supplier { color: var(--muted); font-size: 13px; margin-top: 4px; }
         .empty { padding: 28px 0; text-align: center; color: var(--muted); }
         @media (max-width: 980px) { .hero, .layout, .stat-grid { grid-template-columns: 1fr; } .navbar { flex-direction: column; align-items: flex-start; } .navbar a { margin-left: 0; margin-right: 16px; } }
@@ -70,7 +72,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" alt="Logo Jabatan Air Sabah">
+            <div class="brand-logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
             <div>
                 <h1>Dashboard Pemohon</h1>
                 <p>Sistem Pendaftaran Produk Air • Jabatan Air Negeri Sabah</p>
@@ -102,7 +104,7 @@
                         String initial = fullName.isEmpty() ? "P" : fullName.substring(0, 1).toUpperCase();
                     %>
                     <% if (avatarUrl != null && !avatarUrl.isBlank()) { %>
-                        <img class="avatar" src="<%= avatarUrl %>" alt="Avatar profil">
+                        <img class="avatar" src="${pageContext.request.contextPath}/avatars/view?v=<%= avatarUrl.hashCode() %>" alt="Avatar profil">
                     <% } else { %>
                         <div class="avatar"><%= initial %></div>
                     <% } %>
@@ -223,7 +225,12 @@
                 <div class="section">
                     <h2 class="mini-title">Hubungi Jabatan Air Sabah</h2>
                     <p style="color:#678090;">Maklumat hubungan rasmi dimasukkan terus pada portal untuk rujukan pemohon.</p>
-                    <img class="contact-image" src="${pageContext.request.contextPath}/assets/images/contact-jans.png" alt="Maklumat hubungan Jabatan Air Sabah">
+                    <div class="contact-image" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                        <strong>Hubungi JANS</strong>
+                        <p>Telefon: 088-326888</p>
+                        <p>Email: info@jwater.gov.my</p>
+                        <p>Kota Kinabalu, Sabah</p>
+                    </div>
                 </div>
             </div>
         </div>

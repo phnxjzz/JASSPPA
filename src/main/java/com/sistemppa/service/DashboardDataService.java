@@ -35,8 +35,63 @@ public final class DashboardDataService {
 
         stats.put("active_users", countByQuery(conn,
                 "SELECT COUNT(*) FROM users WHERE status = 'ACTIVE'"));
+        stats.put("registered_users", countRegisteredUsers(conn, false));
+        stats.put("new_registered_users", countRegisteredUsers(conn, true));
         stats.put("total_products", countProducts(conn, null, null));
         return stats;
+    }
+
+    public static List<Map<String, Object>> loadRegisteredUsers(Connection conn, String search,
+                                                                 boolean onlyNew, int limit) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT id, username, full_name, email, status, created_at "
+                + "FROM users WHERE role = 'USER'");
+        List<Object> parameters = new ArrayList<>();
+
+        if (search != null && !search.isBlank()) {
+            sql.append(" AND (username LIKE ? OR full_name LIKE ? OR email LIKE ?)");
+            String keyword = "%" + search.trim() + "%";
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+        }
+
+        if (onlyNew) {
+            sql.append(" AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+        }
+
+        sql.append(" ORDER BY created_at DESC, id DESC");
+        if (limit > 0) {
+            sql.append(" LIMIT ?");
+        }
+
+        List<Map<String, Object>> users = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            int index = applyParameters(stmt, parameters);
+            if (limit > 0) {
+                stmt.setInt(index, limit);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("username", rs.getString("username"));
+                    row.put("full_name", rs.getString("full_name"));
+                    row.put("email", rs.getString("email"));
+                    row.put("status", rs.getString("status"));
+                    row.put("created_at", rs.getTimestamp("created_at"));
+                    users.add(row);
+                }
+            }
+        }
+        return users;
+    }
+
+    public static int countRegisteredUsers(Connection conn, boolean onlyNew) throws SQLException {
+        String sql = onlyNew
+                ? "SELECT COUNT(*) FROM users WHERE role = 'USER' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
+                : "SELECT COUNT(*) FROM users WHERE role = 'USER'";
+        return countByQuery(conn, sql);
     }
 
     public static Map<String, Object> loadUserSummary(Connection conn, int userId) throws SQLException {

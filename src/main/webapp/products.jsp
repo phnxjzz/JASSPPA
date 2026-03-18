@@ -93,7 +93,7 @@
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #eff9ff 0%, #f8fbfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 72%, var(--brand-yellow) 180%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand img { width: 52px; height: auto; background: white; border-radius: 14px; padding: 6px; }
+        .brand-logo { width: 52px; height: 52px; background: white; border-radius: 14px; display: grid; place-items: center; color: var(--brand-navy); font-weight: 800; letter-spacing: 0.08em; }
         .brand h1 { margin: 0; font-size: 20px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
         .nav-links a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; }
@@ -103,7 +103,9 @@
         .hero h2 { margin-top: 0; font-size: 30px; }
         .hero p { color: var(--muted); line-height: 1.7; }
         .metric { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--brand-sky); border-radius: 999px; font-weight: 700; }
-        .contact-image { width: 100%; border-radius: 14px; border: 1px solid var(--line); }
+        .contact-image { width: 100%; border-radius: 14px; border: 1px solid var(--line); padding: 14px; background: #f7fbff; }
+        .contact-image strong { display: block; margin-bottom: 8px; color: var(--brand-navy); }
+        .contact-image p { margin: 4px 0; color: var(--muted); font-size: 14px; }
         .filters { display: grid; grid-template-columns: 2fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 18px; }
         .field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
         .field input, .field select { width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: white; }
@@ -111,14 +113,16 @@
         .btn-primary { background: var(--brand-blue); color: white; }
         .btn-secondary { background: #dcecf6; color: var(--brand-navy); }
         .btn-attachment { background: #e7f4fb; color: #0b4d71; border: 1px solid #b9dcee; padding: 7px 10px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 13px 12px; border-bottom: 1px solid #e5f0f6; text-align: left; vertical-align: top; }
+        .table-wrap { width: 100%; overflow-x: auto; border-radius: 16px; }
+        table { width: 100%; min-width: 1120px; border-collapse: collapse; table-layout: fixed; }
+        th, td { padding: 13px 12px; border-bottom: 1px solid #e5f0f6; text-align: left; vertical-align: top; word-break: break-word; overflow-wrap: anywhere; }
         th { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
         tr:hover { background: #f7fcff; }
         .tag { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #eef7fb; color: var(--brand-navy); font-size: 12px; font-weight: 700; }
         .source-link { color: var(--brand-blue); font-weight: 700; text-decoration: none; }
         .supplier-name { display: block; font-weight: 700; margin-bottom: 5px; }
         .supplier-address { color: var(--muted); font-size: 13px; line-height: 1.5; }
+        .cell-tight { white-space: normal; line-height: 1.5; }
         .import-note { margin-top: 10px; color: var(--muted); font-size: 13px; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(4, 24, 38, 0.72); z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
         .modal-overlay.open { display: flex; }
@@ -130,8 +134,8 @@
         .attachment-list { border-right: 1px solid #e5f0f6; padding: 10px; overflow: auto; }
         .attachment-list button { width: 100%; margin-bottom: 8px; text-align: left; border: 1px solid #d6e7f2; background: #f8fbfe; border-radius: 9px; padding: 9px; cursor: pointer; }
         .attachment-list button.active { background: #e8f7ff; border-color: #8acde9; }
-        .viewer { min-height: 0; }
-        .viewer iframe { width: 100%; height: 100%; border: 0; }
+        .viewer { min-height: 0; display: grid; grid-template-rows: 1fr auto; }
+        .viewer iframe { width: 100%; height: 100%; min-height: 420px; border: 0; }
         .viewer-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); }
         @media (max-width: 980px) { .hero, .filters { grid-template-columns: 1fr; } .navbar { flex-direction: column; align-items: flex-start; } .nav-links a { margin-left: 0; margin-right: 16px; } }
         @media (max-width: 780px) { .modal-body { grid-template-columns: 1fr; } .attachment-list { border-right: 0; border-bottom: 1px solid #e5f0f6; max-height: 180px; } }
@@ -140,7 +144,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" alt="Logo Jabatan Air Sabah">
+            <div class="brand-logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
             <div>
                 <h1>Senarai Produk Berdaftar</h1>
                 <p>Sistem Pendaftaran Produk Air • Jabatan Air Negeri Sabah</p>
@@ -157,11 +161,15 @@
             <div class="panel">
                 <div class="metric"><span><%= request.getAttribute("product_total") %></span> produk ditemui</div>
                 <h2>Rujukan produk air yang telah berdaftar</h2>
-                <p>Halaman ini mengambil data terus daripada jadual MySQL rasmi dalam sistem. Pemohon boleh menyemak jenama, kategori, klasifikasi, dan pembekal sebelum menghantar permohonan baharu.</p>
                 <p class="import-note">Saved <%= request.getAttribute("product_total") %> records to data\water_products.json and data\water_products.csv</p>
             </div>
             <div class="panel">
-                <img class="contact-image" src="${pageContext.request.contextPath}/assets/images/contact-jans.png" alt="Maklumat hubungan Jabatan Air Sabah">
+                <div class="contact-image" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                    <strong>Hubungi JANS</strong>
+                    <p>Telefon: 088-326888</p>
+                    <p>Email: info@jwater.gov.my</p>
+                    <p>Kota Kinabalu, Sabah</p>
+                </div>
             </div>
         </div>
 
@@ -192,17 +200,18 @@
                 </div>
             </form>
 
+            <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>No.</th>
-                        <th>Supplier Name &amp; Address</th>
-                        <th>Product / Materials</th>
-                        <th>Category</th>
-                        <th>Type</th>
-                        <th>Brand</th>
-                        <th>Valid Date</th>
-                        <th>Attachment</th>
+                        <th style="width:70px;">No.</th>
+                        <th style="width:250px;">Supplier Name &amp; Address</th>
+                        <th style="width:220px;">Product / Materials</th>
+                        <th style="width:160px;">Category</th>
+                        <th style="width:150px;">Type</th>
+                        <th style="width:120px;">Brand</th>
+                        <th style="width:120px;">Valid Date</th>
+                        <th style="width:150px;">Attachment</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -226,14 +235,14 @@
                     %>
                     <tr>
                         <td><strong><%= product.get("no") %></strong></td>
-                        <td>
+                        <td class="cell-tight">
                             <span class="supplier-name"><%= escapeHtml(supplierInfo[0]) %></span>
                             <span class="supplier-address"><%= escapeHtml(supplierInfo[1]) %></span>
                         </td>
-                        <td><%= escapeHtml(productMaterials) %></td>
+                        <td class="cell-tight"><%= escapeHtml(productMaterials) %></td>
                         <td><span class="tag"><%= escapeHtml(category) %></span></td>
-                        <td><%= escapeHtml(itemType) %></td>
-                        <td><%= escapeHtml(brand) %></td>
+                        <td class="cell-tight"><%= escapeHtml(itemType) %></td>
+                        <td class="cell-tight"><%= escapeHtml(brand) %></td>
                         <td><%= escapeHtml(validDate) %></td>
                         <td>
                             <% if (attachments.isEmpty()) { %>
@@ -248,6 +257,7 @@
                     %>
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 
@@ -283,8 +293,18 @@
                     .replace(/'/g, '&#39;');
             }
 
+            function buildProxyUrl(url) {
+                return '${pageContext.request.contextPath}/product-attachments/view?url=' + encodeURIComponent(url);
+            }
+
             function showViewer(url) {
-                attachmentViewer.innerHTML = '<iframe title="Lampiran PDF" src="' + escapeHtml(url) + '"></iframe>';
+                const proxyUrl = buildProxyUrl(url);
+                attachmentViewer.innerHTML = ''
+                    + '<iframe title="Lampiran Produk" src="' + escapeHtml(proxyUrl) + '"></iframe>'
+                    + '<div style="padding:12px 14px;border-top:1px solid #e5f0f6;background:#f8fbfe;display:flex;gap:10px;flex-wrap:wrap;">'
+                    + '<a class="source-link" href="' + escapeHtml(proxyUrl) + '" target="_blank" rel="noopener noreferrer">Buka lampiran</a>'
+                    + '<a class="source-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">Sumber asal</a>'
+                    + '</div>';
             }
 
             function openModal(urls) {

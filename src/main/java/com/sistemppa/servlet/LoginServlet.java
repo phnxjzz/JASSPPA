@@ -85,7 +85,7 @@ public class LoginServlet extends HttpServlet {
 
                         LOGGER.info("User logged in: " + username);
                         if ("ADMIN".equals(userRole)) {
-                            response.sendRedirect(request.getContextPath() + "/admin/application");
+                            response.sendRedirect(request.getContextPath() + "/dashboard");
                         } else {
                             response.sendRedirect(request.getContextPath() + "/dashboard");
                         }

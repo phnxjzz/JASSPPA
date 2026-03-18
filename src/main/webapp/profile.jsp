@@ -1,5 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.sql.Timestamp" %>
+<%
+    String avatarValue = request.getAttribute("avatar_url") == null ? null : String.valueOf(request.getAttribute("avatar_url"));
+    String avatarToken = avatarValue == null ? "0" : String.valueOf(avatarValue.hashCode());
+%>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -19,7 +23,7 @@
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: radial-gradient(circle at top left, #fffcd4 0%, #edf8ff 35%, #f7fbfd 100%); color: #183244; }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 76%, var(--brand-yellow) 180%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand img { width: 50px; background: white; border-radius: 14px; padding: 6px; }
+        .brand-logo { width: 50px; height: 50px; background: white; border-radius: 14px; display: grid; place-items: center; color: var(--brand-navy); font-weight: 800; letter-spacing: 0.08em; }
         .brand h1 { margin: 0; font-size: 19px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; }
@@ -39,14 +43,18 @@
         .success { background: #ebfff0; color: #0f7a3d; }
         .summary-item { padding: 14px; border-radius: 14px; background: #f6fbff; margin-bottom: 12px; }
         .summary-item strong { display: block; margin-bottom: 4px; }
-        .contact-image { width: 100%; border-radius: 16px; border: 1px solid var(--line); }
-        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } .navbar { flex-direction: column; align-items: flex-start; gap: 12px; } .navbar a { margin-left: 0; margin-right: 16px; } }
+        .avatar-card { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: center; padding: 14px; border: 1px dashed var(--line); border-radius: 16px; margin-bottom: 18px; background: #f9fcff; }
+        .avatar-preview, .avatar-placeholder { width: 96px; height: 96px; border-radius: 24px; object-fit: cover; border: 1px solid var(--line); background: linear-gradient(135deg, #d7f0ff 0%, #fff7b2 100%); display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 800; color: var(--brand-navy); }
+        .contact-image { width: 100%; border-radius: 16px; border: 1px solid var(--line); padding: 14px; background: #f8fbff; }
+        .contact-image strong { display: block; margin-bottom: 8px; color: var(--brand-navy); }
+        .contact-image p { margin: 4px 0; color: var(--muted); }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } .navbar { flex-direction: column; align-items: flex-start; gap: 12px; } .navbar a { margin-left: 0; margin-right: 16px; } .avatar-card { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" alt="Logo Jabatan Air Sabah">
+            <div class="brand-logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
             <div>
                 <h1>Kemaskini Profil Pemohon</h1>
                 <p>Sistem Pendaftaran Produk Air</p>
@@ -61,7 +69,7 @@
     <div class="container">
         <div class="panel">
             <h2>Maklumat Akaun</h2>
-            <p style="color:#60798b;">Kemaskini maklumat pemohon sebenar, termasuk nama paparan, email, pautan gambar profil, dan kata laluan.</p>
+            <p style="color:#60798b;">Kemaskini maklumat pemohon sebenar, termasuk nama paparan, email, gambar profil dari peranti sendiri, dan kata laluan.</p>
 
             <% if (request.getAttribute("error") != null) { %>
                 <div class="message error"><%= request.getAttribute("error") %></div>
@@ -70,7 +78,19 @@
                 <div class="message success">Profil berjaya dikemaskini.</div>
             <% } %>
 
-            <form method="post" action="${pageContext.request.contextPath}/profile">
+            <div class="avatar-card">
+                <% if (avatarValue != null && !avatarValue.isBlank()) { %>
+                    <img class="avatar-preview" src="${pageContext.request.contextPath}/avatars/view?v=<%= avatarToken %>" alt="Gambar profil semasa">
+                <% } else { %>
+                    <div class="avatar-placeholder"><%= request.getAttribute("full_name") != null && !String.valueOf(request.getAttribute("full_name")).isBlank() ? String.valueOf(request.getAttribute("full_name")).substring(0, 1).toUpperCase() : "P" %></div>
+                <% } %>
+                <div>
+                    <strong style="display:block;margin-bottom:6px;">Gambar Profil</strong>
+                    <span style="color:#60798b;line-height:1.6;">Muat naik terus dari komputer atau telefon anda. Sistem akan simpan fail imej ini di server dan memaparkannya secara automatik dalam portal.</span>
+                </div>
+            </div>
+
+            <form method="post" action="${pageContext.request.contextPath}/profile" enctype="multipart/form-data">
                 <div class="field">
                     <label for="full_name">Nama Penuh</label>
                     <input id="full_name" name="full_name" type="text" value="<%= request.getAttribute("full_name") != null ? request.getAttribute("full_name") : "" %>" required>
@@ -84,9 +104,9 @@
                     <input id="email" name="email" type="email" value="<%= request.getAttribute("email") != null ? request.getAttribute("email") : "" %>" required>
                 </div>
                 <div class="field">
-                    <label for="avatar_url">Pautan Gambar Profil</label>
-                    <input id="avatar_url" name="avatar_url" type="url" value="<%= request.getAttribute("avatar_url") != null ? request.getAttribute("avatar_url") : "" %>">
-                    <div class="hint">Pilihan. Masukkan URL imej jika anda mahu paparan profil lebih rasmi.</div>
+                    <label for="avatar_file">Muat Naik Gambar Profil</label>
+                    <input id="avatar_file" name="avatar_file" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
+                    <div class="hint">Pilih fail imej dari device sendiri. Format disokong: PNG, JPG, GIF, WEBP. Maksimum 5MB.</div>
                 </div>
                 <div class="field">
                     <label for="password">Kata Laluan Baharu</label>
@@ -117,7 +137,12 @@
                 <strong>Nama Semasa</strong>
                 <span><%= request.getAttribute("full_name") != null ? request.getAttribute("full_name") : "-" %></span>
             </div>
-            <img class="contact-image" src="${pageContext.request.contextPath}/assets/images/contact-jans.png" alt="Maklumat hubungan Jabatan Air Sabah">
+            <div class="contact-image" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                <strong>Hubungi JANS</strong>
+                <p>Telefon: 088-326888</p>
+                <p>Email: info@jwater.gov.my</p>
+                <p>Kota Kinabalu, Sabah</p>
+            </div>
         </div>
     </div>
 </body>

@@ -61,6 +61,10 @@ public class DashboardServlet extends HttpServlet {
                 DashboardDataService.loadApplications(conn, search, status, ADMIN_APPLICATION_LIMIT));
         request.setAttribute("filtered_application_count",
                 DashboardDataService.countApplications(conn, search, status));
+        request.setAttribute("registered_users_list",
+            DashboardDataService.loadRegisteredUsers(conn, null, false, 0));
+        request.setAttribute("new_registered_users_list",
+            DashboardDataService.loadRegisteredUsers(conn, null, true, 0));
         request.setAttribute("product_catalog",
                 DashboardDataService.loadProducts(conn, null, null, DASHBOARD_PRODUCT_LIMIT));
     }

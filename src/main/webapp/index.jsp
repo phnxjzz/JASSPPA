@@ -17,7 +17,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: var(--text); background: #f8fbfd; }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 74%, var(--brand-yellow) 190%); color: white; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand img { width: 52px; background: white; border-radius: 16px; padding: 6px; }
+        .brand-logo { width: 52px; height: 52px; background: white; border-radius: 16px; display: grid; place-items: center; color: var(--brand-navy); font-weight: 800; letter-spacing: 0.08em; }
         .brand-text strong { display: block; font-size: 18px; }
         .brand-text span { font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 20px; font-weight: 600; }
@@ -28,7 +28,9 @@
         .hero p { font-size: 18px; margin-bottom: 26px; max-width: 700px; }
         .hero-btn { display: inline-block; padding: 12px 28px; background: white; color: var(--brand-navy); text-decoration: none; border-radius: 999px; font-weight: 700; margin: 10px 10px 0 0; }
         .hero-side { background: rgba(255, 255, 255, 0.14); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.24); border-radius: 22px; padding: 18px; }
-        .hero-side img { width: 100%; border-radius: 16px; }
+        .hero-contact { width: 100%; border-radius: 16px; border: 1px solid rgba(255,255,255,0.28); background: rgba(6, 52, 79, 0.35); padding: 16px; }
+        .hero-contact h3 { margin: 0 0 10px; font-size: 16px; }
+        .hero-contact p { margin: 6px 0; font-size: 14px; }
         .container { max-width: 1200px; margin: 0 auto; padding: 44px 20px; }
         .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 50px; }
         .feature { padding: 24px; border-radius: 18px; background: white; border: 1px solid #d9e8f1; box-shadow: 0 12px 30px rgba(6, 52, 79, 0.06); }
@@ -53,7 +55,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" alt="Logo Jabatan Air Sabah">
+            <div class="brand-logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
             <div class="brand-text">
                 <strong>SPPA</strong>
                 <span>Jabatan Air Negeri Sabah</span>
@@ -69,12 +71,16 @@
         <div class="hero-inner">
             <div>
                 <h1>Selamat datang ke Sistem Pendaftaran Produk Air</h1>
-                <p>Portal ini menyatukan borang pemohon, semakan pentadbir, senarai produk berdaftar dari MySQL, serta rujukan hubungan rasmi Jabatan Air Negeri Sabah.</p>
                 <a href="${pageContext.request.contextPath}/login" class="hero-btn">Log Masuk</a>
                 <a href="${pageContext.request.contextPath}/register" class="hero-btn">Buka Akaun Pemohon</a>
             </div>
             <div class="hero-side">
-                <img src="${pageContext.request.contextPath}/assets/images/contact-jans.png" alt="Maklumat hubungan Jabatan Air Sabah">
+                <div class="hero-contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                    <h3>Hubungi JANS</h3>
+                    <p>Telefon: 088-326888</p>
+                    <p>Email: info@jwater.gov.my</p>
+                    <p>Alamat: Kota Kinabalu, Sabah</p>
+                </div>
             </div>
         </div>
     </div>

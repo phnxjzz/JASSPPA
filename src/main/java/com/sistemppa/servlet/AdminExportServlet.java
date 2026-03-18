@@ -42,6 +42,9 @@ public class AdminExportServlet extends HttpServlet {
         String format = request.getParameter("format");
         String search = trim(request.getParameter("q"));
         String status = trim(request.getParameter("status"));
+        String scope = trim(request.getParameter("scope"));
+        boolean userScope = "users".equalsIgnoreCase(scope);
+        boolean recentOnly = "1".equals(request.getParameter("recent"));
 
         if (format == null || (!"pdf".equalsIgnoreCase(format) && !"xlsx".equalsIgnoreCase(format))) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unsupported export format");
@@ -49,6 +52,16 @@ public class AdminExportServlet extends HttpServlet {
         }
 
         try (Connection conn = DatabaseConfig.getConnection()) {
+            if (userScope) {
+                List<Map<String, Object>> users = DashboardDataService.loadRegisteredUsers(conn, search, recentOnly, 0);
+                if ("pdf".equalsIgnoreCase(format)) {
+                    exportUsersPdf(response, users, search, recentOnly);
+                    return;
+                }
+                exportUsersExcel(response, users, recentOnly);
+                return;
+            }
+
             List<Map<String, Object>> applications = DashboardDataService.loadApplications(conn, search, status, 0);
             if ("pdf".equalsIgnoreCase(format)) {
                 exportPdf(response, applications, search, status);
@@ -122,6 +135,80 @@ public class AdminExportServlet extends HttpServlet {
                 row.createCell(6).setCellValue(String.valueOf(application.get("status")));
                 row.createCell(7).setCellValue(application.get("submitted_at") == null
                         ? "-" : String.valueOf(application.get("submitted_at")));
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            workbook.write(response.getOutputStream());
+        }
+    }
+
+    private void exportUsersPdf(HttpServletResponse response, List<Map<String, Object>> users,
+                                String search, boolean recentOnly) throws IOException, DocumentException {
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", recentOnly
+                ? "attachment; filename=senarai-pemohon-baharu-sppa.pdf"
+                : "attachment; filename=senarai-pemohon-berdaftar-sppa.pdf");
+
+        Document document = new Document(PageSize.A4.rotate(), 24, 24, 24, 24);
+        PdfWriter.getInstance(document, response.getOutputStream());
+        document.open();
+        document.add(new Paragraph(recentOnly
+                        ? "Senarai Pemohon Baharu (30 Hari)"
+                        : "Senarai Pemohon Berdaftar SPPA",
+                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
+        document.add(new Paragraph("Carian: " + (isBlank(search) ? "Semua" : search),
+                FontFactory.getFont(FontFactory.HELVETICA, 10)));
+        document.add(new Paragraph(" "));
+
+        PdfPTable table = new PdfPTable(new float[]{1.0f, 2.0f, 2.2f, 2.8f, 1.2f, 2.0f});
+        table.setWidthPercentage(100);
+        addHeaderCell(table, "ID");
+        addHeaderCell(table, "Nama Pengguna");
+        addHeaderCell(table, "Nama Penuh");
+        addHeaderCell(table, "Email");
+        addHeaderCell(table, "Status");
+        addHeaderCell(table, "Tarikh Daftar");
+
+        for (Map<String, Object> user : users) {
+            table.addCell(String.valueOf(user.get("id")));
+            table.addCell(String.valueOf(user.get("username")));
+            table.addCell(String.valueOf(user.get("full_name")));
+            table.addCell(String.valueOf(user.get("email")));
+            table.addCell(String.valueOf(user.get("status")));
+            table.addCell(user.get("created_at") == null ? "-" : String.valueOf(user.get("created_at")));
+        }
+
+        document.add(table);
+        document.close();
+    }
+
+    private void exportUsersExcel(HttpServletResponse response, List<Map<String, Object>> users,
+                                  boolean recentOnly) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", recentOnly
+                ? "attachment; filename=senarai-pemohon-baharu-sppa.xlsx"
+                : "attachment; filename=senarai-pemohon-berdaftar-sppa.xlsx");
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet(recentOnly ? "Pemohon Baharu" : "Pemohon Berdaftar");
+            String[] headers = {"ID", "Nama Pengguna", "Nama Penuh", "Email", "Status", "Tarikh Daftar"};
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+            }
+
+            int rowIndex = 1;
+            for (Map<String, Object> user : users) {
+                Row row = sheet.createRow(rowIndex++);
+                row.createCell(0).setCellValue(String.valueOf(user.get("id")));
+                row.createCell(1).setCellValue(String.valueOf(user.get("username")));
+                row.createCell(2).setCellValue(String.valueOf(user.get("full_name")));
+                row.createCell(3).setCellValue(String.valueOf(user.get("email")));
+                row.createCell(4).setCellValue(String.valueOf(user.get("status")));
+                row.createCell(5).setCellValue(user.get("created_at") == null ? "-" : String.valueOf(user.get("created_at")));
             }
 
             for (int i = 0; i < headers.length; i++) {

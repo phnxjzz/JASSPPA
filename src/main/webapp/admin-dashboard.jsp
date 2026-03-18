@@ -23,7 +23,7 @@
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 76%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand img { width: 54px; background: white; border-radius: 16px; padding: 6px; }
+        .brand-logo { width: 54px; height: 54px; background: white; border-radius: 16px; display: grid; place-items: center; color: var(--brand-navy); font-weight: 800; letter-spacing: 0.08em; }
         .brand h1 { margin: 0; font-size: 20px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; }
@@ -34,7 +34,9 @@
         .hero p { color: var(--muted); line-height: 1.7; max-width: 760px; }
         .metric-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
         .metric-chip { background: var(--surface-soft); border: 1px solid var(--line); padding: 10px 14px; border-radius: 999px; font-weight: 700; }
-        .contact-image { width: 100%; border-radius: 16px; border: 1px solid var(--line); }
+        .contact-image { width: 100%; border-radius: 16px; border: 1px solid var(--line); padding: 14px; background: #f7fbff; }
+        .contact-image strong { display: block; margin-bottom: 8px; color: var(--brand-navy); }
+        .contact-image p { margin: 4px 0; color: var(--muted); font-size: 14px; }
         .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
         .stat-card { background: var(--surface); padding: 18px; border-radius: 18px; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(6, 52, 79, 0.06); }
         .stat-card h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
@@ -47,6 +49,7 @@
         .btn-primary { background: var(--brand-blue); color: white; }
         .btn-secondary { background: #dcecf6; color: var(--brand-navy); }
         .btn-accent { background: #fff7b0; color: #6a5a00; }
+        .section-stack { display: grid; gap: 18px; }
         .table-card h3 { margin-top: 0; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 13px 12px; border-bottom: 1px solid #e4edf4; text-align: left; vertical-align: top; }
@@ -67,7 +70,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" alt="Logo Jabatan Air Sabah">
+            <div class="brand-logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
             <div>
                 <h1>Dashboard Pentadbir</h1>
                 <p>Pusat kawalan permohonan, produk, dan laporan SPPA</p>
@@ -85,15 +88,21 @@
         <div class="hero">
             <div class="panel">
                 <h2>Pemantauan pentadbiran dengan carian, tapisan, dan eksport</h2>
-                <p>Paparan pentadbir kini disambung kepada penapisan status, carian kata kunci merentas pemohon dan syarikat, serta eksport laporan ke format PDF dan Excel berdasarkan penapis semasa.</p>
                 <div class="metric-strip">
                     <div class="metric-chip">Rekod dipaparkan: <%= request.getAttribute("filtered_application_count") != null ? request.getAttribute("filtered_application_count") : "0" %></div>
                     <div class="metric-chip">Produk dalam MySQL: <%= request.getAttribute("total_products") != null ? request.getAttribute("total_products") : "0" %></div>
                     <div class="metric-chip">Pengguna aktif: <%= request.getAttribute("active_users") != null ? request.getAttribute("active_users") : "0" %></div>
+                    <div class="metric-chip">Jumlah pengguna berdaftar: <%= request.getAttribute("registered_users") != null ? request.getAttribute("registered_users") : "0" %></div>
+                    <div class="metric-chip">Pengguna baharu (30 hari): <%= request.getAttribute("new_registered_users") != null ? request.getAttribute("new_registered_users") : "0" %></div>
                 </div>
             </div>
             <div class="panel">
-                <img class="contact-image" src="${pageContext.request.contextPath}/assets/images/contact-jans.png" alt="Maklumat hubungan Jabatan Air Sabah">
+                <div class="contact-image" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                    <strong>Hubungi JANS</strong>
+                    <p>Telefon: 088-326888</p>
+                    <p>Email: info@jwater.gov.my</p>
+                    <p>Kota Kinabalu, Sabah</p>
+                </div>
             </div>
         </div>
 
@@ -192,6 +201,96 @@
             </div>
 
             <div>
+                <div class="section-stack">
+                <div class="panel table-card" id="senarai-pengguna-berdaftar">
+                    <h3 class="section-title">Senarai Pengguna Berdaftar Dalam Sistem</h3>
+                    <div class="subtle" style="margin-bottom:12px;">Paparan ini menunjukkan semua akaun berperanan USER (pengguna berdaftar), bukan pemohon yang telah menghantar borang sahaja.</div>
+                    <div style="margin-bottom:12px;display:flex;gap:10px;flex-wrap:wrap;">
+                        <a class="btn btn-accent" href="${pageContext.request.contextPath}/admin/export?format=pdf&scope=users">Muat Turun PDF Pemohon Berdaftar</a>
+                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/export?format=xlsx&scope=users">Muat Turun Excel Pemohon Berdaftar</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Pengguna</th>
+                                <th>Nama Penuh</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Tarikh Daftar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%
+                                List<Map<String, Object>> users = (List<Map<String, Object>>) request.getAttribute("registered_users_list");
+                                if (users == null || users.isEmpty()) {
+                            %>
+                            <tr>
+                                <td colspan="6" class="empty">Tiada pemohon berdaftar ditemui.</td>
+                            </tr>
+                            <% } else {
+                                for (Map<String, Object> userRow : users) {
+                                    Timestamp createdAt = (Timestamp) userRow.get("created_at");
+                            %>
+                            <tr>
+                                <td><%= userRow.get("id") %></td>
+                                <td><strong><%= userRow.get("username") %></strong></td>
+                                <td><%= userRow.get("full_name") %></td>
+                                <td><%= userRow.get("email") %></td>
+                                <td><span class="status-pill status-approved"><%= userRow.get("status") %></span></td>
+                                <td><%= createdAt == null ? "-" : createdAt.toString() %></td>
+                            </tr>
+                            <%      }
+                                }
+                            %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="panel table-card" id="senarai-pengguna-baharu">
+                    <h3 class="section-title">Senarai Pengguna Baharu (30 Hari)</h3>
+                    <div style="margin-bottom:12px;display:flex;gap:10px;flex-wrap:wrap;">
+                        <a class="btn btn-accent" href="${pageContext.request.contextPath}/admin/export?format=pdf&scope=users&recent=1">Muat Turun PDF Pemohon Baharu</a>
+                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/export?format=xlsx&scope=users&recent=1">Muat Turun Excel Pemohon Baharu</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Pengguna</th>
+                                <th>Nama Penuh</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Tarikh Daftar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%
+                                List<Map<String, Object>> newUsers = (List<Map<String, Object>>) request.getAttribute("new_registered_users_list");
+                                if (newUsers == null || newUsers.isEmpty()) {
+                            %>
+                            <tr>
+                                <td colspan="6" class="empty">Tiada pemohon baharu ditemui.</td>
+                            </tr>
+                            <% } else {
+                                for (Map<String, Object> userRow : newUsers) {
+                                    Timestamp createdAt = (Timestamp) userRow.get("created_at");
+                            %>
+                            <tr>
+                                <td><%= userRow.get("id") %></td>
+                                <td><strong><%= userRow.get("username") %></strong></td>
+                                <td><%= userRow.get("full_name") %></td>
+                                <td><%= userRow.get("email") %></td>
+                                <td><span class="status-pill status-approved"><%= userRow.get("status") %></span></td>
+                                <td><%= createdAt == null ? "-" : createdAt.toString() %></td>
+                            </tr>
+                            <%      }
+                                }
+                            %>
+                        </tbody>
+                    </table>
+                </div>
+
                 <div class="panel">
                     <h3 class="section-title">Pratonton Produk MySQL</h3>
                     <table>
@@ -227,6 +326,7 @@
                     <div style="margin-top:16px;">
                         <a class="btn btn-secondary" href="${pageContext.request.contextPath}/products">Buka Senarai Produk Penuh</a>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
