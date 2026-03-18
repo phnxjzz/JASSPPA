@@ -25,7 +25,9 @@
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; color: #173040; font-weight: 700; }
         .form-group input { width: 100%; padding: 13px; border: 1px solid #d7e7ef; border-radius: 12px; font-size: 14px; }
+        .form-group select { width: 100%; padding: 13px; border: 1px solid #d7e7ef; border-radius: 12px; font-size: 14px; background: white; }
         .form-group input:focus { outline: none; border-color: var(--brand-blue); }
+        .form-group select:focus { outline: none; border-color: var(--brand-blue); }
         .login-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; }
         .error-message { color: #d32f2f; padding: 12px; margin-bottom: 15px; background: #ffebee; border-radius: 10px; font-size: 14px; }
         .success-message { color: #166534; padding: 12px; margin-bottom: 15px; background: #dcfce7; border-radius: 10px; font-size: 14px; }
@@ -35,6 +37,8 @@
     </style>
 </head>
 <body>
+    <% String selectedRole = (String) request.getAttribute("selected_role"); %>
+    <% if (selectedRole == null) { selectedRole = ""; } %>
     <div class="login-shell">
         <div class="brand-panel">
             <img class="logo" src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" alt="Logo Jabatan Air Sabah">
@@ -58,6 +62,15 @@
         <% } %>
         
         <form method="POST" action="${pageContext.request.contextPath}/login">
+            <div class="form-group">
+                <label for="portal_role">Portal</label>
+                <select id="portal_role" name="portal_role" required>
+                    <option value="" <%= selectedRole.isEmpty() ? "selected" : "" %>>Pilih Portal</option>
+                    <option value="ADMIN" <%= "ADMIN".equals(selectedRole) ? "selected" : "" %>>Portal Admin</option>
+                    <option value="USER" <%= "USER".equals(selectedRole) ? "selected" : "" %>>Portal Pemohon</option>
+                </select>
+            </div>
+
             <div class="form-group">
                 <label for="username">Nama Pengguna</label>
                 <input type="text" id="username" name="username" placeholder="Masukkan nama pengguna" required>

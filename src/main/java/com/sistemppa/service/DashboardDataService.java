@@ -143,7 +143,7 @@ public final class DashboardDataService {
         String tableName = resolveProductTable(conn);
         QueryParts queryParts = buildProductFilter(search, productType);
         String sql = "SELECT no, supplier_agent, supplier_valid_until, product_materials, product_type, "
-                + "classification, brand, source_url "
+            + "classification, brand, attachment_urls, source_url "
                 + "FROM " + tableName + queryParts.clause + " ORDER BY no ASC";
         if (limit > 0) {
             sql += " LIMIT ?";
@@ -165,6 +165,7 @@ public final class DashboardDataService {
                     row.put("product_type", rs.getString("product_type"));
                     row.put("classification", rs.getString("classification"));
                     row.put("brand", rs.getString("brand"));
+                    row.put("attachment_urls", rs.getString("attachment_urls"));
                     row.put("source_url", rs.getString("source_url"));
                     products.add(row);
                 }
@@ -225,8 +226,11 @@ public final class DashboardDataService {
         List<Object> parameters = new ArrayList<>();
 
         if (search != null && !search.isBlank()) {
-            clause.append(" AND (product_materials LIKE ? OR supplier_agent LIKE ? OR brand LIKE ? OR classification LIKE ?)");
+            clause.append(" AND (product_materials LIKE ? OR supplier_agent LIKE ? OR brand LIKE ? OR classification LIKE ? "
+                    + "OR DATE_FORMAT(supplier_valid_until, '%d-%m-%Y') LIKE ? OR DATE_FORMAT(supplier_valid_until, '%Y-%m-%d') LIKE ?)");
             String keyword = "%" + search.trim() + "%";
+            parameters.add(keyword);
+            parameters.add(keyword);
             parameters.add(keyword);
             parameters.add(keyword);
             parameters.add(keyword);

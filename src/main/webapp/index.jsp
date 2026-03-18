@@ -42,6 +42,10 @@
         .role-card li { padding: 10px 0; border-bottom: 1px solid #edf3f6; color: var(--muted); font-size: 14px; }
         .role-card li:before { content: "✓ "; color: #0f7a3d; font-weight: bold; margin-right: 8px; }
         .role-card li:last-child { border-bottom: none; }
+        .role-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .role-btn { display: inline-block; padding: 10px 16px; border-radius: 999px; text-decoration: none; font-weight: 700; }
+        .role-btn.primary { background: var(--brand-blue); color: white; }
+        .role-btn.secondary { background: #e8f7ff; color: var(--brand-navy); }
         footer { background: #072d43; color: white; text-align: center; padding: 30px; }
         @media (max-width: 960px) { .hero-inner { grid-template-columns: 1fr; } .navbar { flex-direction: column; align-items: flex-start; gap: 12px; } .navbar a { margin-left: 0; margin-right: 16px; } }
     </style>
@@ -64,7 +68,7 @@
     <div class="hero">
         <div class="hero-inner">
             <div>
-                <h1>Sistem rasmi pendaftaran produk air dengan aliran digital penuh</h1>
+                <h1>Selamat datang ke Sistem Pendaftaran Produk Air</h1>
                 <p>Portal ini menyatukan borang pemohon, semakan pentadbir, senarai produk berdaftar dari MySQL, serta rujukan hubungan rasmi Jabatan Air Negeri Sabah.</p>
                 <a href="${pageContext.request.contextPath}/login" class="hero-btn">Log Masuk</a>
                 <a href="${pageContext.request.contextPath}/register" class="hero-btn">Buka Akaun Pemohon</a>
@@ -95,7 +99,7 @@
 
     <div class="roles">
         <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
-            <h2 style="text-align: center; margin-bottom: 10px;">Peranan Pengguna</h2>
+            <h2 style="text-align: center; margin-bottom: 10px;">Portal Pilihan Peranan</h2>
             <p style="text-align:center;color:#64808f;">Aliran kerja dipisahkan jelas antara pemohon dan pentadbir tanpa memecahkan sumber data.</p>
         </div>
         <div class="role-container">
@@ -108,6 +112,9 @@
                     <li>Menjana laporan PDF dan Excel</li>
                     <li>Menyemak senarai produk berdaftar</li>
                 </ul>
+                <div class="role-actions">
+                    <a class="role-btn primary" href="${pageContext.request.contextPath}/login?role=ADMIN">Masuk Portal Admin</a>
+                </div>
             </div>
             <div class="role-card">
                 <h3>Pemohon / Pengguna</h3>
@@ -118,6 +125,10 @@
                     <li>Melihat senarai produk berdaftar</li>
                     <li>Mengesan status permohonan sendiri</li>
                 </ul>
+                <div class="role-actions">
+                    <a class="role-btn primary" href="${pageContext.request.contextPath}/login?role=USER">Masuk Portal Pemohon</a>
+                    <a class="role-btn secondary" href="${pageContext.request.contextPath}/register">Daftar Akaun</a>
+                </div>
             </div>
         </div>
     </div>

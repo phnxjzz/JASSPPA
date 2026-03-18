@@ -23,6 +23,7 @@ public class LoginServlet extends HttpServlet {
         if (session.getAttribute("user_id") != null) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
         } else {
+            request.setAttribute("selected_role", normalizeRole(request.getParameter("role")));
             if (request.getParameter("registered") != null) {
                 request.setAttribute("success", "Akaun berjaya didaftarkan. Sila log masuk.");
             }
@@ -35,9 +36,18 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
+        String selectedRole = normalizeRole(request.getParameter("portal_role"));
 
         if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
             request.setAttribute("error", "Username dan kata laluan diperlukan.");
+            request.setAttribute("selected_role", selectedRole);
+            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            return;
+        }
+
+        if (selectedRole == null) {
+            request.setAttribute("error", "Sila pilih peranan portal sebelum log masuk.");
+            request.setAttribute("selected_role", "");
             request.getRequestDispatcher("/login.jsp").forward(request, response);
             return;
         }
@@ -53,6 +63,15 @@ public class LoginServlet extends HttpServlet {
                         String status = rs.getString("status");
                         if (!"ACTIVE".equals(status)) {
                             request.setAttribute("error", "Akaun anda telah digantung atau tidak aktif.");
+                            request.setAttribute("selected_role", selectedRole);
+                            request.getRequestDispatcher("/login.jsp").forward(request, response);
+                            return;
+                        }
+
+                        String userRole = rs.getString("role");
+                        if (!selectedRole.equals(userRole)) {
+                            request.setAttribute("error", "Akaun ini tidak sepadan dengan portal yang dipilih.");
+                            request.setAttribute("selected_role", selectedRole);
                             request.getRequestDispatcher("/login.jsp").forward(request, response);
                             return;
                         }
@@ -60,12 +79,17 @@ public class LoginServlet extends HttpServlet {
                         HttpSession session = request.getSession();
                         session.setAttribute("user_id", rs.getInt("id"));
                         session.setAttribute("username", rs.getString("username"));
-                        session.setAttribute("role", rs.getString("role"));
+                        session.setAttribute("role", userRole);
 
                         LOGGER.info("User logged in: " + username);
-                        response.sendRedirect(request.getContextPath() + "/dashboard");
+                        if ("ADMIN".equals(userRole)) {
+                            response.sendRedirect(request.getContextPath() + "/admin/application");
+                        } else {
+                            response.sendRedirect(request.getContextPath() + "/dashboard");
+                        }
                     } else {
                         request.setAttribute("error", "Username atau kata laluan tidak sah.");
+                        request.setAttribute("selected_role", selectedRole);
                         request.getRequestDispatcher("/login.jsp").forward(request, response);
                     }
                 }
@@ -73,7 +97,19 @@ public class LoginServlet extends HttpServlet {
         } catch (SQLException e) {
             LOGGER.severe("Database error: " + e.getMessage());
             request.setAttribute("error", "Ralat pangkalan data. Sila cuba lagi.");
+            request.setAttribute("selected_role", selectedRole);
             request.getRequestDispatcher("/login.jsp").forward(request, response);
         }
+    }
+
+    private String normalizeRole(String value) {
+        if (value == null) {
+            return null;
+        }
+        String role = value.trim().toUpperCase();
+        if ("ADMIN".equals(role) || "USER".equals(role)) {
+            return role;
+        }
+        return null;
     }
 }

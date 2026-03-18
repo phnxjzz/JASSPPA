@@ -28,7 +28,7 @@ public class ProductServlet extends HttpServlet {
         String productType = trim(request.getParameter("type"));
 
         try (Connection conn = DatabaseConfig.getConnection()) {
-            request.setAttribute("products", DashboardDataService.loadProducts(conn, search, productType, 100));
+            request.setAttribute("products", DashboardDataService.loadProducts(conn, search, productType, 0));
             request.setAttribute("product_types", DashboardDataService.loadProductTypes(conn));
             request.setAttribute("product_total", DashboardDataService.countProducts(conn, search, productType));
             request.setAttribute("search_query", search == null ? "" : search);
