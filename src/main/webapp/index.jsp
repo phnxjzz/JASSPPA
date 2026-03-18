@@ -17,7 +17,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: var(--text); background: #f8fbfd; }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 74%, var(--brand-yellow) 190%); color: white; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 52px; height: 52px; background: white; border-radius: 16px; display: grid; place-items: center; color: var(--brand-navy); font-weight: 800; letter-spacing: 0.08em; }
+        .brand-logo { width: 52px; height: 52px; border-radius: 16px; object-fit: contain; background: white; padding: 4px; }
         .brand-text strong { display: block; font-size: 18px; }
         .brand-text span { font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 20px; font-weight: 600; }
@@ -55,7 +55,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
-            <div class="brand-logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
+            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div class="brand-text">
                 <strong>SPPA</strong>
                 <span>Jabatan Air Negeri Sabah</span>

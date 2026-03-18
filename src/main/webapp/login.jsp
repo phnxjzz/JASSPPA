@@ -14,7 +14,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #06344f 0%, #0097d9 58%, #fff9b8 150%); min-height: 100vh; display: grid; place-items: center; padding: 24px; }
         .login-shell { display: grid; grid-template-columns: 1.05fr 0.95fr; width: 100%; max-width: 1080px; border-radius: 24px; overflow: hidden; box-shadow: 0 24px 60px rgba(6, 52, 79, 0.22); }
         .brand-panel { background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%); color: white; padding: 40px; }
-        .brand-panel .logo { width: 78px; height: 78px; background: white; border-radius: 18px; margin-bottom: 18px; display: grid; place-items: center; color: var(--brand-navy); font-size: 22px; font-weight: 800; letter-spacing: 0.08em; }
+        .brand-panel .logo { width: 78px; height: 78px; border-radius: 18px; margin-bottom: 18px; object-fit: contain; background: white; padding: 6px; display: block; }
         .brand-panel h1 { font-size: 34px; margin-bottom: 10px; }
         .brand-panel p { max-width: 420px; line-height: 1.7; }
         .brand-panel .contact { width: 100%; max-width: 360px; margin-top: 24px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.25); padding: 14px; background: rgba(6, 52, 79, 0.28); }
@@ -45,7 +45,7 @@
     <% if (selectedRole == null) { selectedRole = ""; } %>
     <div class="login-shell">
         <div class="brand-panel">
-            <div class="logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
+            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" class="logo" alt="Logo Jabatan Air Sabah">
             <h1>SPPA</h1>
             <p>Portal rasmi Jabatan Air Negeri Sabah untuk pendaftaran produk air, semakan permohonan, dan rujukan produk yang telah berdaftar.</p>
             <div class="contact" aria-label="Maklumat hubungan Jabatan Air Sabah">

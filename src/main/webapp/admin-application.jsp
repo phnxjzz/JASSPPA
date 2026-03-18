@@ -12,7 +12,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #eff8ff 0%, #f7fbfd 100%); margin: 0; color: #1e293b; }
         .navbar { background: linear-gradient(130deg, #06344f 0%, #0097d9 74%, #fff212 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 48px; height: 48px; background: white; border-radius: 14px; display: grid; place-items: center; color: #06344f; font-weight: 800; letter-spacing: 0.08em; }
+        .brand-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: contain; background: white; padding: 3px; }
         .brand strong { display: block; }
         .brand span { font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; }
@@ -40,7 +40,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
-            <div class="brand-logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
+            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <strong>SPPA - Semakan Permohonan</strong>
                 <span>Jabatan Air Negeri Sabah</span>

@@ -23,7 +23,7 @@
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 76%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 54px; height: 54px; background: white; border-radius: 16px; display: grid; place-items: center; color: var(--brand-navy); font-weight: 800; letter-spacing: 0.08em; }
+        .brand-logo { width: 54px; height: 54px; border-radius: 16px; object-fit: contain; background: white; padding: 4px; }
         .brand h1 { margin: 0; font-size: 20px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; }
@@ -70,7 +70,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
-            <div class="brand-logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
+            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <h1>Dashboard Pentadbir</h1>
                 <p>Pusat kawalan permohonan, produk, dan laporan SPPA</p>
