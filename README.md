@@ -250,6 +250,11 @@ Data produk air dari Sabah Water Department telah dikumpul dan disimpan dalam:
 ### Dokumen Penting
 - **[PANDUAN_PENGGUNA.md](PANDUAN_PENGGUNA.md)** - Panduan untuk pengguna akhir (login, fitur, troubleshooting)
 - **[LANCARKAN_SISTEM.md](LANCARKAN_SISTEM.md)** - Panduan untuk admin (startup, shutdown, network access)
+- **[DEPLOYMENT_RAILWAY.md](DEPLOYMENT_RAILWAY.md)** - Deploy ke Railway.app (15 menit, paling mudah)
+- **[DEPLOYMENT_GCP.md](DEPLOYMENT_GCP.md)** - Deploy ke Google Cloud Platform (detailed 45-min guide)
+- **[DEPLOYMENT_CLOUD.md](DEPLOYMENT_CLOUD.md)** - Comparison: Railway vs AWS vs GCP vs Heroku
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Pre/post-deployment verification
+- **[DEPLOYMENT_READY.md](DEPLOYMENT_READY.md)** - Ringkasan sistem ready untuk online
 - `README.md` - Panduan setup, deployment, dan architecture
 - `database/schema.sql` - Skema pangkalan data utama
 - `docs/ERD-SPPA.md` - Dokumen ERD sistem
