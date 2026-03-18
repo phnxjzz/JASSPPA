@@ -6,6 +6,10 @@
 
     <display-name>Sistem Pendaftaran Produk Air</display-name>
 
+    <listener>
+        <listener-class>com.sistemppa.config.AppLifecycleListener</listener-class>
+    </listener>
+
     <context-param>
         <param-name>db.url</param-name>
         <param-value>jdbc:mysql://localhost:3306/sistemppa</param-value>
