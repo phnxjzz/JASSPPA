@@ -26,6 +26,8 @@ public class LoginServlet extends HttpServlet {
             request.setAttribute("selected_role", normalizeRole(request.getParameter("role")));
             if (request.getParameter("registered") != null) {
                 request.setAttribute("success", "Akaun berjaya didaftarkan. Sila log masuk.");
+            } else if (request.getParameter("reset") != null) {
+                request.setAttribute("success", "Kata laluan berjaya diset semula. Sila log masuk.");
             }
             request.getRequestDispatcher("/login.jsp").forward(request, response);
         }

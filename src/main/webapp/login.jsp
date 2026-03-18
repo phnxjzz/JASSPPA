@@ -33,6 +33,8 @@
         .success-message { color: #166534; padding: 12px; margin-bottom: 15px; background: #dcfce7; border-radius: 10px; font-size: 14px; }
         .register-link { text-align: center; margin-top: 20px; font-size: 14px; color: #60798b; }
         .register-link a { color: var(--brand-blue); text-decoration: none; font-weight: 700; }
+        .forgot-link { text-align: right; margin-top: -10px; margin-bottom: 14px; }
+        .forgot-link a { color: #146594; text-decoration: none; font-size: 13px; font-weight: 700; }
         @media (max-width: 920px) { .login-shell { grid-template-columns: 1fr; } .brand-panel { display:none; } }
     </style>
 </head>
@@ -79,6 +81,10 @@
             <div class="form-group">
                 <label for="password">Kata Laluan</label>
                 <input type="password" id="password" name="password" placeholder="Masukkan kata laluan" required>
+            </div>
+
+            <div class="forgot-link">
+                <a href="${pageContext.request.contextPath}/forgot-password">Lupa kata laluan?</a>
             </div>
             
             <button type="submit" class="login-btn">Log Masuk</button>

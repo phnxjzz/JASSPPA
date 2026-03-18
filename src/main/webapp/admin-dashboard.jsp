@@ -76,6 +76,7 @@
         <div>
             <span>Selamat datang, <%= session.getAttribute("username") %></span>
             <a href="${pageContext.request.contextPath}/products">Senarai Produk</a>
+            <a href="${pageContext.request.contextPath}/profile">Kemaskini Portal</a>
             <a href="${pageContext.request.contextPath}/logout">Log Keluar</a>
         </div>
     </div>
