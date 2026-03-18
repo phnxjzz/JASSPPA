@@ -11,13 +11,27 @@ public class DatabaseConfig {
     static {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        config.setJdbcUrl("jdbc:mysql://localhost:3306/sistemppa");
-        config.setUsername("root");
-        config.setPassword("JASSPPA@2000");
-        config.setMaximumPoolSize(10);
-        config.setMinimumIdle(2);
+        
+        // Support both environment variables (cloud) and defaults (local development)
+        String dbUrl = System.getenv("DATABASE_URL");
+        String dbUser = System.getenv("DATABASE_USER");
+        String dbPass = System.getenv("DATABASE_PASSWORD");
+        
+        // Default untuk development (jika env vars tidak set)
+        if (dbUrl == null || dbUrl.isEmpty()) {
+            dbUrl = "jdbc:mysql://localhost:3306/sistemppa";
+            dbUser = "root";
+            dbPass = "JASSPPA@2000";
+        }
+        
+        config.setJdbcUrl(dbUrl);
+        config.setUsername(dbUser);
+        config.setPassword(dbPass);
+        config.setMaximumPoolSize(20);
+        config.setMinimumIdle(5);
         config.setConnectionTimeout(30000);
         config.setIdleTimeout(600000);
+        config.setMaxLifetime(1800000);
         config.setAutoCommit(true);
         
         dataSource = new HikariDataSource(config);
