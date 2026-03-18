@@ -21,5 +21,3 @@ tools/
 
 # Optional local scripts/cache
 Scripts/
-!scripts/
-!scripts/*.ps1

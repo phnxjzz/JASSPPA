@@ -208,8 +208,8 @@ Data produk air dari Sabah Water Department telah dikumpul dan disimpan dalam:
 ## 📁 Skrip & Dokumen Penting Dalam Repo
 
 ### Skrip Operasi
-- `scripts/build-and-deploy.ps1` - Build WAR (`mvn clean package`) dan deploy ke Tomcat `webapps`
-- `scripts/smoke-test.ps1` - Ujian pantas endpoint utama sistem
+- `ops-scripts/build-and-deploy.ps1` - Build WAR (`mvn clean package`) dan deploy ke Tomcat `webapps`
+- `ops-scripts/smoke-test.ps1` - Ujian pantas endpoint utama sistem
 - `SistemPPA.py` - Skrip pengambilan/kemas kini data produk air
 
 ### Dokumen Penting
