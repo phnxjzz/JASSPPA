@@ -2,6 +2,8 @@
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.Date" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.regex.Matcher" %>
 <%@ page import="java.util.regex.Pattern" %>
 <%!
@@ -31,6 +33,31 @@
             }
         }
         return urls;
+    }
+
+    private String safeText(Object value) {
+        if (value == null) {
+            return "-";
+        }
+        String text = String.valueOf(value).trim();
+        if (text.isEmpty() || "null".equalsIgnoreCase(text)) {
+            return "-";
+        }
+        return text;
+    }
+
+    private String formatValidDate(Object value) {
+        if (value == null) {
+            return "-";
+        }
+        if (value instanceof Date) {
+            return new SimpleDateFormat("dd-MM-yyyy").format((Date) value);
+        }
+        String raw = String.valueOf(value).trim();
+        if (raw.isEmpty() || "null".equalsIgnoreCase(raw)) {
+            return "-";
+        }
+        return raw;
     }
 
     private String[] splitSupplierInfo(String supplierAgent) {
@@ -189,9 +216,11 @@
                     <% } else {
                         for (Map<String, Object> product : products) {
                             String[] supplierInfo = splitSupplierInfo(String.valueOf(product.get("supplier_agent")));
-                                String brandValue = String.valueOf(product.get("brand") == null ? "" : product.get("brand")).trim();
-                                String brand = brandValue.isEmpty() || "null".equalsIgnoreCase(brandValue) ? "-" : brandValue;
-                            String validDate = product.get("supplier_valid_until") == null ? "-" : String.valueOf(product.get("supplier_valid_until"));
+                            String productMaterials = safeText(product.get("product_materials"));
+                            String category = safeText(product.get("product_type"));
+                            String itemType = safeText(product.get("classification"));
+                            String brand = safeText(product.get("brand"));
+                            String validDate = formatValidDate(product.get("supplier_valid_until"));
                             List<String> attachments = extractUrls(String.valueOf(product.get("attachment_urls")));
                             String attachmentPayload = escapeHtml(String.join("||", attachments));
                     %>
@@ -201,11 +230,11 @@
                             <span class="supplier-name"><%= escapeHtml(supplierInfo[0]) %></span>
                             <span class="supplier-address"><%= escapeHtml(supplierInfo[1]) %></span>
                         </td>
-                        <td><%= product.get("product_materials") %></td>
-                        <td><span class="tag"><%= product.get("product_type") %></span></td>
-                        <td><%= product.get("classification") %></td>
-                        <td><%= brand %></td>
-                        <td><%= validDate %></td>
+                        <td><%= escapeHtml(productMaterials) %></td>
+                        <td><span class="tag"><%= escapeHtml(category) %></span></td>
+                        <td><%= escapeHtml(itemType) %></td>
+                        <td><%= escapeHtml(brand) %></td>
+                        <td><%= escapeHtml(validDate) %></td>
                         <td>
                             <% if (attachments.isEmpty()) { %>
                                 -
