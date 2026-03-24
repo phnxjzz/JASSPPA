@@ -3,7 +3,7 @@
 **Status**: Sistem sudah siap untuk production deployment  
 **Domain Target**: sppa.gov  
 **Budget**: < $5/bulan  
-**Database Backup**: ✅ sistemppa_backup_20260318_132007.sql
+**Database Backup**:  sistemppa_backup_20260318_132007.sql
 
 ---
 
@@ -11,29 +11,29 @@
 
 | Kriteria | AWS Free Tier | Google Cloud | Railway.app | Heroku |
 |----------|---------------|--------------|-------------|--------|
-| **Setup Complexity** | Sederhana | Sederhana | 🟢 PALING MUDAH | Mudah |
-| **Cost** | Gratis 1 tahun | Gratis $300 / 3 bulan | 🟢 Gratis + $5/bulan | $7+/bulan |
-| **Tomcat Support** | ✅ EC2 | ✅ GCP | ✅ Over Railway | Limited |
-| **Database MySQL** | ✅ RDS (gratis tier) | ✅ Cloud SQL | 🟢 Gratis tier | ✅ Paid |
-| **HTTPS/SSL** | ✅ AWS Certificate Manager | ✅ Gratis | 🟢 Otomatis | ✅ Gratis |
-| **Custom Domain** | ✅ Route 53 | ✅ Cloud DNS | ✅ | ✅ |
-| **Recommended For** | Production, Long-term | Enterprise | 🟢 **RECOMMENDED** | Small scale |
+| **Setup Complexity** | Sederhana | Sederhana |  PALING MUDAH | Mudah |
+| **Cost** | Gratis 1 tahun | Gratis $300 / 3 bulan |  Gratis + $5/bulan | $7+/bulan |
+| **Tomcat Support** |  EC2 |  GCP |  Over Railway | Limited |
+| **Database MySQL** |  RDS (gratis tier) |  Cloud SQL |  Gratis tier |  Paid |
+| **HTTPS/SSL** |  AWS Certificate Manager |  Gratis |  Otomatis |  Gratis |
+| **Custom Domain** |  Route 53 |  Cloud DNS |  |  |
+| **Recommended For** | Production, Long-term | Enterprise |  **RECOMMENDED** | Small scale |
 
 ---
 
-## 🟢 PILIHAN 1: Railway.app (Recommended - Paling Mudah)
+##  PILIHAN 1: Railway.app (Recommended - Paling Mudah)
 
 ### **Kelebihan:**
-- ✅ Setup 10 menit (drag-drop GitHub repo)
-- ✅ Free tier dengan $5/bulan credits
-- ✅ MySQL database included
-- ✅ HTTPS otomatis
-- ✅ Preview environment per branch
-- ✅ Unlimited deployments
+-  Setup 10 menit (drag-drop GitHub repo)
+-  Free tier dengan $5/bulan credits
+-  MySQL database included
+-  HTTPS otomatis
+-  Preview environment per branch
+-  Unlimited deployments
 
 ### **Langkah-langkah Setup:**
 
-#### 1️⃣ Daftar Railway.app
+####  Daftar Railway.app
 ```
 1. Pergi ke: https://railway.app
 2. Login dengan GitHub
@@ -41,7 +41,7 @@
 4. Railway akan auto-detect Java project (dari pom.xml)
 ```
 
-#### 2️⃣ Setup Environment Variables
+####  Setup Environment Variables
 Di Railway dashboard → Variables tab, tambah:
 ```
 JAR_ARGS=--server.port=$PORT
@@ -49,13 +49,13 @@ DATABASE_URL=postgres://user:pass@host:port/db
 JAVA_OPTS=-Xmx512m
 ```
 
-#### 3️⃣ Deploy
+####  Deploy
 ```
 Railway akan auto-build Maven project → WAR → deploy ke container
 Logs: Railway dashboard akan show real-time logs
 ```
 
-#### 4️⃣ Setup Custom Domain
+####  Setup Custom Domain
 ```
 Di Railway dashboard:
 Settings → Custom Domain
@@ -65,7 +65,7 @@ Konfigurasi DNS sesuai instruksi Railway
 
 ---
 
-## 🟦 PILIHAN 2: AWS Free Tier (Production-Grade)
+##  PILIHAN 2: AWS Free Tier (Production-Grade)
 
 ### **Setup Overview:**
 1. **EC2** - Virtual machine untuk Tomcat (gratis 1 tahun)
@@ -75,14 +75,14 @@ Konfigurasi DNS sesuai instruksi Railway
 
 ### **Langkah-langkah Setup:**
 
-#### 1️⃣ Buat AWS Account
+####  Buat AWS Account
 ```
 Pergi ke: https://aws.amazon.com/free
 Daftar dengan email
 Verify dengan credit card (gratis 1 tahun, tidak ada charge)
 ```
 
-#### 2️⃣ Launch EC2 Instance
+####  Launch EC2 Instance
 ```powershell
 # Di AWS Console:
 1. Services → EC2
@@ -99,7 +99,7 @@ Verify dengan credit card (gratis 1 tahun, tidak ada charge)
 8. Launch!
 ```
 
-#### 3️⃣ SSH ke EC2 Instance
+####  SSH ke EC2 Instance
 ```powershell
 # Windows PowerShell (gunakan WSL atau PuTTY):
 ssh -i "path/to/your-key.pem" ec2-user@your-ec2-public-ip
@@ -110,7 +110,7 @@ sudo yum install java-21-amazon-corretto -y
 sudo yum install mysql -y
 ```
 
-#### 4️⃣ Deploy Aplikasi
+####  Deploy Aplikasi
 ```bash
 # Clone repo or upload WAR file
 cd /opt
@@ -131,7 +131,7 @@ cp sistemppa.war /opt/tomcat/webapps/
 /opt/tomcat/bin/startup.sh
 ```
 
-#### 5️⃣ Setup RDS MySQL
+####  Setup RDS MySQL
 ```
 AWS Console → RDS → Create Database
 - Engine: MySQL 8.0
@@ -143,7 +143,7 @@ AWS Console → RDS → Create Database
 - Public access: No (soal keselamatan, gunakan VPC)
 ```
 
-#### 6️⃣ Update Database Config
+####  Update Database Config
 ```java
 // src/main/java/com/sistemppa/config/DatabaseConfig.java
 config.setJdbcUrl("jdbc:mysql://your-rds-endpoint:3306/sistemppa");
@@ -151,7 +151,7 @@ config.setUsername("admin");
 config.setPassword("your-rds-password");
 ```
 
-#### 7️⃣ Setup HTTPS dengan Let's Encrypt
+####  Setup HTTPS dengan Let's Encrypt
 ```bash
 # Install Certbot
 sudo yum install certbot python3-certbot-apache -y
@@ -163,7 +163,7 @@ sudo certbot certonly --standalone -d sppa.gov
 # Atau update Tomcat server.xml dengan SSL connector
 ```
 
-#### 8️⃣ Setup DNS (Route 53)
+####  Setup DNS (Route 53)
 ```
 1. AWS Console → Route 53
 2. Create Hosted Zone: sppa.gov
@@ -176,7 +176,7 @@ sudo certbot certonly --standalone -d sppa.gov
 
 ---
 
-## 📦 PILIHAN 3: Google Cloud (Enterprise)
+##  PILIHAN 3: Google Cloud (Enterprise)
 
 Mirip AWS, tapi dengan $300 free credit untuk 3 bulan.
 
@@ -192,9 +192,9 @@ Mirip AWS, tapi dengan $300 free credit untuk 3 bulan.
 
 ---
 
-## 🔐 Pre-Deployment Checklist
+##  Pre-Deployment Checklist
 
-- [ ] Database backup sudah tersimpan ✅ (sistemppa_backup_20260318_132007.sql)
+- [ ] Database backup sudah tersimpan  (sistemppa_backup_20260318_132007.sql)
 - [ ] Hardcoded credentials sudah move ke environment variables
 - [ ] CORS settings sudah dikonfigurasi untuk production
 - [ ] Logging sudah di-setup (CloudWatch / Stackdriver)
@@ -240,7 +240,7 @@ public class DatabaseConfig {
 
 ---
 
-## ⚡ Deployment Timeline
+##  Deployment Timeline
 
 | Langkah | Waktu | Kesuksesan |
 |---------|-------|-----------|
@@ -250,11 +250,11 @@ public class DatabaseConfig {
 | Auto-build + deploy | 5-10 menit | 85% |
 | Configure custom domain | 10-30 menit | 95% |
 | Setup HTTPS | 5 menit (auto) | 99% |
-| **TOTAL** | **40-65 menit** | **✅ SIAP ONLINE** |
+| **TOTAL** | **40-65 menit** | ** SIAP ONLINE** |
 
 ---
 
-## 🎯 Seterusnya Selepas Deploy Online
+##  Seterusnya Selepas Deploy Online
 
 1. **Luncurkan bersiraji:**
    - Beri akses kepada pengguna: `https://sppa.gov/login`
@@ -282,7 +282,7 @@ public class DatabaseConfig {
 
 ---
 
-## 📞 Help & Support
+##  Help & Support
 
 **Jika ada masalah:**
 1. Railway Dashboard → Deployment Logs
@@ -297,4 +297,4 @@ public class DatabaseConfig {
 
 ---
 
-**Rekomendasi Final:** 🚀 **Mulai dengan Railway.app** — easiest, fastest, gratis tier cukup untuk testing. Lepas stable, baru migrate ke AWS untuk production.
+**Rekomendasi Final:**  **Mulai dengan Railway.app** — easiest, fastest, gratis tier cukup untuk testing. Lepas stable, baru migrate ke AWS untuk production.
