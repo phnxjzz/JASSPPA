@@ -1,20 +1,20 @@
-# 🚀 Railway.app - Quick Deployment Guide (15 menit)
+#  Railway.app - Quick Deployment Guide (15 menit)
 
-## ⏱️ Estimated Time: 15 minutes
-## 💰 Cost: Gratis + $5/bulan (Free tier)
+##  Estimated Time: 15 minutes
+##  Cost: Gratis + $5/bulan (Free tier)
 
 ---
 
-## 🎯 LANGKAH 1: Daftar Railway.app (2 menit)
+##  LANGKAH 1: Daftar Railway.app (2 menit)
 
 1. Pergi ke: **https://railway.app**
 2. Klik **"Login"** → Login dengan **GitHub**
 3. Authorize Railway untuk akses GitHub repos
-4. Accept terms and setup complete ✅
+4. Accept terms and setup complete 
 
 ---
 
-## 🎯 LANGKAH 2: Create New Project (1 menit)
+##  LANGKAH 2: Create New Project (1 menit)
 
 Di Railway dashboard:
 1. Klik **"New Project"**
@@ -25,7 +25,7 @@ Di Railway dashboard:
 
 ---
 
-## 🎯 LANGKAH 3: Railway Auto-Detect & Build (5-8 menit)
+##  LANGKAH 3: Railway Auto-Detect & Build (5-8 menit)
 
 Rails will automatically detect:
 
@@ -46,7 +46,7 @@ Building... 🔨
 
 ---
 
-## 🎯 LANGKAH 4: Setup Environment Variables (2 menit)
+##  LANGKAH 4: Setup Environment Variables (2 menit)
 
 Aplikasi perlu 3 environment variables untuk production MySQL:
 
@@ -68,7 +68,7 @@ DATABASE_PUBLIC_URL (sudah include username:password@host)
 
 ---
 
-## 🎯 LANGKAH 5: Add MySQL Database (2 menit)
+##  LANGKAH 5: Add MySQL Database (2 menit)
 
 **Option A: Railway MySQL Plugin (Recommended)**
 
@@ -90,7 +90,7 @@ Jika sudah punya MySQL cloud (AWS RDS, Google Cloud SQL):
 
 ---
 
-## 🎯 LANGKAH 6: Deploy Database Schema (2 menit)
+##  LANGKAH 6: Deploy Database Schema (2 menit)
 
 **Option 1: Railway CLI**
 ```bash
@@ -115,7 +115,7 @@ Railway dashboard → MySQL panel → SQL Editor → Paste schema.sql content
 
 ---
 
-## 🎯 LANGKAH 7: Custom Domain Setup (2 menit)
+##  LANGKAH 7: Custom Domain Setup (2 menit)
 
 **Di Railway Dashboard:**
 
@@ -145,17 +145,17 @@ ping sppa.gov
 
 ---
 
-## 🎯 LANGKAH 8: HTTPS (Automatic!)
+##  LANGKAH 8: HTTPS (Automatic!)
 
 Railway automatically provides HTTPS for:
 - `https://sistemppa-xxxxx.up.railway.app` (Railway subdomain)
 - `https://sppa.gov` (Custom domain) - HTTPS auto-enable
 
-**No additional setup needed!** ✅
+**No additional setup needed!** 
 
 ---
 
-## ✅ VERIFICATION CHECKLIST
+##  VERIFICATION CHECKLIST
 
 Aplikasi sudah online jika:
 
@@ -174,9 +174,9 @@ Aplikasi sudah online jika:
 
 ---
 
-## 🔧 TROUBLESHOOTING
+##  TROUBLESHOOTING
 
-### ❌ "502 Bad Gateway"
+###  "502 Bad Gateway"
 - **Cause**: Database connection failed
 - **Fix**: 
   ```
@@ -186,7 +186,7 @@ Aplikasi sudah online jika:
   4. Restart service: Railway → Redeploy
   ```
 
-### ❌ "Connection refused"
+###  "Connection refused"
 - **Cause**: Tomcat port misconfigured
 - **Fix**:
   ```
@@ -195,7 +195,7 @@ Aplikasi sudah online jika:
   Should be 3000 or 8080
   ```
 
-### ❌ "Custom domain not resolving"
+###  "Custom domain not resolving"
 - **Cause**: DNS not updated yet
 - **Fix**:
   ```
@@ -205,7 +205,7 @@ Aplikasi sudah online jika:
   4. Flush DNS: ipconfig /flushdns (Windows)
   ```
 
-### ❌ "Database schema import failed"
+###  "Database schema import failed"
 - **Cause**: SQL syntax error or table exists
 - **Fix**:
   ```
@@ -216,7 +216,7 @@ Aplikasi sudah online jika:
 
 ---
 
-## 📊 Monitoring & Logs
+##  Monitoring & Logs
 
 **Di Railway Dashboard:**
 
@@ -237,7 +237,7 @@ Aplikasi sudah online jika:
 
 ---
 
-## 💰 Billing & Optimization
+##  Billing & Optimization
 
 **Railway Pricing Model:**
 - **Free Tier**: $5/month Credits
@@ -251,7 +251,7 @@ Aplikasi sudah online jika:
 
 ---
 
-## 🔐 Post-Deployment Security
+##  Post-Deployment Security
 
 Selepas sistem online:
 
@@ -274,14 +274,14 @@ Selepas sistem online:
 
 ---
 
-## 📞 Next Steps
+##  Next Steps
 
-1. ✅ Login to Railway.app
-2. ✅ Deploy from GitHub
-3. ✅ Setup MySQL
-4. ✅ Add custom domain
-5. ✅ Test aplikasi online
-6. ✅ **Announce to users**: `https://sppa.gov/login`
+1.  Login to Railway.app
+2.  Deploy from GitHub
+3.  Setup MySQL
+4.  Add custom domain
+5.  Test aplikasi online
+6.  **Announce to users**: `https://sppa.gov/login`
 
 **Estimated Total Time**: 15-20 menit dari sekarang sistem sudah online!
 
