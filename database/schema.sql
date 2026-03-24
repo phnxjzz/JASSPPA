@@ -1,5 +1,4 @@
 -- Sistem Pendaftaran Produk Air (SPPA) Database Schema
--- Created: 2026-03-17
 
 CREATE DATABASE IF NOT EXISTS sistemppa;
 USE sistemppa;
