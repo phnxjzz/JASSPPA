@@ -1,6 +1,6 @@
-# 📱 Panduan Akses Sistem Pendaftaran Produk Air (SPPA)
+#  Panduan Akses Sistem Pendaftaran Produk Air (SPPA)
 
-## 🚀 Cara Mengakses Sistem
+##  Cara Mengakses Sistem
 
 ### **Dari Komputer Server / LAN yang Sama**
 ```
@@ -14,7 +14,7 @@ URL: http://localhost:8081/sistemppa/
 
 ---
 
-## 🔐 Login Pengguna
+##  Login Pengguna
 
 ### **Akaun Admin (Default)**
 - **Username:** `admin`
@@ -24,17 +24,17 @@ URL: http://localhost:8081/sistemppa/
 - **Username:** `user1`
 - **Password:** `user123`
 
-> ⚠️ **PENTING:** Tukar password default selepas login pertama kali (Profil → Update Maklumat Pengguna)
+>  **PENTING:** Tukar password default selepas login pertama kali (Profil → Update Maklumat Pengguna)
 
 ---
 
-## 📋 Keperluan Teknikal
+##  Keperluan Teknikal
 
 ### **Browser Yang Disokong**
-- ✅ Google Chrome / Chromium 90+
-- ✅ Mozilla Firefox 88+
-- ✅ Microsoft Edge 90+
-- ✅ Safari 14+
+-  Google Chrome / Chromium 90+
+-  Mozilla Firefox 88+
+-  Microsoft Edge 90+
+-  Safari 14+
 
 ### **Persyaratan Jaringan**
 1. **Komputer harus pada rangkaian yang sama (LAN)** dengan server (192.168.1.x)
@@ -47,26 +47,26 @@ URL: http://localhost:8081/sistemppa/
 
 ---
 
-## 🎯 Fitur Sistem
+## Fitur Sistem
 
 ### **Untuk Pengguna Biasa:**
-- 📝 Borang Pendaftaran Produk
-- 👤 Lihat/Update Profil
-- 📦 Senarai Produk Berdaftar
-- 🔍 Cari & Filter Produk
-- 📱 Responsive Design (Desktop/Mobile)
+-  Borang Pendaftaran Produk
+-  Lihat/Update Profil
+-  Senarai Produk Berdaftar
+-  Cari & Filter Produk
+-  Responsive Design (Desktop/Mobile)
 
 ### **Untuk Admin:**
-- 📊 Dashboard Pentadbir
-- ✅ Ulasan & Kelulusan Aplikasi
-- 👥 Senarai Pengguna Berdaftar
-- 📈 Statistik Sistem
-- 📥 Export PDF / Excel
-- 🔧 Pengurusan Produk
+-  Dashboard Pentadbir
+-  Ulasan & Kelulusan Aplikasi
+-  Senarai Pengguna Berdaftar
+-  Statistik Sistem
+-  Export PDF / Excel
+-  Pengurusan Produk
 
 ---
 
-## 🔧 Pemecahan Masalah
+##  Pemecahan Masalah
 
 ### **"Tidak Boleh Akses URL"**
 1. ✓ Sahkan Tomcat sedang berjalan:
@@ -90,18 +90,18 @@ URL: http://localhost:8081/sistemppa/
 
 ---
 
-## 🖥️ Status Sistem Semasa
+##  Status Sistem Semasa
 
 | Komponen | Status |
 |----------|--------|
-| **Tomcat Server** | ✅ Berjalan (Port 8081) |
-| **Database (MySQL)** | ✅ Aktif |
-| **Aplikasi Web** | ✅ Siap diakses |
+| **Tomcat Server** | Berjalan (Port 8081) |
+| **Database (MySQL)** | Aktif |
+| **Aplikasi Web** | Siap diakses |
 | **IP Server** | 192.168.1.52 |
 
 ---
 
-## 📞 Sokongan Teknikal
+##  Sokongan Teknikal
 
 Jika mengalami masalah:
 1. Periksa fail log: `runtime\apache-tomcat-11.0.18\logs\catalina.out`
