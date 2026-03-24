@@ -50,7 +50,7 @@ if ($javaProcess) {
     Stop-Process -Name "java" -Force -ErrorAction SilentlyContinue
     Write-Log "Java processes ditutup" "SUCCESS"
 } else {
-    Write-Log "✅ Tomcat sudah berjalan" "SUCCESS"
+    Write-Log " Tomcat sudah berjalan" "SUCCESS"
 }
 
 # 3. Optional: Tutup MySQL
@@ -62,4 +62,4 @@ if ($response -eq "y") {
 }
 
 Write-Log "" "INFO"
-Write-Log "✅ Sistem sudah ditutup!" "SUCCESS"
+Write-Log " Sistem sudah ditutup!" "SUCCESS"
