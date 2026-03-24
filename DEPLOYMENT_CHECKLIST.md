@@ -1,6 +1,6 @@
 # ☁️ Cloud Deployment - Pre-Flight Checklist
 
-## 📋 Pre-Deployment (BEFORE going online)
+##  Pre-Deployment (BEFORE going online)
 
 ### Code & Configuration
 - [x] Database config supports environment variables (DatabaseConfig.java updated)
@@ -51,7 +51,7 @@
 
 ---
 
-## ⚙️ Deployment Steps (IN ORDER)
+##  Deployment Steps (IN ORDER)
 
 ### Step 1: Choose Cloud Provider
 - [ ] Decision: **Railway.app** (Recommended - easiest) OR **AWS** (Production-grade)
@@ -143,7 +143,7 @@
 
 ---
 
-## 🚨 Rollback Plan
+##  Rollback Plan
 
 If critical issues occur during deployment:
 
@@ -168,7 +168,7 @@ git push origin appmod/java-upgrade-20260318013609 --force
 
 ---
 
-## 📞 Support & Escalation
+##  Support & Escalation
 
 If deployment fails:
 
@@ -191,7 +191,7 @@ If deployment fails:
 
 ---
 
-## ✅ Post-Launch Monitoring (First Week)
+##  Post-Launch Monitoring (First Week)
 
 Monitor these metrics:
 
@@ -207,26 +207,26 @@ Monitor these metrics:
 
 ---
 
-## 🎉 Success Criteria
+##  Success Criteria
 
 System is successfully deployed if:
 
-1. ✅ Accessible at https://sppa.gov (or your domain)
-2. ✅ Login page loads instantly (< 2 sec)
-3. ✅ Admin can login and access dashboard
-4. ✅ Users can register and submit applications
-5. ✅ HTTPS certificate valid (no SSL warnings)
-6. ✅ Database performing well (< 100ms queries)
-7. ✅ Monitoring & logs working
-8. ✅ Backup system operational
-9. ✅ No critical errors in logs (24 hours of monitoring)
-10. ✅ Team/users can access and use system
+1.  Accessible at https://sppa.gov (or your domain)
+2.  Login page loads instantly (< 2 sec)
+3.  Admin can login and access dashboard
+4.  Users can register and submit applications
+5.  HTTPS certificate valid (no SSL warnings)
+6.  Database performing well (< 100ms queries)
+7.  Monitoring & logs working
+8.  Backup system operational
+9.  No critical errors in logs (24 hours of monitoring)
+10.  Team/users can access and use system
 
-**🎊 Once all above are green, system is PRODUCTION READY! 🎊**
+** Once all above are green, system is PRODUCTION READY! 🎊**
 
 ---
 
-## 📚 Related Documentation
+##  Related Documentation
 
 - [README.md](README.md) - Project overview
 - [DEPLOYMENT_RAILWAY.md](DEPLOYMENT_RAILWAY.md) - Railway.app step-by-step (15 min)
@@ -240,4 +240,4 @@ System is successfully deployed if:
 ---
 
 **Last Updated:** 2026-03-18  
-**Status**: Ready for Production Deployment ✅
+**Status**: Ready for Production Deployment 
