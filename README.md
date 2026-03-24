@@ -7,37 +7,40 @@ SPPA ialah platform web untuk urus pendaftaran dan pengesahan produk air di Saba
 ## Developer Onboarding (Quick Link)
 
 - Rujuk panduan setup lengkap: [DEVELOPER_SETUP_GUIDE.md](DEVELOPER_SETUP_GUIDE.md)
+- Repo ini boleh dikongsi sebagai pakej penuh termasuk skrip operasi, runtime Tomcat, dan tools yang dibundel untuk setup developer pada Windows.
 
 ---
 
 ##  Struktur 
+```text
 ProjectLI/
-├── pom.xml # Maven configuration
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/sistemppa/
-│   │   │       ├── config/
-│   │   │       │   └── DatabaseConfig.java
-│   │   │       ├── servlet/
-│   │   │       │   ├── LoginServlet.java
-│   │   │       │   ├── LogoutServlet.java
-│   │   │       │   └── DashboardServlet.java
-│   │   │       └── util/
-│   │   └── webapp/
-│   │       ├── WEB-INF/
-│   │       │   └── web.xml
-│   │       ├── assets/
-│   │       ├── login.jsp
-│   │       ├── admin-dashboard.jsp
-│   │       ├── user-dashboard.jsp
-│   │       └── index.jsp
-├── database/
-│   └── schema.sql # Database schema
-├── data/
-│   ├── water_products.json
-│   └── water_products.csv
-└── SistemPPA.py # Python scraper for data import
++-- pom.xml # Maven configuration
++-- src/
+|   +-- main/
+|   |   +-- java/
+|   |   |   +-- com/sistemppa/
+|   |   |       +-- config/
+|   |   |       |   +-- DatabaseConfig.java
+|   |   |       +-- servlet/
+|   |   |       |   +-- LoginServlet.java
+|   |   |       |   +-- LogoutServlet.java
+|   |   |       |   +-- DashboardServlet.java
+|   |   |       +-- util/
+|   |   +-- webapp/
+|   |       +-- WEB-INF/
+|   |       |   +-- web.xml
+|   |       +-- assets/
+|   |       +-- login.jsp
+|   |       +-- admin-dashboard.jsp
+|   |       +-- user-dashboard.jsp
+|   |       +-- index.jsp
++-- database/
+|   +-- schema.sql # Database schema
++-- data/
+|   +-- water_products.json
+|   +-- water_products.csv
++-- SistemPPA.py # Python scraper for data import
+```
 
 ---
 
@@ -199,7 +202,7 @@ powershell
 powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\register-autostart.ps1"
 
 
-Selepas ini, SPPA akan dimulakan secara automatik setiap kali Windows dihidupkan — tanpa perlu tindakan manual.
+Selepas ini, SPPA akan dimulakan secara automatik setiap kali Windows dihidupkan tanpa perlu tindakan manual.
 
 ### Cara Watchdog Berfungsi
 
@@ -207,7 +210,7 @@ Selepas ini, SPPA akan dimulakan secara automatik setiap kali Windows dihidupkan
 Windows Boot
      |
      v
-Task Scheduler → ops-scripts\_task-launcher.ps1
+Task Scheduler -> ops-scripts\_task-launcher.ps1
                           |
                           v
                  always-run-system.ps1  (setiap 45 saat)
@@ -469,7 +472,7 @@ Untuk sokongan teknikal atau cadangan ciri, hubungi:
 ##  Lesen
 
 Sistem ini dibangunkan untuk Jabatan Air Negeri Sabah.
-Semua hak terpelihara © 2026.
+Semua hak terpelihara (c) 2026.
 
 ---
 

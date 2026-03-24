@@ -55,25 +55,25 @@ Expected: `StatusCode = 200`
 - Script execution order: [ops-scripts/EXECUTION_ORDER.md](ops-scripts/EXECUTION_ORDER.md)
 - Database schema: [database/schema.sql](database/schema.sql)
 
-## 8) Share Full Project To Remote (Including Ignored Folders)
+## 8) Share Full Project To Remote
 
-This repository currently ignores `runtime/` and `tools/` in `.gitignore`.
-If you must include those folders in remote, use force-add:
+This repository is intended to include source code, scripts, runtime, and bundled tools so another developer can clone and run the project on their own Windows machine.
+
+Use this standard push flow:
 
 ```powershell
 git add .
-git add -f runtime tools
 git commit -m "Share full project for team onboarding"
 git push origin HEAD
 ```
 
-If push fails due to large files, use Git LFS:
+If push fails due to large files, use Git LFS for bundled runtime or tool binaries:
 
 ```powershell
 git lfs install
 git lfs track "runtime/**" "tools/**"
 git add .gitattributes
-git add -f runtime tools
+git add .
 git commit -m "Track runtime/tools with Git LFS"
 git push origin HEAD
 ```
@@ -81,5 +81,5 @@ git push origin HEAD
 ## 9) Recommended Team Workflow
 
 - Keep source changes in `src/` and `database/`.
-- Prefer not committing runtime binaries unless required for offline setup.
+- Keep `runtime/` and `tools/` consistent across the team if you want reproducible local setup.
 - For normal daily work, run startup script and deploy from source.
