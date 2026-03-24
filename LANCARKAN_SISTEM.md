@@ -1,6 +1,6 @@
 # Lancarkan Sistem SPPA
 
-## ⚡ Cara Terpantas (Bagi Pentadbir)
+##  Cara (Bagi Pentadbir)
 
 ### **Pilihan 1: Guna Script PowerShell (Recommended)**
 ```powershell
@@ -43,7 +43,7 @@ start http://192.168.1.52:8081/sistemppa/
 
 ---
 
-## ✅ Sahkan Sistem Berjalan
+##  Sahkan Sistem Berjalan
 
 ```powershell
 # Cek Tomcat
@@ -58,7 +58,7 @@ Invoke-WebRequest -Uri "http://localhost:8081/sistemppa/" -UseBasicParsing
 
 ---
 
-## 🔴 Tutup Sistem (Maintenance)
+##  Tutup Sistem (Maintenance)
 
 ```powershell
 # Tutup Tomcat
@@ -70,7 +70,7 @@ Stop-Service MySQL80
 
 ---
 
-## 🎯 Akses dari Perangkat Lain
+##  Akses dari Perangkat Lain
 
 **UDP Network:**
 - Guest/Pengguna: `http://192.168.1.52:8081/sistemppa/`
