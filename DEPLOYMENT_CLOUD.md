@@ -7,7 +7,7 @@
 
 ---
 
-## 📋 Perbandingan Pilihan Cloud Hosting
+##  Perbandingan Pilihan Cloud Hosting
 
 | Kriteria | AWS Free Tier | Google Cloud | Railway.app | Heroku |
 |----------|---------------|--------------|-------------|--------|
