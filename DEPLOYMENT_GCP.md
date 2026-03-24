@@ -1,11 +1,11 @@
-# 🚀 Google Cloud Platform (GCP) - Step-by-Step Deployment Guide
+#  Google Cloud Platform (GCP) - Step-by-Step Deployment Guide
 
-## ⏱️ Estimated Time: 30-45 minutes
-## 💰 Cost: **$300 free credits** for 3 months, then ~$10-20/month
+##  Estimated Time: 30-45 minutes
+##  Cost: **$300 free credits** for 3 months, then ~$10-20/month
 
 ---
 
-## 📋 GCP Architecture for SPPA
+##  GCP Architecture for SPPA
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -40,7 +40,7 @@
 
 ---
 
-## 🎯 LANGKAH 1: Create Google Cloud Account & Setup Billing
+##  LANGKAH 1: Create Google Cloud Account & Setup Billing
 
 ### 1.1 Register / Login Google Cloud
 ```
@@ -65,7 +65,7 @@
 
 ---
 
-## 🎯 LANGKAH 2: Create New GCP Project
+##  LANGKAH 2: Create New GCP Project
 
 ### 2.1 Create Project
 ```
@@ -104,7 +104,7 @@ gcloud services enable dns.googleapis.com
 
 ---
 
-## 🎯 LANGKAH 3: Setup Cloud SQL (MySQL Database)
+##  LANGKAH 3: Setup Cloud SQL (MySQL Database)
 
 ### 3.1 Create Cloud SQL Instance
 ```
@@ -177,7 +177,7 @@ FLUSH PRIVILEGES;
 
 ---
 
-## 🎯 LANGKAH 4: Containerize Java Application
+##  LANGKAH 4: Containerize Java Application
 
 ### 4.1 Create Dockerfile
 ```dockerfile
@@ -242,7 +242,7 @@ docker run -p 8080:8080 \
 
 ---
 
-## 🎯 LANGKAH 5: Deploy to Cloud Run (or App Engine)
+##  LANGKAH 5: Deploy to Cloud Run (or App Engine)
 
 ### OPTION A: Cloud Run (Recommended - Simpler)
 
@@ -337,7 +337,7 @@ gcloud app deploy app.yaml --region=asia-southeast1
 
 ---
 
-## 🎯 LANGKAH 6: Setup Custom Domain & HTTPS
+##  LANGKAH 6: Setup Custom Domain & HTTPS
 
 ### 6.1 Register Domain (if not yet)
 ```
@@ -397,7 +397,7 @@ In Cloud DNS → A Record:
 
 ### 6.5 HTTPS Auto-Provisioned!
 ```
-✅ Google Cloud auto-provisions HTTPS for:
+ Google Cloud auto-provisions HTTPS for:
 - https://sistemppa-xxxxx.run.app (Cloud Run URL)
 - https://sppa.gov (Custom domain)
 - https://www.sppa.gov (if added)
@@ -408,7 +408,7 @@ Certificate valid for 13 months, auto-renewed.
 
 ---
 
-## 🎯 LANGKAH 7: Setup Monitoring & Alerts
+##  LANGKAH 7: Setup Monitoring & Alerts
 
 ### 7.1 Enable Cloud Logging
 ```
@@ -443,7 +443,7 @@ Cloud Monitoring dashboard akan show:
 
 ---
 
-## 🎯 LANGKAH 8: Database Backups & Recovery
+##  LANGKAH 8: Database Backups & Recovery
 
 ### 8.1 Enable Automated Backups
 ```
@@ -476,7 +476,7 @@ gcloud sql backups restore BACKUP_ID \
 
 ---
 
-## ✅ VERIFICATION CHECKLIST
+##  VERIFICATION CHECKLIST
 
 Sistem berhasil deploy jika:
 
@@ -494,9 +494,9 @@ Sistem berhasil deploy jika:
 
 ---
 
-## 🔧 TROUBLESHOOTING
+##  TROUBLESHOOTING
 
-### ❌ "502 Bad Gateway" atau "Service Unavailable"
+###  "502 Bad Gateway" atau "Service Unavailable"
 ```
 Cause: Application can't connect to Cloud SQL
 Fix:
@@ -509,7 +509,7 @@ Fix:
 4. Restart service: Cloud Run → Revisions → Deploy new revision
 ```
 
-### ❌ "Connection Refused"
+### "Connection Refused"
 ```
 Cause: Cloud Run cannot reach Cloud SQL
 Fix:
@@ -519,7 +519,7 @@ Fix:
    gcloud cloud-sql-proxy --instances=PROJECT:REGION:INSTANCE
 ```
 
-### ❌ "Domain not resolving"
+###  "Domain not resolving"
 ```
 Cause: DNS not updated
 Fix:
@@ -533,7 +533,7 @@ Fix:
    nslookup sppa.gov 8.8.8.8 (Google DNS)
 ```
 
-### ❌ "HTTPS Certificate Error"
+###  "HTTPS Certificate Error"
 ```
 Cause: SSL certificate not yet provisioned
 Fix:
@@ -543,7 +543,7 @@ Fix:
 4. If still no cert, delete mapping and re-add
 ```
 
-### ❌ "Cloud Build Failed"
+### "Cloud Build Failed"
 ```
 Troubleshoot:
 1. Cloud Build → Build History
@@ -557,7 +557,7 @@ Troubleshoot:
 
 ---
 
-## 💰 Cost Estimation (After Free Credits)
+##  Cost Estimation (After Free Credits)
 
 | Service | Monthly Cost | Usageหมายเหตุ |
 |---------|-------------|---------|
@@ -570,7 +570,7 @@ Troubleshoot:
 
 ---
 
-## 🚀 Scaling & Performance
+##  Scaling & Performance
 
 ### Auto-scaling Configuration
 ```yaml
@@ -590,7 +590,7 @@ Recommended: Enable for production
 
 ---
 
-## 🔐 Security Best Practices for GCP
+##  Security Best Practices for GCP
 
 1. **Encrypt Secrets**
    ```bash
@@ -618,20 +618,20 @@ Recommended: Enable for production
 
 ---
 
-## 📊 Next Steps After Deploy
+##  Next Steps After Deploy
 
-1. ✅ Change admin password (admin123 → strong)
-2. ✅ Create admin accounts for teampada
-3. ✅ Setup email alerts
-4. ✅ Test backup/restore procedure
-5. ✅ Configure custom metrics/dashboards
-6. ✅ Document deployment for team
-7. ✅ Plan for scaling (if usage grows)
-8. ✅ Market to users: https://sppa.gov
+1.  Change admin password (admin123 → strong)
+2.  Create admin accounts for teampada
+3.  Setup email alerts
+4.  Test backup/restore procedure
+5.  Configure custom metrics/dashboards
+6.  Document deployment for team
+7.  Plan for scaling (if usage grows)
+8.  Market to users: https://sppa.gov
 
 ---
 
-## 📚 GCP Documentation Links
+##  GCP Documentation Links
 
 - [Cloud Run Docs](https://cloud.google.com/run/docs)
 - [Cloud SQL Docs](https://cloud.google.com/sql/docs)
@@ -641,7 +641,7 @@ Recommended: Enable for production
 
 ---
 
-## 💡 Tips & Tricks
+##  Tips & Tricks
 
 1. **Use gcloud CLI** for faster deployment:
    ```bash
