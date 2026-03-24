@@ -76,7 +76,7 @@ Write-Log "Menguji koneksian sistem..." "INFO"
 try {
     $response = Invoke-WebRequest -Uri "http://localhost:8081/sistemppa/" -UseBasicParsing -TimeoutSec 5
     if ($response.StatusCode -eq 200) {
-        Write-Log "✅ Sistem boleh diakses: HTTP 200" "SUCCESS"
+        Write-Log " Sistem boleh diakses: HTTP 200" "SUCCESS"
         Write-Log "" "INFO"
         Write-Log "========== AKSES SISTEM ==========" "INFO"
         Write-Log "URL Lokal: http://localhost:8081/sistemppa/" "INFO"
