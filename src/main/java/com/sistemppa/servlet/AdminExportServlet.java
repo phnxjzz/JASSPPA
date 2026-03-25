@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -79,42 +80,57 @@ public class AdminExportServlet extends HttpServlet {
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=laporan-permohonan-sppa.pdf");
 
-        Document document = new Document(PageSize.A4.rotate(), 24, 24, 24, 24);
-        PdfWriter.getInstance(document, response.getOutputStream());
-        document.open();
-        document.add(new Paragraph("Laporan Permohonan SPPA",
-                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
-        String filterText = "Carian: " + (isBlank(search) ? "Semua" : search)
-                + " | Status: " + (isBlank(status) ? "Semua" : status.toUpperCase());
-        document.add(new Paragraph(filterText, FontFactory.getFont(FontFactory.HELVETICA, 10)));
-        document.add(new Paragraph(" "));
+        byte[] bytes = buildApplicationPdfBytes(applications, search, status);
+        response.getOutputStream().write(bytes);
+    }
 
-        PdfPTable table = new PdfPTable(new float[]{1.2f, 3.2f, 2.2f, 2.2f, 1.5f, 2.2f});
-        table.setWidthPercentage(100);
-        addHeaderCell(table, "ID");
-        addHeaderCell(table, "Syarikat / Pemohon");
-        addHeaderCell(table, "Produk");
-        addHeaderCell(table, "Kategori");
-        addHeaderCell(table, "Status");
-        addHeaderCell(table, "Dihantar");
+    private byte[] buildApplicationPdfBytes(List<Map<String, Object>> applications,
+                                            String search, String status) throws IOException, DocumentException {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4.rotate(), 24, 24, 24, 24);
+            PdfWriter.getInstance(document, output);
+            document.open();
+            document.add(new Paragraph("Laporan Permohonan SPPA",
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
+            String filterText = "Carian: " + (isBlank(search) ? "Semua" : search)
+                    + " | Status: " + (isBlank(status) ? "Semua" : status.toUpperCase());
+            document.add(new Paragraph(filterText, FontFactory.getFont(FontFactory.HELVETICA, 10)));
+            document.add(new Paragraph(" "));
 
-        for (Map<String, Object> application : applications) {
-            table.addCell(String.valueOf(application.get("id")));
-            table.addCell(application.get("company_name") + "\n" + application.get("full_name"));
-            table.addCell(String.valueOf(application.get("product_name")));
-            table.addCell(String.valueOf(application.get("product_category")));
-            table.addCell(String.valueOf(application.get("status")));
-            table.addCell(application.get("submitted_at") == null ? "-" : String.valueOf(application.get("submitted_at")));
+            PdfPTable table = new PdfPTable(new float[]{1.2f, 3.2f, 2.2f, 2.2f, 1.5f, 2.2f});
+            table.setWidthPercentage(100);
+            addHeaderCell(table, "ID");
+            addHeaderCell(table, "Syarikat / Pemohon");
+            addHeaderCell(table, "Produk");
+            addHeaderCell(table, "Kategori");
+            addHeaderCell(table, "Status");
+            addHeaderCell(table, "Dihantar");
+
+            for (Map<String, Object> application : applications) {
+                table.addCell(String.valueOf(application.get("id")));
+                table.addCell(application.get("company_name") + "\n" + application.get("full_name"));
+                table.addCell(String.valueOf(application.get("product_name")));
+                table.addCell(String.valueOf(application.get("product_category")));
+                table.addCell(String.valueOf(application.get("status")));
+                table.addCell(application.get("submitted_at") == null ? "-" : String.valueOf(application.get("submitted_at")));
+            }
+            document.add(table);
+            document.close();
+            return output.toByteArray();
         }
-        document.add(table);
-        document.close();
     }
 
     private void exportExcel(HttpServletResponse response, List<Map<String, Object>> applications) throws IOException {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=laporan-permohonan-sppa.xlsx");
 
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+        byte[] bytes = buildApplicationExcelBytes(applications);
+        response.getOutputStream().write(bytes);
+    }
+
+    private byte[] buildApplicationExcelBytes(List<Map<String, Object>> applications) throws IOException {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream();
+             XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet("Permohonan SPPA");
             String[] headers = {"ID", "Nama Syarikat", "Pemohon", "Email", "Nama Produk", "Kategori", "Status", "Tarikh Hantar"};
             Row headerRow = sheet.createRow(0);
@@ -140,7 +156,8 @@ public class AdminExportServlet extends HttpServlet {
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);
             }
-            workbook.write(response.getOutputStream());
+            workbook.write(output);
+            return output.toByteArray();
         }
     }
 
