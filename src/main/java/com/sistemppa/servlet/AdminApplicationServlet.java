@@ -15,8 +15,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class AdminApplicationServlet extends HttpServlet {
+    private static final Logger LOGGER = Logger.getLogger(AdminApplicationServlet.class.getName());
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -31,11 +34,9 @@ public class AdminApplicationServlet extends HttpServlet {
         }
 
         try (Connection conn = DatabaseConfig.getConnection()) {
-            request.setAttribute("application", loadApplication(conn, Integer.parseInt(applicationId)));
-            request.setAttribute("applicationDetail", loadApplicationDetail(conn, Integer.parseInt(applicationId)));
-            request.setAttribute("documents", loadDocuments(conn, Integer.parseInt(applicationId)));
-            request.getRequestDispatcher("/admin-application.jsp").forward(request, response);
+            renderApplicationPage(conn, request, response, Integer.parseInt(applicationId), null);
         } catch (SQLException e) {
+            LOGGER.severe("Failed to load admin application review page: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Gagal memuatkan permohonan");
         }
     }
@@ -49,9 +50,15 @@ public class AdminApplicationServlet extends HttpServlet {
 
         int applicationId = Integer.parseInt(request.getParameter("id"));
         String action = request.getParameter("action");
-        String adminNotes = request.getParameter("admin_notes");
+        String adminNotes = trim(request.getParameter("admin_notes"));
 
         try (Connection conn = DatabaseConfig.getConnection()) {
+            if ("reject".equals(action) && (adminNotes == null || adminNotes.isBlank())) {
+                request.setAttribute("error", "Sebab penolakan wajib diisi sebelum permohonan ditolak.");
+                renderApplicationPage(conn, request, response, applicationId, "");
+                return;
+            }
+
             if ("approve".equals(action)) {
                 updateApplicationStatus(conn, applicationId, "APPROVED", adminNotes);
             } else if ("reject".equals(action)) {
@@ -60,9 +67,14 @@ public class AdminApplicationServlet extends HttpServlet {
                 updateApplicationStatus(conn, applicationId, "SUSPENDED", adminNotes);
             } else if ("suspend_user".equals(action)) {
                 suspendUserByApplication(conn, applicationId, adminNotes);
+            } else {
+                request.setAttribute("error", "Tindakan pentadbir tidak sah.");
+                renderApplicationPage(conn, request, response, applicationId, adminNotes);
+                return;
             }
             response.sendRedirect(request.getContextPath() + "/admin/application?id=" + applicationId + "&updated=1");
         } catch (SQLException e) {
+            LOGGER.severe("Failed to update admin application review: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Gagal mengemas kini permohonan");
         }
     }
@@ -74,6 +86,24 @@ public class AdminApplicationServlet extends HttpServlet {
             return false;
         }
         return true;
+    }
+
+    private void renderApplicationPage(Connection conn, HttpServletRequest request, HttpServletResponse response,
+            int applicationId, String adminNotesOverride) throws SQLException, ServletException, IOException {
+        Map<String, Object> application = new HashMap<>(loadApplication(conn, applicationId));
+        if (application.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Permohonan tidak ditemui");
+            return;
+        }
+
+        if (adminNotesOverride != null) {
+            application.put("admin_notes", adminNotesOverride);
+        }
+
+        request.setAttribute("application", application);
+        request.setAttribute("applicationDetail", loadApplicationDetail(conn, applicationId));
+        request.setAttribute("documents", loadDocuments(conn, applicationId));
+        request.getRequestDispatcher("/admin-application.jsp").forward(request, response);
     }
 
     private Map<String, Object> loadApplication(Connection conn, int applicationId) throws SQLException {
@@ -178,5 +208,10 @@ public class AdminApplicationServlet extends HttpServlet {
             stmt.setInt(2, applicationId);
             stmt.executeUpdate();
         }
+    }
+
+    private String trim(String value) {
+        return value !=null ? value.trim() : null;
+    
     }
 }
