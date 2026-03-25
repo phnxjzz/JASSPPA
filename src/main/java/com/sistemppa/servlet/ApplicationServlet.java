@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +20,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -59,7 +57,7 @@ public class ApplicationServlet extends HttpServlet {
         String productCategory = trim(request.getParameter("product_category"));
 
         if (supplierName.isEmpty() || productName.isEmpty() || productCategory.isEmpty() || applicationType.isEmpty()) {
-            request.setAttribute("error", "Sila lengkapkan medan wajib borang PPP1.");
+            request.setAttribute("error", "Sila lengkapkan bahagian wajib borang PPP1.");
             request.setAttribute("requiredDocuments", buildRequiredDocuments());
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
             return;
