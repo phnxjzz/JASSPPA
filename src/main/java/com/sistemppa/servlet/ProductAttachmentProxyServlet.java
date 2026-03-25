@@ -73,6 +73,8 @@ public class ProductAttachmentProxyServlet extends HttpServlet {
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             response.sendError(HttpServletResponse.SC_BAD_GATEWAY, "Paparan lampiran terganggu");
+        } catch (IOException ex) {
+            response.sendError(HttpServletResponse.SC_BAD_GATEWAY, "Ralat semasa memaparkan lampiran");
         }
     }
 
