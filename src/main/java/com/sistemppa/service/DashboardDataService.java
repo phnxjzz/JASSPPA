@@ -126,7 +126,7 @@ public final class DashboardDataService {
 
     public static List<Map<String, Object>> loadUserApplications(Connection conn, int userId) throws SQLException {
         List<Map<String, Object>> applications = new ArrayList<>();
-        String sql = "SELECT id, product_name, company_name, status, submitted_at "
+        String sql = "SELECT id, product_name, company_name, status, submitted_at, admin_notes "
                 + "FROM applications WHERE user_id = ? ORDER BY created_at DESC";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
@@ -138,6 +138,7 @@ public final class DashboardDataService {
                     row.put("company_name", rs.getString("company_name"));
                     row.put("status", rs.getString("status"));
                     row.put("submitted_at", rs.getTimestamp("submitted_at"));
+                    row.put("admin_notes", rs.getString("admin_notes"));
                     applications.add(row);
                 }
             }
