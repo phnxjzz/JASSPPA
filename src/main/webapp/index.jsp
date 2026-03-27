@@ -17,6 +17,67 @@
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
     }
+
+    private String buildImageSrc(String contextPath, Object imageUrlValue) {
+        if (imageUrlValue == null) {
+            return "";
+        }
+
+        String raw = String.valueOf(imageUrlValue).trim().replace('\\', '/');
+        if (raw.isEmpty()) {
+            return "";
+        }
+
+        int assetsIndex = raw.indexOf("/assets/");
+        if (assetsIndex > 0) {
+            raw = raw.substring(assetsIndex);
+        } else {
+            int assetsRelativeIndex = raw.indexOf("assets/");
+            if (assetsRelativeIndex > 0) {
+                raw = "/" + raw.substring(assetsRelativeIndex);
+            }
+        }
+
+        while (raw.contains("//") && !raw.startsWith("//")) {
+            raw = raw.replace("//", "/");
+        }
+
+        int managedAnnouncementIndex = raw.indexOf("/announcement-images/");
+        if (managedAnnouncementIndex >= 0) {
+            raw = raw.substring(managedAnnouncementIndex);
+        }
+
+        int legacyAnnouncementIndex = raw.indexOf("/assets/images/announcements/");
+        if (legacyAnnouncementIndex >= 0) {
+            String fileName = raw.substring(legacyAnnouncementIndex + "/assets/images/announcements/".length());
+            int slashPos = fileName.indexOf('/');
+            if (slashPos >= 0) {
+                fileName = fileName.substring(0, slashPos);
+            }
+            if (!fileName.isBlank()) {
+                raw = "/announcement-images/" + fileName;
+            }
+        }
+
+        String lower = raw.toLowerCase(java.util.Locale.ROOT);
+        if (lower.startsWith("http://") || lower.startsWith("https://") || lower.startsWith("data:") || raw.startsWith("//")) {
+            return raw;
+        }
+
+        String safeContextPath = contextPath == null ? "" : contextPath.trim();
+        if (safeContextPath.isEmpty() || "/".equals(safeContextPath)) {
+            safeContextPath = "";
+        }
+
+        if (raw.startsWith("/")) {
+            if (!safeContextPath.isEmpty() && raw.startsWith(safeContextPath + "/")) {
+                return raw;
+            }
+            return safeContextPath + raw;
+        }
+
+        return safeContextPath + "/" + raw;
+    }
 %>
 <%
     List<Map<String, Object>> homepageAnnouncements = Collections.emptyList();
@@ -130,12 +191,8 @@
             padding: 44px;
         }
         .hero-inner {
-            max-width: 1200px;
+            max-width: 1020px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1.45fr 1fr;
-            gap: 24px;
-            align-items: center;
             position: relative;
             z-index: 1;
         }
@@ -175,24 +232,6 @@
         .hero-btn:hover, .hero-btn:focus { transform: translateY(-1px); background: rgba(255, 255, 255, 0.22); }
         .hero-btn.accent { background: #ffffff; color: #0a5f8b; border-color: #ffffff; }
         .hero-btn.accent:hover, .hero-btn.accent:focus { background: #f0f9ff; }
-
-        .hero-side {
-            background: rgba(255,255,255,0.17);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.33);
-            border-radius: 20px;
-            padding: 18px;
-            animation: riseIn .82s ease-out;
-        }
-        .hero-side h3 { font-size: 17px; margin-bottom: 10px; }
-        .hero-side ul { list-style: none; }
-        .hero-side li {
-            padding: 8px 10px;
-            margin-bottom: 8px;
-            border-radius: 10px;
-            background: rgba(6, 47, 72, 0.28);
-            font-size: 14px;
-        }
 
         .container { max-width: 1200px; margin: 0 auto; padding: 42px 20px 56px; }
 
@@ -297,7 +336,6 @@
         }
 
         @media (max-width: 980px) {
-            .hero-inner { grid-template-columns: 1fr; }
             .quick-grid { grid-template-columns: 1fr; }
             .navbar { flex-direction: column; align-items: flex-start; gap: 12px; }
             .nav-actions { width: 100%; }
@@ -339,14 +377,6 @@
                     <a href="${pageContext.request.contextPath}/login" class="hero-btn">Log Masuk Ke Sistem</a>
                 </div>
             </div>
-            <div class="hero-side" aria-label="Kelebihan portal SPPA">
-                <h3>Kenapa Guna SPPA?</h3>
-                <ul>
-                    <li>Pendaftaran dan semakan permohonan di satu tempat.</li>
-                    <li>Maklumat pengumuman rasmi dipaparkan secara terkini.</li>
-                    <li>Reka bentuk responsif untuk desktop dan telefon.</li>
-                </ul>
-            </div>
         </div>
     </div>
 
@@ -354,7 +384,7 @@
         <h2 class="section-title">Kemudahan Utama Portal</h2>
         <p class="section-subtitle">Direka untuk memastikan urusan pemohon lebih lancar dari awal hingga keputusan semakan.</p>
 
-        <div class="quick-grid" aria-label="Kemudahan utama sistem">
+        <div class="quick-grid" aria-label="Kemudahan Utama Portal">
             <article class="quick-card">
                 <h4>Pendaftaran Akaun Selamat</h4>
                 <p>Cipta akaun pemohon dengan pengesahan maklumat asas secara mudah.</p>
@@ -379,11 +409,12 @@
                     <div class="announcement-empty">Tiada pengumuman buat masa ini.</div>
                 <% } else {
                     for (Map<String, Object> ann : homepageAnnouncements) {
+                        String announcementImageSrc = buildImageSrc(request.getContextPath(), ann.get("image_url"));
                 %>
                     <div class="announcement-item">
                         <h4><%= escapeHtml(String.valueOf(ann.get("title"))) %></h4>
-                        <% if (ann.get("image_url") != null && !String.valueOf(ann.get("image_url")).isBlank()) { %>
-                            <img src="${pageContext.request.contextPath}<%= ann.get("image_url") %>" alt="Gambar pengumuman">
+                        <% if (!announcementImageSrc.isBlank()) { %>
+                            <img src="<%= escapeHtml(announcementImageSrc) %>" alt="Gambar pengumuman" onerror="this.style.display='none';">
                         <% } %>
                         <p><%= escapeHtml(String.valueOf(ann.get("content"))) %></p>
                     </div>

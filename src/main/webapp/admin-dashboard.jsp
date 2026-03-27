@@ -1,7 +1,81 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.sql.Timestamp" %>
+<%!
+    private String escapeHtml(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+
+    private String buildImageSrc(String contextPath, Object imageUrlValue) {
+        if (imageUrlValue == null) {
+            return "";
+        }
+
+        String raw = String.valueOf(imageUrlValue).trim().replace('\\', '/');
+        if (raw.isEmpty()) {
+            return "";
+        }
+
+        int assetsIndex = raw.indexOf("/assets/");
+        if (assetsIndex > 0) {
+            raw = raw.substring(assetsIndex);
+        } else {
+            int assetsRelativeIndex = raw.indexOf("assets/");
+            if (assetsRelativeIndex > 0) {
+                raw = "/" + raw.substring(assetsRelativeIndex);
+            }
+        }
+
+        while (raw.contains("//") && !raw.startsWith("//")) {
+            raw = raw.replace("//", "/");
+        }
+
+        int managedAnnouncementIndex = raw.indexOf("/announcement-images/");
+        if (managedAnnouncementIndex >= 0) {
+            raw = raw.substring(managedAnnouncementIndex);
+        }
+
+        int legacyAnnouncementIndex = raw.indexOf("/assets/images/announcements/");
+        if (legacyAnnouncementIndex >= 0) {
+            String fileName = raw.substring(legacyAnnouncementIndex + "/assets/images/announcements/".length());
+            int slashPos = fileName.indexOf('/');
+            if (slashPos >= 0) {
+                fileName = fileName.substring(0, slashPos);
+            }
+            if (!fileName.isBlank()) {
+                raw = "/announcement-images/" + fileName;
+            }
+        }
+
+        String lower = raw.toLowerCase(java.util.Locale.ROOT);
+        if (lower.startsWith("http://") || lower.startsWith("https://") || lower.startsWith("data:") || raw.startsWith("//")) {
+            return raw;
+        }
+
+        String safeContextPath = contextPath == null ? "" : contextPath.trim();
+        if (safeContextPath.isEmpty() || "/".equals(safeContextPath)) {
+            safeContextPath = "";
+        }
+
+        if (raw.startsWith("/")) {
+            if (!safeContextPath.isEmpty() && raw.startsWith(safeContextPath + "/")) {
+                return raw;
+            }
+            return safeContextPath + raw;
+        }
+
+        return safeContextPath + "/" + raw;
+    }
+%>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -26,7 +100,8 @@
         .brand-logo { width: 54px; height: 54px; border-radius: 16px; object-fit: contain; padding: 4px; }
         .brand h1 { margin: 0; font-size: 20px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
-        .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; }
+        .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .icon-inline { width: 14px; height: 14px; object-fit: contain; vertical-align: middle; }
         .container { max-width: 1320px; margin: 28px auto; padding: 0 20px 32px; }
         .hero { display: grid; grid-template-columns: 1.8fr 1fr; gap: 20px; margin-bottom: 20px; }
         .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 16px 40px rgba(6, 52, 79, 0.08); padding: 22px; }
@@ -52,6 +127,26 @@
         .btn-secondary { background: #dcecf6; color: var(--brand-navy); }
         .btn-accent { background: #fff7b0; color: #6a5a00; }
         .section-stack { display: grid; gap: 18px; }
+        .announcement-panel { border-top: 4px solid #0097d9; }
+        .announcement-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .announcement-head img { width: 18px; height: 18px; object-fit: contain; }
+        .announce-alert { margin-bottom: 12px; border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+        .announce-success { background: #e7f9ec; color: #166534; border: 1px solid #b8e7c6; }
+        .announce-error { background: #fff1f2; color: #b91c1c; border: 1px solid #fecdd3; }
+        .announcement-form { display: grid; gap: 10px; margin-bottom: 14px; }
+        .announcement-form input[type="text"], .announcement-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; }
+        .announcement-form input[type="file"] { width: 100%; border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; background: #f9fcff; }
+        .announcement-form textarea { min-height: 96px; resize: vertical; }
+        .announce-image-preview { margin-top: 8px; }
+        .announce-image-preview img { width: 100%; max-width: 220px; height: auto; border: 1px solid var(--line); border-radius: 10px; }
+        .announcement-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .announcement-table td { font-size: 13px; }
+        .announce-title { font-weight: 700; color: var(--brand-navy); }
+        .announce-content { color: var(--muted); margin-top: 4px; white-space: pre-wrap; }
+        .announce-status { display: inline-block; border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 700; }
+        .announce-active { background: #dcfce7; color: #166534; }
+        .announce-inactive { background: #e2e8f0; color: #334155; }
+        .icon-btn { width: 14px; height: 14px; object-fit: contain; }
         .table-card h3 { margin-top: 0; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 13px 12px; border-bottom: 1px solid #e4edf4; text-align: left; vertical-align: top; }
@@ -101,7 +196,27 @@
         a.btn:focus {
             border: 1px solid #fff !important;
             box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
-        }</style>
+        }
+        .floating-home-btn {
+            position: static;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            margin-left: 12px;
+            border-radius: 999px;
+            border: 1px solid #fff;
+            background: rgba(255, 255, 255, 0.12);
+            text-decoration: none;
+            vertical-align: middle;
+        }
+        .floating-home-btn img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+        }
+        </style>
 </head>
 <body>
     <div class="navbar">
@@ -116,7 +231,7 @@
             <span>Selamat datang, <%= session.getAttribute("username") %></span>
             <a href="${pageContext.request.contextPath}/products">Senarai Produk</a>
             <a href="${pageContext.request.contextPath}/profile">Kemaskini Portal</a>
-            <a href="${pageContext.request.contextPath}/logout">Log Keluar</a>
+            <a href="${pageContext.request.contextPath}/logout" aria-label="Keluar" title="Keluar"><img src="${pageContext.request.contextPath}/assets/images/icon-exit.png" class="icon-inline" alt="Ikon keluar"></a>
         </div>
     </div>
 
@@ -130,14 +245,6 @@
                     <div class="metric-chip">Pengguna aktif: <%= request.getAttribute("active_users") != null ? request.getAttribute("active_users") : "0" %></div>
                     <div class="metric-chip">Jumlah pengguna berdaftar: <%= request.getAttribute("registered_users") != null ? request.getAttribute("registered_users") : "0" %></div>
                     <div class="metric-chip">Pengguna baharu (30 hari): <%= request.getAttribute("new_registered_users") != null ? request.getAttribute("new_registered_users") : "0" %></div>
-                </div>
-            </div>
-            <div class="panel">
-                <div class="contact-image" aria-label="Maklumat hubungan Jabatan Air Sabah">
-                    <strong>Hubungi JANS</strong>
-                    <p>Telefon: 088-326888</p>
-                    <p>Email: info@jwater.gov.my</p>
-                    <p>Kota Kinabalu, Sabah</p>
                 </div>
             </div>
         </div>
@@ -170,7 +277,7 @@
                 <h3 class="section-title">Permohonan Terkini</h3>
                 <form method="get" action="${pageContext.request.contextPath}/dashboard" class="toolbar">
                     <div class="field">
-                        <label for="q">Carian</label>
+                        <label for="q"><img src="${pageContext.request.contextPath}/assets/images/icon-search.png" class="icon-inline" alt="Ikon carian"> Carian</label>
                         <input id="q" name="q" type="text" value="<%= request.getAttribute("search_query") %>" placeholder="Cari syarikat, produk, pemohon atau email">
                     </div>
                     <div class="field">
@@ -199,9 +306,8 @@
                                 <option value="pdf_rejected">PDF - REJECTED</option>
                             </optgroup>
                         </select>
-                        <div class="export-help">Pilih format dan status, kemudian klik Muat Turun.</div>
                     </div>
-                    <button class="btn btn-secondary" type="button" id="exportDownloadBtn">Muat Turun</button>
+                    <button class="btn btn-secondary" type="button" id="exportDownloadBtn" aria-label="Turun" title="Turun"><img src="${pageContext.request.contextPath}/assets/images/icon-download.png" class="icon-inline" alt="Ikon turun"></button>
                 </form>
 
                 <table>
@@ -277,7 +383,7 @@
                                 <td><%= product.get("no") %></td>
                                 <td>
                                     <strong><%= product.get("product_materials") %></strong><br>
-                                    <span class="subtle"><%= product.get("brand") == null ? "-" : product.get("brand") %> â€¢ <%= product.get("classification") %></span>
+                                    <span class="subtle"><%= product.get("brand") == null ? "-" : product.get("brand") %> • <%= product.get("classification") %></span>
                                 </td>
                             </tr>
                             <%      }
@@ -289,7 +395,151 @@
                         <a class="btn btn-secondary" href="${pageContext.request.contextPath}/products">Buka Senarai Produk Penuh</a>
                     </div>
                 </div>
+
+                <div class="panel announcement-panel">
+                    <div class="announcement-head">
+                        <img src="${pageContext.request.contextPath}/assets/images/icon-announcement.png" alt="Pengumuman">
+                        <h3 class="section-title" style="margin:0;">Pengurusan Pengumuman / Info</h3>
+                    </div>
+
+                    <% if (request.getAttribute("announcement_success") != null) { %>
+                        <div class="announce-alert announce-success"><%= request.getAttribute("announcement_success") %></div>
+                    <% } %>
+                    <% if (request.getAttribute("announcement_error") != null) { %>
+                        <div class="announce-alert announce-error"><%= request.getAttribute("announcement_error") %></div>
+                    <% } %>
+
+                    <%
+                        Map<String, Object> announcementEditing = (Map<String, Object>) request.getAttribute("announcement_editing");
+                        String announcementFormTitle = String.valueOf(request.getAttribute("announcement_form_title") == null ? "" : request.getAttribute("announcement_form_title"));
+                        String announcementFormContent = String.valueOf(request.getAttribute("announcement_form_content") == null ? "" : request.getAttribute("announcement_form_content"));
+                        Boolean announcementFormActive = (Boolean) request.getAttribute("announcement_form_active");
+                        boolean formActive = announcementFormActive == null || announcementFormActive;
+
+                        if (announcementEditing != null && !announcementEditing.isEmpty()) {
+                            announcementFormTitle = String.valueOf(announcementEditing.get("title"));
+                            announcementFormContent = String.valueOf(announcementEditing.get("content"));
+                            formActive = Boolean.TRUE.equals(announcementEditing.get("is_active"));
+                        }
+                    %>
+
+                    <form method="post" action="${pageContext.request.contextPath}/dashboard" class="announcement-form" enctype="multipart/form-data">
+                        <input type="hidden" name="announcement_action" value="<%= (announcementEditing != null && !announcementEditing.isEmpty()) ? "update_announcement" : "create_announcement" %>">
+                        <% if (announcementEditing != null && !announcementEditing.isEmpty()) { %>
+                            <input type="hidden" name="announcement_id" value="<%= announcementEditing.get("id") %>">
+                        <% } %>
+                        <%
+                            String announcementImageUrl = String.valueOf(request.getAttribute("announcement_form_image_url") == null ? "" : request.getAttribute("announcement_form_image_url"));
+                            if ((announcementImageUrl == null || announcementImageUrl.isBlank()) && announcementEditing != null && !announcementEditing.isEmpty()) {
+                                announcementImageUrl = announcementEditing.get("image_url") == null ? "" : String.valueOf(announcementEditing.get("image_url"));
+                            }
+                            String announcementImageSrc = buildImageSrc(request.getContextPath(), announcementImageUrl);
+                        %>
+                        <input type="hidden" name="announcement_existing_image_url" value="<%= escapeHtml(announcementImageUrl) %>">
+
+                        <div>
+                            <label for="announcement_title"><strong>Tajuk</strong></label>
+                            <input id="announcement_title" type="text" name="announcement_title" maxlength="180" required value="<%= escapeHtml(announcementFormTitle) %>">
+                        </div>
+                        <div>
+                            <label for="announcement_content"><strong>Kandungan</strong></label>
+                            <textarea id="announcement_content" name="announcement_content" required><%= escapeHtml(announcementFormContent) %></textarea>
+                        </div>
+                        <div>
+                            <label for="announcement_image"><strong>Gambar (pilihan)</strong></label>
+                            <input id="announcement_image" type="file" name="announcement_image" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+                            <% if (!announcementImageSrc.isBlank()) { %>
+                                <div class="announce-image-preview">
+                                    <img src="<%= escapeHtml(announcementImageSrc) %>" alt="Pratonton gambar pengumuman" onerror="this.style.display='none';">
+                                </div>
+                            <% } %>
+                        </div>
+                        <label style="display:flex;align-items:center;gap:8px;">
+                            <input type="checkbox" name="announcement_active" <%= formActive ? "checked" : "" %>>
+                            Aktifkan paparan di halaman utama
+                        </label>
+                        <div class="announcement-actions">
+                            <button class="btn btn-primary" type="submit">
+                                <% if (announcementEditing != null && !announcementEditing.isEmpty()) { %>
+                                    <img src="${pageContext.request.contextPath}/assets/images/icon-edit.png" class="icon-btn" alt="Edit"> Kemas Kini
+                                <% } else { %>
+                                    <img src="${pageContext.request.contextPath}/assets/images/icon-add.png" class="icon-btn" alt="Tambah"> Tambah
+                                <% } %>
+                            </button>
+                            <% if (announcementEditing != null && !announcementEditing.isEmpty()) { %>
+                                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/dashboard">Batal</a>
+                            <% } %>
+                        </div>
+                    </form>
+
+                    <table class="announcement-table">
+                        <thead>
+                            <tr>
+                                <th>Pengumuman</th>
+                                <th>Status</th>
+                                <th>Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%
+                                List<Map<String, Object>> announcements = (List<Map<String, Object>>) request.getAttribute("announcements");
+                                if (announcements == null || announcements.isEmpty()) {
+                            %>
+                            <tr>
+                                <td colspan="3" class="empty">Belum ada pengumuman direkodkan.</td>
+                            </tr>
+                            <% } else {
+                                for (Map<String, Object> ann : announcements) {
+                                    String listAnnouncementImageSrc = buildImageSrc(request.getContextPath(), ann.get("image_url"));
+                            %>
+                            <tr>
+                                <td>
+                                    <div class="announce-title"><%= escapeHtml(String.valueOf(ann.get("title"))) %></div>
+                                    <% if (!listAnnouncementImageSrc.isBlank()) { %>
+                                        <div class="announce-image-preview" style="margin-top:6px;margin-bottom:6px;">
+                                            <img src="<%= escapeHtml(listAnnouncementImageSrc) %>" alt="Gambar pengumuman" onerror="this.style.display='none';">
+                                        </div>
+                                    <% } %>
+                                    <div class="announce-content"><%= escapeHtml(String.valueOf(ann.get("content"))) %></div>
+                                </td>
+                                <td>
+                                    <span class="announce-status <%= Boolean.TRUE.equals(ann.get("is_active")) ? "announce-active" : "announce-inactive" %>">
+                                        <%= Boolean.TRUE.equals(ann.get("is_active")) ? "AKTIF" : "TIDAK AKTIF" %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="announcement-actions">
+                                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/dashboard?announcement_id=<%= ann.get("id") %>">
+                                            <img src="${pageContext.request.contextPath}/assets/images/icon-edit.png" class="icon-btn" alt="Edit"> Edit
+                                        </a>
+                                        <form method="post" action="${pageContext.request.contextPath}/dashboard" onsubmit="return confirm('Hapus pengumuman ini?');" style="margin:0;">
+                                            <input type="hidden" name="announcement_action" value="delete_announcement">
+                                            <input type="hidden" name="announcement_id" value="<%= ann.get("id") %>">
+                                            <button class="btn btn-accent" type="submit">
+                                                <img src="${pageContext.request.contextPath}/assets/images/icon-delete.png" class="icon-btn" alt="Hapus"> Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <%      }
+                                }
+                            %>
+                        </tbody>
+                    </table>
                 </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="contact-image" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="height:24px;width:auto;"></strong>
+                <p>SABAH WATER DEPARTMENT</p>
+                <p>Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</p>
+                <p>Kota Kinabalu, Sabah, Malaysia</p>
+                <p>Tel: +60-88-232364 (HQ), Fax: +60-88-232396</p>
+                <p>Email: jans.hq@sabah.gov.my</p>
             </div>
         </div>
     </div>
@@ -333,8 +583,29 @@
         });
     })();
 </script>
+    <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama"></a>
+<script>
+(function() {
+    var homeBtn = document.querySelector('.floating-home-btn');
+    if (!homeBtn) return;
+
+    var navContainer = document.querySelector('.navbar > div:last-child');
+    if (!navContainer) navContainer = document.querySelector('.navbar');
+    if (!navContainer) return;
+
+    if (homeBtn.parentElement !== navContainer) {
+        navContainer.appendChild(homeBtn);
+    }
+})();
+</script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 

@@ -35,6 +35,11 @@
     <servlet>
         <servlet-name>DashboardServlet</servlet-name>
         <servlet-class>com.sistemppa.servlet.DashboardServlet</servlet-class>
+        <multipart-config>
+            <max-file-size>10485760</max-file-size>
+            <max-request-size>12582912</max-request-size>
+            <file-size-threshold>0</file-size-threshold>
+        </multipart-config>
     </servlet>
     <servlet-mapping>
         <servlet-name>DashboardServlet</servlet-name>
@@ -140,6 +145,15 @@
         <url-pattern>/avatars/view</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>AnnouncementImageServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.AnnouncementImageServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AnnouncementImageServlet</servlet-name>
+        <url-pattern>/announcement-images/*</url-pattern>
+    </servlet-mapping>
+
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
@@ -147,7 +161,7 @@
     <session-config>
         <cookie-http-only>true</cookie-http-only>
         <tracking-mode>COOKIE</tracking-mode>
-        <timeout>30</timeout>
+        <timeout>10</timeout>
     </session-config>
 
 </web-app>
