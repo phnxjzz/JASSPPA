@@ -68,7 +68,27 @@
         a.btn:focus {
             border: 1px solid #fff !important;
             box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
-        }</style>
+        }
+        .floating-home-btn {
+            position: static;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            margin-left: 12px;
+            border-radius: 999px;
+            border: 1px solid #fff;
+            background: rgba(255, 255, 255, 0.12);
+            text-decoration: none;
+            vertical-align: middle;
+        }
+        .floating-home-btn img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+        }
+        </style>
 </head>
 <body>
     <div class="shell">
@@ -122,8 +142,29 @@
             <p>Email: jans.hq@sabah.gov.my</p>
         </div>
     </div>
+    <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama"></a>
+<script>
+(function() {
+    var homeBtn = document.querySelector('.floating-home-btn');
+    if (!homeBtn) return;
+
+    var navContainer = document.querySelector('.navbar > div:last-child');
+    if (!navContainer) navContainer = document.querySelector('.navbar');
+    if (!navContainer) return;
+
+    if (homeBtn.parentElement !== navContainer) {
+        navContainer.appendChild(homeBtn);
+    }
+})();
+</script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
