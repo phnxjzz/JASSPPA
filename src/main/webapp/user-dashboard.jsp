@@ -1,7 +1,12 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.sql.Timestamp" %>
+<%
+    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.setHeader("Pragma", "no-cache");
+    response.setDateHeader("Expires", 0);
+%>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -23,7 +28,7 @@
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: radial-gradient(circle at top left, #fffcd8 0%, #ebf8ff 34%, #f7fbfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 75%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 54px; height: 54px; border-radius: 16px; object-fit: contain; background: white; padding: 4px; }
+        .brand-logo { width: 54px; height: 54px; border-radius: 16px; object-fit: contain; padding: 4px; }
         .brand h1 { margin: 0; font-size: 20px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; }
@@ -45,7 +50,7 @@
         .stat-card h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
         .stat-card .number { font-size: 30px; font-weight: 800; color: var(--brand-navy); }
         .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
-        .btn { padding: 11px 16px; border-radius: 12px; border: none; text-decoration: none; font-weight: 700; cursor: pointer; }
+        .btn { padding: 11px 16px; border-radius: 12px; border: 1px solid #fff; text-decoration: none; font-weight: 700; cursor: pointer; }
         .btn-primary { background: var(--brand-blue); color: white; }
         .btn-secondary { background: #dcecf6; color: var(--brand-navy); }
         .notice { margin-bottom: 16px; padding: 13px 16px; border-radius: 12px; background: #ebf7ff; color: #16537a; border: 1px solid #cce5f5; }
@@ -67,15 +72,48 @@
         .supplier { color: var(--muted); font-size: 13px; margin-top: 4px; }
         .empty { padding: 28px 0; text-align: center; color: var(--muted); }
         @media (max-width: 980px) { .hero, .layout, .stat-grid { grid-template-columns: 1fr; } .navbar { flex-direction: column; align-items: flex-start; } .navbar a { margin-left: 0; margin-right: 16px; } }
-    </style>
+        button,
+        input[type="submit"],
+        input[type="button"],
+        .btn,
+        .login-btn,
+        .modal-close,
+        .btn-attachment,
+        .attachment-list button,
+        a.btn {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }
+
+        button:hover,
+        input[type="submit"]:hover,
+        input[type="button"]:hover,
+        .btn:hover,
+        .login-btn:hover,
+        .modal-close:hover,
+        .btn-attachment:hover,
+        .attachment-list button:hover,
+        a.btn:hover,
+        button:focus,
+        input[type="submit"]:focus,
+        input[type="button"]:focus,
+        .btn:focus,
+        .login-btn:focus,
+        .modal-close:focus,
+        .btn-attachment:focus,
+        .attachment-list button:focus,
+        a.btn:focus {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }</style>
 </head>
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" class="brand-logo" alt="Logo Jabatan Air Sabah">
+            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <h1>Dashboard Pemohon</h1>
-                <p>Sistem Pendaftaran Produk Air • Jabatan Air Negeri Sabah</p>
+                <p>Sistem Pendaftaran Produk Air - Jabatan Air Negeri Sabah</p>
             </div>
         </div>
         <div>
@@ -90,7 +128,7 @@
         <div class="hero">
             <div class="section hero-card">
                 <h2>Portal pemohon yang bersambung terus ke rekod MySQL</h2>
-                <p>Paparan ini membolehkan pemohon mengurus profil sebenar, menghantar permohonan PPP1 secara online, dan menyemak produk berdaftar yang sudah ada dalam pangkalan data.</p>
+                <p>Pantau status permohonan, kemas kini profil, dan semak produk berdaftar dalam satu paparan.</p>
                 <div class="badge-row">
                     <div class="badge">Akaun: <%= request.getAttribute("account_status") != null ? request.getAttribute("account_status") : "ACTIVE" %></div>
                     <div class="badge">Produk tersedia: <%= request.getAttribute("product_count") != null ? request.getAttribute("product_count") : "0" %></div>
@@ -143,7 +181,6 @@
             <div>
                 <div class="section">
                     <h2 class="mini-title">Permohonan Saya</h2>
-                    <div class="notice">Permohonan online ini menggantikan pengisian manual PPP1. Dokumen sokongan masih perlu dimuat naik dalam format PDF mengikut PPP2 dan garis panduan JANS.</div>
                     <table>
                         <thead>
                             <tr>
@@ -151,6 +188,7 @@
                                 <th>Nama Produk</th>
                                 <th>Syarikat</th>
                                 <th>Status</th>
+                                <th>Maklum Balas Pentadbir</th>
                                 <th>Tarikh Penghantaran</th>
                             </tr>
                         </thead>
@@ -160,17 +198,30 @@
                                 if (applications == null || applications.isEmpty()) {
                             %>
                             <tr>
-                                <td colspan="5" class="empty">Tiada permohonan lagi.</td>
+                                <td colspan="6" class="empty">Tiada permohonan lagi.</td>
                             </tr>
                             <% } else {
                                 for (Map<String, Object> applicationRow : applications) {
                                     Timestamp submittedAt = (Timestamp) applicationRow.get("submitted_at");
+                                    String status = String.valueOf(applicationRow.get("status"));
+                                    String adminNotes = applicationRow.get("admin_notes") == null ? "" : String.valueOf(applicationRow.get("admin_notes"));
                             %>
                             <tr>
                                 <td><strong>#<%= applicationRow.get("id") %></strong></td>
                                 <td><%= applicationRow.get("product_name") %></td>
                                 <td><%= applicationRow.get("company_name") %></td>
-                                <td><span class="status-badge status-<%= String.valueOf(applicationRow.get("status")).toLowerCase() %>"><%= applicationRow.get("status") %></span></td>
+                                <td><span class="status-badge status-<%= status.toLowerCase() %>"><%= status %></span></td>
+                                <td>
+                                    <%
+                                        String feedback = "-";
+                                        if ("REJECTED".equals(status)) {
+                                            feedback = !adminNotes.isBlank() ? adminNotes : "Permohonan ditolak tanpa sebab direkodkan.";
+                                        } else if ("SUSPENDED".equals(status)) {
+                                            feedback = !adminNotes.isBlank() ? adminNotes : "Permohonan digantung.";
+                                        }
+                                    %>
+                                    <%= feedback %>
+                                </td>
                                 <td><%= submittedAt != null ? submittedAt.toString() : "Belum dihantar" %></td>
                             </tr>
                             <%      }
@@ -184,7 +235,6 @@
             <div>
                 <div class="section">
                     <h2 class="mini-title">Produk Air Berdaftar</h2>
-                    <p style="color:#678090;margin-top:0;">Paparan ringkas daripada jadual <strong>water_products</strong> dalam MySQL.</p>
                     <table>
                         <thead>
                             <tr>
@@ -224,7 +274,6 @@
 
                 <div class="section">
                     <h2 class="mini-title">Hubungi Jabatan Air Sabah</h2>
-                    <p style="color:#678090;">Maklumat hubungan rasmi dimasukkan terus pada portal untuk rujukan pemohon.</p>
                     <div class="contact-image" aria-label="Maklumat hubungan Jabatan Air Sabah">
                         <strong>Hubungi JANS</strong>
                         <p>Telefon: 088-326888</p>
@@ -237,3 +286,8 @@
     </div>
 </body>
 </html>
+
+
+
+
+

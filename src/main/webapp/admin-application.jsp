@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.List" %>
 <!DOCTYPE html>
@@ -12,12 +12,12 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #eff8ff 0%, #f7fbfd 100%); margin: 0; color: #1e293b; }
         .navbar { background: linear-gradient(130deg, #06344f 0%, #0097d9 74%, #fff212 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: contain; background: white; padding: 3px; }
+        .brand-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: contain; padding: 3px; }
         .brand strong { display: block; }
         .brand span { font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; }
         .container { max-width: 1200px; margin: 28px auto; padding: 0 20px; }
-        .panel { background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); padding: 24px; margin-bottom: 20px; }
+        .panel { border-radius: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); padding: 24px; margin-bottom: 20px; }
         .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
         .full { grid-column: 1 / -1; }
         .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; margin-bottom: 4px; }
@@ -26,21 +26,56 @@
         .docs th, .docs td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
         textarea { width: 100%; min-height: 110px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; }
         .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
-        .btn { border: none; border-radius: 8px; padding: 12px 18px; cursor: pointer; color: white; font-weight: 700; }
+        .btn { border: 1px solid #fff; border-radius: 8px; padding: 12px 18px; cursor: pointer; color: white; font-weight: 700; }
         .approve { background: #15803d; }
         .reject { background: #b91c1c; }
         .suspend { background: #9a3412; }
         .secondary { background: #475569; text-decoration: none; display: inline-block; }
         .status { font-weight: 700; }
+        .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 10px; padding: 12px; margin-bottom: 14px; }
         .contact-card { width: 100%; max-width: 420px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fbff; padding: 14px; color: #475569; }
         .contact-card strong { display: block; margin-bottom: 8px; color: #0f172a; }
         .contact-card p { margin: 4px 0; }
-    </style>
+                    /* Enforce visible white border on all clickable buttons */
+        button,
+        input[type="submit"],
+        input[type="button"],
+        .btn,
+        .login-btn,
+        .modal-close,
+        .btn-attachment,
+        .attachment-list button,
+        a.btn {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }
+
+        button:hover,
+        input[type="submit"]:hover,
+        input[type="button"]:hover,
+        .btn:hover,
+        .login-btn:hover,
+        .modal-close:hover,
+        .btn-attachment:hover,
+        .attachment-list button:hover,
+        a.btn:hover,
+        button:focus,
+        input[type="submit"]:focus,
+        input[type="button"]:focus,
+        .btn:focus,
+        .login-btn:focus,
+        .modal-close:focus,
+        .btn-attachment:focus,
+        .attachment-list button:focus,
+        a.btn:focus {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }</style>
 </head>
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" class="brand-logo" alt="Logo Jabatan Air Sabah">
+            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <strong>SPPA - Semakan Permohonan</strong>
                 <span>Jabatan Air Negeri Sabah</span>
@@ -145,13 +180,19 @@
 
         <div class="panel">
             <h3>Tindakan Pentadbir</h3>
-            <form method="post" action="${pageContext.request.contextPath}/admin/application">
+            <%
+                String adminError = request.getAttribute("error") == null ? null : String.valueOf(request.getAttribute("error"));
+                if (adminError != null && !adminError.isBlank()) {
+            %>
+            <div class="alert-error"><%= adminError %></div>
+            <% } %>
+            <form method="post" action="${pageContext.request.contextPath}/admin/application" id="adminActionForm">
                 <input type="hidden" name="id" value="<%= applicationData.get("id") %>">
-                <div class="label">Nota Pentadbir</div>
-                <textarea name="admin_notes"><%= applicationData.get("admin_notes") != null ? applicationData.get("admin_notes") : "" %></textarea>
+                <div class="label">Sebab Penolakan / Nota Pentadbir (wajib jika Tolak)</div>
+                <textarea name="admin_notes" id="adminNotes"><%= applicationData.get("admin_notes") != null ? applicationData.get("admin_notes") : "" %></textarea>
                 <div class="actions">
                     <button class="btn approve" type="submit" name="action" value="approve">Luluskan</button>
-                    <button class="btn reject" type="submit" name="action" value="reject">Tolak</button>
+                    <button class="btn reject" type="submit" name="action" value="reject" onclick="return validateRejectReason();">Tolak</button>
                     <button class="btn suspend" type="submit" name="action" value="suspend_application">Gantung Permohonan</button>
                     <button class="btn suspend" type="submit" name="action" value="suspend_user">Gantung Pengguna</button>
                     <a class="btn secondary" href="${pageContext.request.contextPath}/dashboard">Kembali</a>
@@ -169,5 +210,24 @@
             </div>
         </div>
     </div>
+    <script>
+        function validateRejectReason() {
+            var notesField = document.getElementById('adminNotes');
+            if (!notesField) {
+                return true;
+            }
+            var reason = notesField.value == null ? '' : notesField.value.trim();
+            if (reason.length === 0) {
+                alert('Sila isi sebab penolakan sebelum menolak permohonan.');
+                notesField.focus();
+                return false;
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>
+
+
+
+

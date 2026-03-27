@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -19,11 +19,45 @@
         .field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: #173040; }
         .field input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d7e7ef; }
         .actions { display: flex; gap: 10px; margin-top: 8px; }
-        .btn { border: none; border-radius: 12px; padding: 12px 16px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+        .btn { border: 1px solid #fff; border-radius: 12px; padding: 12px 16px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
         .btn-primary { background: linear-gradient(135deg, var(--brand-navy), var(--brand-blue)); color: #fff; }
         .btn-secondary { background: #e5f2f9; color: #06344f; }
         .error { padding: 11px 12px; border-radius: 10px; background: #ffe9e9; color: #b42318; margin-bottom: 14px; }
-    </style>
+                    /* Enforce visible white border on all clickable buttons */
+        button,
+        input[type="submit"],
+        input[type="button"],
+        .btn,
+        .login-btn,
+        .modal-close,
+        .btn-attachment,
+        .attachment-list button,
+        a.btn {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }
+
+        button:hover,
+        input[type="submit"]:hover,
+        input[type="button"]:hover,
+        .btn:hover,
+        .login-btn:hover,
+        .modal-close:hover,
+        .btn-attachment:hover,
+        .attachment-list button:hover,
+        a.btn:hover,
+        button:focus,
+        input[type="submit"]:focus,
+        input[type="button"]:focus,
+        .btn:focus,
+        .login-btn:focus,
+        .modal-close:focus,
+        .btn-attachment:focus,
+        .attachment-list button:focus,
+        a.btn:focus {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }</style>
 </head>
 <body>
     <div class="card">
@@ -59,3 +93,8 @@
     </div>
 </body>
 </html>
+
+
+
+
+

@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.ArrayList" %>
@@ -93,7 +93,7 @@
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #eff9ff 0%, #f8fbfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 72%, var(--brand-yellow) 180%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 52px; height: 52px; border-radius: 14px; object-fit: contain; background: white; padding: 4px; }
+        .brand-logo { width: 52px; height: 52px; border-radius: 14px; object-fit: contain; padding: 4px; }
         .brand h1 { margin: 0; font-size: 20px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
         .nav-links a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; }
@@ -108,8 +108,8 @@
         .contact-image p { margin: 4px 0; color: var(--muted); font-size: 14px; }
         .filters { display: grid; grid-template-columns: 2fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 18px; }
         .field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
-        .field input, .field select { width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: white; }
-        .btn { padding: 12px 16px; border-radius: 12px; border: none; cursor: pointer; text-decoration: none; font-weight: 700; }
+        .field input, .field select { width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); }
+        .btn { padding: 12px 16px; border-radius: 12px; border: 1px solid #fff; cursor: pointer; text-decoration: none; font-weight: 700; }
         .btn-primary { background: var(--brand-blue); color: white; }
         .btn-secondary { background: #dcecf6; color: var(--brand-navy); }
         .btn-attachment { background: #e7f4fb; color: #0b4d71; border: 1px solid #b9dcee; padding: 7px 10px; border-radius: 10px; font-weight: 700; cursor: pointer; }
@@ -129,7 +129,7 @@
         .modal-card { width: min(1000px, 96vw); height: min(88vh, 760px); background: #fff; border-radius: 16px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid #e5f0f6; }
         .modal-title { font-size: 15px; font-weight: 700; }
-        .modal-close { border: none; background: #eff4f8; border-radius: 10px; padding: 7px 10px; font-weight: 700; cursor: pointer; }
+        .modal-close { border: 1px solid #fff; background: #eff4f8; border-radius: 10px; padding: 7px 10px; font-weight: 700; cursor: pointer; }
         .modal-body { display: grid; grid-template-columns: 240px 1fr; min-height: 0; }
         .attachment-list { border-right: 1px solid #e5f0f6; padding: 10px; overflow: auto; }
         .attachment-list button { width: 100%; margin-bottom: 8px; text-align: left; border: 1px solid #d6e7f2; background: #f8fbfe; border-radius: 9px; padding: 9px; cursor: pointer; }
@@ -139,15 +139,49 @@
         .viewer-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); }
         @media (max-width: 980px) { .hero, .filters { grid-template-columns: 1fr; } .navbar { flex-direction: column; align-items: flex-start; } .nav-links a { margin-left: 0; margin-right: 16px; } }
         @media (max-width: 780px) { .modal-body { grid-template-columns: 1fr; } .attachment-list { border-right: 0; border-bottom: 1px solid #e5f0f6; max-height: 180px; } }
-    </style>
+                    /* Enforce visible white border on all clickable buttons */
+        button,
+        input[type="submit"],
+        input[type="button"],
+        .btn,
+        .login-btn,
+        .modal-close,
+        .btn-attachment,
+        .attachment-list button,
+        a.btn {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }
+
+        button:hover,
+        input[type="submit"]:hover,
+        input[type="button"]:hover,
+        .btn:hover,
+        .login-btn:hover,
+        .modal-close:hover,
+        .btn-attachment:hover,
+        .attachment-list button:hover,
+        a.btn:hover,
+        button:focus,
+        input[type="submit"]:focus,
+        input[type="button"]:focus,
+        .btn:focus,
+        .login-btn:focus,
+        .modal-close:focus,
+        .btn-attachment:focus,
+        .attachment-list button:focus,
+        a.btn:focus {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }</style>
 </head>
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" class="brand-logo" alt="Logo Jabatan Air Sabah">
+            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <h1>Senarai Produk Berdaftar</h1>
-                <p>Sistem Pendaftaran Produk Air • Jabatan Air Negeri Sabah</p>
+                <p>Sistem Pendaftaran Produk Air â€¢ Jabatan Air Negeri Sabah</p>
             </div>
         </div>
         <div class="nav-links">
@@ -161,7 +195,6 @@
             <div class="panel">
                 <div class="metric"><span><%= request.getAttribute("product_total") %></span> produk ditemui</div>
                 <h2>Rujukan produk air yang telah berdaftar</h2>
-                <p class="import-note">Saved <%= request.getAttribute("product_total") %> records to data\water_products.json and data\water_products.csv</p>
             </div>
             <div class="panel">
                 <div class="contact-image" aria-label="Maklumat hubungan Jabatan Air Sabah">
@@ -365,3 +398,7 @@
     </script>
 </body>
 </html>
+
+
+
+

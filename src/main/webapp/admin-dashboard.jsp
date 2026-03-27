@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.sql.Timestamp" %>
@@ -23,7 +23,7 @@
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 76%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 54px; height: 54px; border-radius: 16px; object-fit: contain; background: white; padding: 4px; }
+        .brand-logo { width: 54px; height: 54px; border-radius: 16px; object-fit: contain; padding: 4px; }
         .brand h1 { margin: 0; font-size: 20px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; }
@@ -42,10 +42,12 @@
         .stat-card h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
         .stat-card .number { font-size: 30px; font-weight: 800; color: var(--brand-navy); }
         .layout { display: grid; grid-template-columns: 1.9fr 1fr; gap: 20px; }
-        .toolbar { display: grid; grid-template-columns: 2fr 1fr auto auto auto; gap: 12px; align-items: end; margin-bottom: 16px; }
+        .toolbar { display: grid; grid-template-columns: minmax(240px, 2fr) minmax(160px, 1fr) auto minmax(280px, 1.6fr) auto; gap: 12px; align-items: end; margin-bottom: 16px; }
+        .export-control { min-width: 0; }
+        .export-help { margin-top: 6px; font-size: 12px; color: var(--muted); }
         .field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
         .field input, .field select { width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); }
-        .btn { padding: 11px 15px; border-radius: 12px; border: none; text-decoration: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .btn { padding: 11px 15px; border-radius: 12px; border: 1px solid #fff; text-decoration: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
         .btn-primary { background: var(--brand-blue); color: white; }
         .btn-secondary { background: #dcecf6; color: var(--brand-navy); }
         .btn-accent { background: #fff7b0; color: #6a5a00; }
@@ -65,12 +67,46 @@
         .empty { text-align: center; color: var(--muted); padding: 26px 0; }
         .section-title { margin-top: 0; margin-bottom: 14px; }
         @media (max-width: 1100px) { .hero, .layout, .stats, .toolbar { grid-template-columns: 1fr; } .navbar { flex-direction: column; align-items: flex-start; } .navbar a { margin-left: 0; margin-right: 16px; } }
-    </style>
+                    /* Enforce visible white border on all clickable buttons */
+        button,
+        input[type="submit"],
+        input[type="button"],
+        .btn,
+        .login-btn,
+        .modal-close,
+        .btn-attachment,
+        .attachment-list button,
+        a.btn {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }
+
+        button:hover,
+        input[type="submit"]:hover,
+        input[type="button"]:hover,
+        .btn:hover,
+        .login-btn:hover,
+        .modal-close:hover,
+        .btn-attachment:hover,
+        .attachment-list button:hover,
+        a.btn:hover,
+        button:focus,
+        input[type="submit"]:focus,
+        input[type="button"]:focus,
+        .btn:focus,
+        .login-btn:focus,
+        .modal-close:focus,
+        .btn-attachment:focus,
+        .attachment-list button:focus,
+        a.btn:focus {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }</style>
 </head>
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png" class="brand-logo" alt="Logo Jabatan Air Sabah">
+            <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <h1>Dashboard Pentadbir</h1>
                 <p>Pusat kawalan permohonan, produk, dan laporan SPPA</p>
@@ -149,8 +185,23 @@
                         </select>
                     </div>
                     <button class="btn btn-primary" type="submit">Tapis</button>
-                    <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/export?format=xlsx&q=<%= java.net.URLEncoder.encode(String.valueOf(request.getAttribute("search_query")), "UTF-8") %>&status=<%= java.net.URLEncoder.encode(String.valueOf(request.getAttribute("selected_status")), "UTF-8") %>">Export Excel</a>
-                    <a class="btn btn-accent" href="${pageContext.request.contextPath}/admin/export?format=pdf&q=<%= java.net.URLEncoder.encode(String.valueOf(request.getAttribute("search_query")), "UTF-8") %>&status=<%= java.net.URLEncoder.encode(String.valueOf(request.getAttribute("selected_status")), "UTF-8") %>">Export PDF</a>
+                    <div class="field export-control">
+                        <label for="exportOption">Eksport</label>
+                        <select id="exportOption" name="exportOption">
+                            <optgroup label="Ikut penapis semasa">
+                                <option value="xlsx_current">Excel</option>
+                                <option value="pdf_current">PDF</option>
+                            </optgroup>
+                            <optgroup label="Status khusus">
+                                <option value="xlsx_approved">Excel - APPROVED</option>
+                                <option value="xlsx_rejected">Excel - REJECTED</option>
+                                <option value="pdf_approved">PDF - APPROVED</option>
+                                <option value="pdf_rejected">PDF - REJECTED</option>
+                            </optgroup>
+                        </select>
+                        <div class="export-help">Pilih format dan status, kemudian klik Muat Turun.</div>
+                    </div>
+                    <button class="btn btn-secondary" type="button" id="exportDownloadBtn">Muat Turun</button>
                 </form>
 
                 <table>
@@ -226,7 +277,7 @@
                                 <td><%= product.get("no") %></td>
                                 <td>
                                     <strong><%= product.get("product_materials") %></strong><br>
-                                    <span class="subtle"><%= product.get("brand") == null ? "-" : product.get("brand") %> • <%= product.get("classification") %></span>
+                                    <span class="subtle"><%= product.get("brand") == null ? "-" : product.get("brand") %> â€¢ <%= product.get("classification") %></span>
                                 </td>
                             </tr>
                             <%      }
@@ -242,5 +293,50 @@
             </div>
         </div>
     </div>
+<script>
+    (function () {
+        var toolbarForm = document.querySelector('.toolbar');
+        var exportButton = document.getElementById('exportDownloadBtn');
+        var exportOption = document.getElementById('exportOption');
+        var searchInput = document.getElementById('q');
+        var statusSelect = document.getElementById('status');
+
+        if (!toolbarForm || !exportButton || !exportOption || !searchInput || !statusSelect) {
+            return;
+        }
+
+        var contextPath = '<%= request.getContextPath() %>';
+
+        function statusForSelection(optionValue) {
+            if (optionValue === 'xlsx_approved' || optionValue === 'pdf_approved') {
+                return 'APPROVED';
+            }
+            if (optionValue === 'xlsx_rejected' || optionValue === 'pdf_rejected') {
+                return 'REJECTED';
+            }
+            return statusSelect.value || '';
+        }
+
+        function formatForSelection(optionValue) {
+            return optionValue.indexOf('pdf_') === 0 ? 'pdf' : 'xlsx';
+        }
+
+        exportButton.addEventListener('click', function () {
+            var optionValue = exportOption.value;
+            var format = formatForSelection(optionValue);
+            var status = statusForSelection(optionValue);
+            var q = searchInput.value || '';
+            var url = contextPath + '/admin/export?format=' + encodeURIComponent(format)
+                + '&q=' + encodeURIComponent(q)
+                + '&status=' + encodeURIComponent(status);
+            window.location.href = url;
+        });
+    })();
+</script>
 </body>
 </html>
+
+
+
+
+

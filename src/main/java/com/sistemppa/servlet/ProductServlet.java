@@ -41,6 +41,6 @@ public class ProductServlet extends HttpServlet {
     }
 
     private String trim(String value) {
-        return value == null ? null : value.trim();
+        return value != null ? value.trim() : null;
     }
 }
