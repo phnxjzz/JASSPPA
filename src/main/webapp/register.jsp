@@ -14,24 +14,61 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #06344f 0%, #0097d9 58%, #fff9b8 150%); min-height: 100vh; display: grid; place-items: center; padding: 24px; }
         .shell { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 1040px; border-radius: 24px; overflow: hidden; box-shadow: 0 22px 58px rgba(6, 52, 79, 0.2); }
         .info { background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%); color: white; padding: 40px; }
-        .info .logo { width: 78px; height: 78px; background: white; border-radius: 18px; margin-bottom: 18px; display: grid; place-items: center; color: var(--brand-navy); font-size: 22px; font-weight: 800; letter-spacing: 0.08em; }
+        .info .logo { width: 78px; height: 78px; border-radius: 18px; margin-bottom: 18px; display: grid; place-items: center; color: var(--brand-navy); font-size: 22px; font-weight: 800; letter-spacing: 0.08em; }
         .info h1 { margin-bottom: 10px; font-size: 34px; }
         .info p { opacity: 0.94; margin-bottom: 20px; }
         .info .contact { width: 100%; border-radius: 18px; border: 1px solid rgba(255,255,255,0.25); padding: 14px; background: rgba(6, 52, 79, 0.28); }
         .info .contact strong { display: block; margin-bottom: 8px; }
         .info .contact p { margin: 4px 0; font-size: 13px; }
-        .card { background: white; padding: 36px; }
+        .shell .page-contact { grid-column: 1 / -1; border: 1px solid rgba(255,255,255,0.25); border-radius: 18px; padding: 14px; background: rgba(6, 52, 79, 0.85); color: #ffffff; }
+        .shell .page-contact strong { display: block; margin-bottom: 8px; }
+        .shell .page-contact p { margin: 4px 0; font-size: 13px; }
+        .card { padding: 36px; }
         h2 { margin-bottom: 8px; color: #173040; }
         p.form-copy { color: #60798b; margin-bottom: 20px; }
         .field { margin-bottom: 16px; }
         label { display: block; margin-bottom: 6px; font-weight: 700; color: #173040; }
         input { width: 100%; padding: 12px; border: 1px solid #d7e7ef; border-radius: 12px; }
         .error { margin-bottom: 14px; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 10px; }
-        .btn { width: 100%; border: none; border-radius: 12px; padding: 13px; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 100%); color: white; font-weight: 700; cursor: pointer; }
+        .btn { width: 100%; border: 1px solid #fff; border-radius: 12px; padding: 13px; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 100%); color: white; font-weight: 700; cursor: pointer; }
         .footer { margin-top: 18px; text-align: center; color: #64748b; }
         .footer a { color: var(--brand-blue); text-decoration: none; font-weight: 700; }
         @media (max-width: 920px) { .shell { grid-template-columns: 1fr; } .info { display: none; } }
-    </style>
+                    
+        button,
+        input[type="submit"],
+        input[type="button"],
+        .btn,
+        .login-btn,
+        .modal-close,
+        .btn-attachment,
+        .attachment-list button,
+        a.btn {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }
+
+        button:hover,
+        input[type="submit"]:hover,
+        input[type="button"]:hover,
+        .btn:hover,
+        .login-btn:hover,
+        .modal-close:hover,
+        .btn-attachment:hover,
+        .attachment-list button:hover,
+        a.btn:hover,
+        button:focus,
+        input[type="submit"]:focus,
+        input[type="button"]:focus,
+        .btn:focus,
+        .login-btn:focus,
+        .modal-close:focus,
+        .btn-attachment:focus,
+        .attachment-list button:focus,
+        a.btn:focus {
+            border: 1px solid #fff !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        }</style>
 </head>
 <body>
     <div class="shell">
@@ -39,12 +76,6 @@
             <div class="logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
             <h1>Akaun Pemohon SPPA</h1>
             <p>Cipta akaun untuk mengisi borang PPP1 secara online, menyemak senarai produk berdaftar, dan memantau keputusan semakan pentadbir.</p>
-            <div class="contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
-                <strong>Hubungi JANS</strong>
-                <p>Telefon: 088-326888</p>
-                <p>Email: info@jwater.gov.my</p>
-                <p>Kota Kinabalu, Sabah</p>
-            </div>
         </div>
         <div class="card">
         <h2>Daftar Akaun Pemohon</h2>
@@ -82,6 +113,18 @@
                 Sudah ada akaun? <a href="${pageContext.request.contextPath}/login">Log masuk di sini</a>
             </div>
         </div>
+        <div class="contact page-contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
+            <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="height:24px;width:auto;"></strong>
+            <p>SABAH WATER DEPARTMENT</p>
+            <p>Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</p>
+            <p>Kota Kinabalu, Sabah, Malaysia</p>
+            <p>Tel: +60-88-232364 (HQ), Fax: +60-88-232396</p>
+            <p>Email: jans.hq@sabah.gov.my</p>
+        </div>
     </div>
 </body>
 </html>
+
+
+
+
