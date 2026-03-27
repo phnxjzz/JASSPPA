@@ -256,6 +256,124 @@ public final class DashboardDataService {
         return productTypes;
     }
 
+    public static void createAnnouncement(Connection conn, String title, String content,
+                                          String imageUrl, boolean isActive, Integer userId) throws SQLException {
+        ensureAnnouncementsTable(conn);
+        String sql = "INSERT INTO announcements (title, content, image_url, is_active, created_by, updated_by) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, title);
+            stmt.setString(2, content);
+            stmt.setString(3, imageUrl);
+            stmt.setBoolean(4, isActive);
+            if (userId == null) {
+                stmt.setNull(5, java.sql.Types.INTEGER);
+                stmt.setNull(6, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(5, userId);
+                stmt.setInt(6, userId);
+            }
+            stmt.executeUpdate();
+        }
+    }
+
+    public static void updateAnnouncement(Connection conn, int announcementId, String title, String content,
+                                          String imageUrl, boolean isActive, Integer userId) throws SQLException {
+        ensureAnnouncementsTable(conn);
+        String sql = "UPDATE announcements "
+                + "SET title = ?, content = ?, image_url = ?, is_active = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP "
+                + "WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, title);
+            stmt.setString(2, content);
+            stmt.setString(3, imageUrl);
+            stmt.setBoolean(4, isActive);
+            if (userId == null) {
+                stmt.setNull(5, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(5, userId);
+            }
+            stmt.setInt(6, announcementId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public static void deleteAnnouncement(Connection conn, int announcementId) throws SQLException {
+        ensureAnnouncementsTable(conn);
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM announcements WHERE id = ?")) {
+            stmt.setInt(1, announcementId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public static Map<String, Object> loadAnnouncementById(Connection conn, int announcementId) throws SQLException {
+        ensureAnnouncementsTable(conn);
+        String sql = "SELECT a.id, a.title, a.content, a.image_url, a.is_active, a.created_at, a.updated_at, "
+                + "a.created_by, a.updated_by, cu.full_name AS created_by_name, uu.full_name AS updated_by_name "
+                + "FROM announcements a "
+                + "LEFT JOIN users cu ON cu.id = a.created_by "
+                + "LEFT JOIN users uu ON uu.id = a.updated_by "
+                + "WHERE a.id = ? LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, announcementId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapAnnouncementRow(rs);
+                }
+            }
+        }
+        return new HashMap<>();
+    }
+
+    public static List<Map<String, Object>> loadAllAnnouncements(Connection conn, int limit) throws SQLException {
+        ensureAnnouncementsTable(conn);
+        String sql = "SELECT a.id, a.title, a.content, a.image_url, a.is_active, a.created_at, a.updated_at, "
+                + "a.created_by, a.updated_by, cu.full_name AS created_by_name, uu.full_name AS updated_by_name "
+                + "FROM announcements a "
+                + "LEFT JOIN users cu ON cu.id = a.created_by "
+                + "LEFT JOIN users uu ON uu.id = a.updated_by "
+                + "ORDER BY a.is_active DESC, a.updated_at DESC, a.id DESC";
+        if (limit > 0) {
+            sql += " LIMIT ?";
+        }
+
+        List<Map<String, Object>> announcements = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (limit > 0) {
+                stmt.setInt(1, limit);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    announcements.add(mapAnnouncementRow(rs));
+                }
+            }
+        }
+        return announcements;
+    }
+
+    public static List<Map<String, Object>> loadActiveAnnouncements(Connection conn, int limit) throws SQLException {
+        ensureAnnouncementsTable(conn);
+        String sql = "SELECT id, title, content, image_url, is_active, created_at, updated_at "
+                + "FROM announcements WHERE is_active = 1 "
+                + "ORDER BY updated_at DESC, id DESC";
+        if (limit > 0) {
+            sql += " LIMIT ?";
+        }
+
+        List<Map<String, Object>> announcements = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (limit > 0) {
+                stmt.setInt(1, limit);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    announcements.add(mapAnnouncementRow(rs));
+                }
+            }
+        }
+        return announcements;
+    }
+
     private static QueryParts buildApplicationFilter(String search, String status) {
         StringBuilder clause = new StringBuilder(" WHERE 1=1");
         List<Object> parameters = new ArrayList<>();
@@ -307,6 +425,58 @@ public final class DashboardDataService {
             stmt.setObject(index++, parameter);
         }
         return index;
+    }
+
+    private static Map<String, Object> mapAnnouncementRow(ResultSet rs) throws SQLException {
+        Map<String, Object> row = new HashMap<>();
+        row.put("id", rs.getInt("id"));
+        row.put("title", rs.getString("title"));
+        row.put("content", rs.getString("content"));
+        row.put("image_url", rs.getString("image_url"));
+        row.put("is_active", rs.getBoolean("is_active"));
+        row.put("created_at", rs.getTimestamp("created_at"));
+        row.put("updated_at", rs.getTimestamp("updated_at"));
+
+        try {
+            row.put("created_by", rs.getObject("created_by"));
+        } catch (SQLException ignored) {
+            row.put("created_by", null);
+        }
+        try {
+            row.put("updated_by", rs.getObject("updated_by"));
+        } catch (SQLException ignored) {
+            row.put("updated_by", null);
+        }
+        try {
+            row.put("created_by_name", rs.getString("created_by_name"));
+        } catch (SQLException ignored) {
+            row.put("created_by_name", null);
+        }
+        try {
+            row.put("updated_by_name", rs.getString("updated_by_name"));
+        } catch (SQLException ignored) {
+            row.put("updated_by_name", null);
+        }
+        return row;
+    }
+
+    private static void ensureAnnouncementsTable(Connection conn) throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS announcements ("
+                + "id INT AUTO_INCREMENT PRIMARY KEY, "
+                + "title VARCHAR(180) NOT NULL, "
+                + "content TEXT NOT NULL, "
+                + "image_url VARCHAR(500) NULL, "
+                + "is_active TINYINT(1) NOT NULL DEFAULT 1, "
+                + "created_by INT NULL, "
+                + "updated_by INT NULL, "
+                + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+                + "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, "
+                + "INDEX idx_announcements_active_updated (is_active, updated_at), "
+                + "INDEX idx_announcements_updated_at (updated_at)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.execute();
+        }
     }
 
     private static int countByQuery(Connection conn, String sql) throws SQLException {
