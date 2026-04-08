@@ -88,13 +88,15 @@ public class ProductAttachmentProxyServlet extends HttpServlet {
 
     private String extractFileName(URI uri) {
         String path = uri.getPath();
-        if (path == null || path.isBlank()) {
+        if(path == null || path.isBlank()) {
             return "lampiran";
         }
         int slashIndex = path.lastIndexOf('/');
         if (slashIndex >= 0 && slashIndex < path.length() - 1) {
             return path.substring(slashIndex + 1);
+
         }
-        return "lampiran";
+        return "Lampiran";
+
     }
-}
+} 
