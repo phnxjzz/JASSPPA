@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.List" %>
 <!DOCTYPE html>
@@ -12,10 +12,11 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #eff8ff 0%, #f7fbfd 100%); margin: 0; color: #1e293b; }
         .navbar { background: linear-gradient(130deg, #06344f 0%, #0097d9 74%, #fff212 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: contain; padding: 3px; }
+        .brand-logo { width: 48px; height: 48px; object-fit: contain; }
         .brand strong { display: block; }
         .brand span { font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; }
+        .icon-inline { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
         .container { max-width: 1200px; margin: 28px auto; padding: 0 20px; }
         .panel { border-radius: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); padding: 24px; margin-bottom: 20px; }
         .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -33,9 +34,9 @@
         .secondary { background: #475569; text-decoration: none; display: inline-block; }
         .status { font-weight: 700; }
         .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 10px; padding: 12px; margin-bottom: 14px; }
-        .contact-card { width: 100%; max-width: 420px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fbff; padding: 14px; color: #475569; }
-        .contact-card strong { display: block; margin-bottom: 8px; color: #0f172a; }
-        .contact-card p { margin: 4px 0; }
+        .contact-panel { background: #f8fbff; border: 1px solid #d7e7ef; border-radius: 12px; padding: 14px; margin-bottom: 20px; }
+        .contact-panel h4 { margin: 0 0 8px; color: #06344f; }
+        .contact-panel p { margin: 4px 0; color: #334155; }
                     /* Enforce visible white border on all clickable buttons */
         button,
         input[type="submit"],
@@ -75,6 +76,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
+            <img src="${pageContext.request.contextPath}/assets/images/sabah-logo.png" class="brand-logo" alt="Logo Sabah">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <strong>SPPA - Semakan Permohonan</strong>
@@ -83,6 +85,8 @@
         </div>
         <div>
             <a href="${pageContext.request.contextPath}/dashboard">Kembali ke Dashboard</a>
+            <a href="${pageContext.request.contextPath}/dashboard?status=ARCHIVED">Tetapan Arkib</a>
+            <a href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" class="icon-inline" alt="Laman utama"></a>
             <a href="${pageContext.request.contextPath}/logout">Log Keluar</a>
         </div>
     </div>
@@ -96,6 +100,9 @@
         <div class="panel">
             <h2>Permohonan #<%= applicationData.get("id") %></h2>
             <p>Status semasa: <span class="status"><%= applicationData.get("status") %></span></p>
+            <% if (applicationData.get("archived_at") != null) { %>
+                <p>Status arkib: <span class="status">ARCHIVED sejak <%= applicationData.get("archived_at") %></span></p>
+            <% } %>
             <div class="grid">
                 <div>
                     <div class="label">Pemohon</div>
@@ -195,19 +202,24 @@
                     <button class="btn reject" type="submit" name="action" value="reject" onclick="return validateRejectReason();">Tolak</button>
                     <button class="btn suspend" type="submit" name="action" value="suspend_application">Gantung Permohonan</button>
                     <button class="btn suspend" type="submit" name="action" value="suspend_user">Gantung Pengguna</button>
+                    <% String currentStatus = String.valueOf(applicationData.get("status")); %>
+                    <% boolean archived = applicationData.get("archived_at") != null; %>
+                    <% if (!archived && ("APPROVED".equals(currentStatus) || "REJECTED".equals(currentStatus) || "SUSPENDED".equals(currentStatus))) { %>
+                        <button class="btn secondary" type="submit" name="action" value="archive" onclick="return confirm('Arkibkan permohonan ini? Rekod akan dipindahkan ke kategori ARCHIVED.');">Arkibkan Permohonan</button>
+                    <% } %>
+                    <% if (archived) { %>
+                        <button class="btn secondary" type="submit" name="action" value="unarchive" onclick="return confirm('Keluarkan permohonan ini dari arkib?');">Keluarkan Dari Arkib</button>
+                    <% } %>
                     <a class="btn secondary" href="${pageContext.request.contextPath}/dashboard">Kembali</a>
                 </div>
             </form>
         </div>
 
-        <div class="panel">
-            <h3>Hubungan Rasmi</h3>
-            <div class="contact-card" aria-label="Maklumat hubungan Jabatan Air Sabah">
-                <strong>Hubungi JANS</strong>
-                <p>Telefon: 088-326888</p>
-                <p>Email: info@jwater.gov.my</p>
-                <p>Kota Kinabalu, Sabah</p>
-            </div>
+        <div class="contact-panel">
+            <h4><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Hubungi JANS</h4>
+            <p>Telefon: +60-88-232364 (HQ)</p>
+            <p>Fax: +60-88-232396</p>
+            <p>Email: jans.hq@sabah.gov.my</p>
         </div>
     </div>
     <script>
@@ -224,9 +236,32 @@
             }
             return true;
         }
+
+        (function () {
+            var idleLimitMs = 10 * 60 * 1000;
+            var logoutUrl = '${pageContext.request.contextPath}/logout?timeout=1';
+            var timerId;
+
+            function triggerAutoLogout() {
+                window.location.href = logoutUrl;
+            }
+
+            function resetTimer() {
+                window.clearTimeout(timerId);
+                timerId = window.setTimeout(triggerAutoLogout, idleLimitMs);
+            }
+
+            ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (eventName) {
+                document.addEventListener(eventName, resetTimer, { passive: true });
+            });
+
+            resetTimer();
+        })();
     </script>
 </body>
 </html>
+
+
 
 
 
