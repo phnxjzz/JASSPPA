@@ -44,6 +44,30 @@
             raw = raw.substring(managedAnnouncementIndex);
         }
 
+        int uploadManagedIndex = raw.toLowerCase(java.util.Locale.ROOT).indexOf("/uploads/sistemppa/announcements/");
+        if (uploadManagedIndex >= 0) {
+            String fileName = raw.substring(uploadManagedIndex + "/uploads/sistemppa/announcements/".length());
+            int slashPos = fileName.indexOf('/');
+            if (slashPos >= 0) {
+                fileName = fileName.substring(0, slashPos);
+            }
+            if (!fileName.isBlank()) {
+                raw = "/announcement-images/" + fileName;
+            }
+        }
+
+        int uploadRelativeIndex = raw.toLowerCase(java.util.Locale.ROOT).indexOf("uploads/sistemppa/announcements/");
+        if (uploadRelativeIndex >= 0) {
+            String fileName = raw.substring(uploadRelativeIndex + "uploads/sistemppa/announcements/".length());
+            int slashPos = fileName.indexOf('/');
+            if (slashPos >= 0) {
+                fileName = fileName.substring(0, slashPos);
+            }
+            if (!fileName.isBlank()) {
+                raw = "/announcement-images/" + fileName;
+            }
+        }
+
         int legacyAnnouncementIndex = raw.indexOf("/assets/images/announcements/");
         if (legacyAnnouncementIndex >= 0) {
             String fileName = raw.substring(legacyAnnouncementIndex + "/assets/images/announcements/".length());
@@ -83,38 +107,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Pentadbir - SPPA</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
         :root {
-            --brand-blue: #0097d9;
-            --brand-navy: #06344f;
-            --brand-yellow: #fff212;
+            --brand-blue: #0d5c8f;
+            --brand-navy: #08334d;
+            --brand-gold: #e7bf56;
             --surface: #ffffff;
-            --surface-soft: #f7fbff;
-            --line: #d9e7f1;
-            --text: #183244;
-            --muted: #637d8d;
+            --surface-soft: #f3f8fc;
+            --line: #d4e1ec;
+            --text: #1a3040;
+            --muted: #5d7484;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
-        .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 76%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        body { margin: 0; font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: var(--text); }
+        .navbar { background: linear-gradient(180deg, var(--brand-navy) 0%, #0c4569 100%); border-bottom: 3px solid var(--brand-gold); color: white; padding: 14px 26px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 12px 28px rgba(8, 51, 77, 0.2); }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 54px; height: 54px; border-radius: 16px; object-fit: contain; padding: 4px; }
-        .brand h1 { margin: 0; font-size: 20px; }
-        .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
-        .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-        .icon-inline { width: 14px; height: 14px; object-fit: contain; vertical-align: middle; }
+        .brand-logo { width: 52px; height: 52px; object-fit: contain; }
+        .brand h1 { margin: 0; font-size: 21px; letter-spacing: 0.02em; }
+        .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.9; }
+        .navbar a { color: white; text-decoration: none; margin-left: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border-radius: 8px; transition: background 0.18s ease; }
+        .navbar a:hover { background: rgba(255,255,255,0.14); }
+        .icon-inline { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
+        .nav-dropdown { position: relative; display: inline-flex; align-items: center; margin-left: 10px; }
+        .nav-dropdown-btn { background: transparent; border: none !important; box-shadow: none !important; color: white; font-weight: 700; font-family: inherit; font-size: 1em; cursor: pointer; padding: 8px 11px; border-radius: 8px; display: flex; align-items: center; gap: 4px; }
+        .nav-dropdown-btn:hover { background: rgba(255,255,255,0.14); }
+        .nav-dropdown-menu { display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 10px; box-shadow: 0 12px 28px rgba(6,52,79,0.18); min-width: 190px; z-index: 100; overflow: hidden; margin-top: 4px; }
+        .nav-dropdown-menu a { display: block; padding: 10px 16px; color: #06344f !important; text-decoration: none; font-weight: 700; margin-left: 0 !important; border-bottom: 1px solid #e4edf4; }
+        .nav-dropdown-menu a:last-child { border-bottom: none; }
+        .nav-dropdown-menu a:hover { background: #eef5fb; }
+        .nav-dropdown:hover .nav-dropdown-menu,
+        .nav-dropdown:focus-within .nav-dropdown-menu { display: block; }
         .container { max-width: 1320px; margin: 28px auto; padding: 0 20px 32px; }
         .hero { display: grid; grid-template-columns: 1.8fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 16px 40px rgba(6, 52, 79, 0.08); padding: 22px; }
-        .hero h2 { margin-top: 0; font-size: 30px; }
+        .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 26px rgba(9, 53, 79, 0.07); padding: 20px; }
+        .hero h2 { margin-top: 0; font-size: 28px; color: #103d58; }
         .hero p { color: var(--muted); line-height: 1.7; max-width: 760px; }
         .metric-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-        .metric-chip { background: var(--surface-soft); border: 1px solid var(--line); padding: 10px 14px; border-radius: 999px; font-weight: 700; }
-        .contact-image { width: 100%; border-radius: 16px; border: 1px solid var(--line); padding: 14px; background: #f7fbff; }
-        .contact-image strong { display: block; margin-bottom: 8px; color: var(--brand-navy); }
-        .contact-image p { margin: 4px 0; color: var(--muted); font-size: 14px; }
-        .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
-        .stat-card { background: var(--surface); padding: 18px; border-radius: 18px; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(6, 52, 79, 0.06); }
-        .stat-card h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+        .metric-chip { background: var(--surface-soft); border: 1px solid #cbd9e4; padding: 9px 13px; border-radius: 999px; font-weight: 700; color: #17425f; }
+        .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); padding: 18px; border-radius: 14px; border: 1px solid #d3e1ed; box-shadow: 0 8px 22px rgba(6, 52, 79, 0.06); }
+        .stat-card h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #557286; }
         .stat-card .number { font-size: 30px; font-weight: 800; color: var(--brand-navy); }
         .layout { display: grid; grid-template-columns: 1.9fr 1fr; gap: 20px; }
         .toolbar { display: grid; grid-template-columns: minmax(240px, 2fr) minmax(160px, 1fr) auto minmax(280px, 1.6fr) auto; gap: 12px; align-items: end; margin-bottom: 16px; }
@@ -122,9 +154,10 @@
         .export-help { margin-top: 6px; font-size: 12px; color: var(--muted); }
         .field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
         .field input, .field select { width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); }
-        .btn { padding: 11px 15px; border-radius: 12px; border: 1px solid #fff; text-decoration: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
-        .btn-primary { background: var(--brand-blue); color: white; }
-        .btn-secondary { background: #dcecf6; color: var(--brand-navy); }
+        .btn { padding: 11px 15px; border-radius: 10px; border: 1px solid #fff; text-decoration: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.16s ease, box-shadow 0.16s ease; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(9,53,79,0.16); }
+        .btn-primary { background: linear-gradient(180deg, #0f6fa8 0%, #0d5c8f 100%); color: white; }
+        .btn-secondary { background: #e2edf5; color: var(--brand-navy); }
         .btn-accent { background: #fff7b0; color: #6a5a00; }
         .section-stack { display: grid; gap: 18px; }
         .announcement-panel { border-top: 4px solid #0097d9; }
@@ -149,15 +182,16 @@
         .icon-btn { width: 14px; height: 14px; object-fit: contain; }
         .table-card h3 { margin-top: 0; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 13px 12px; border-bottom: 1px solid #e4edf4; text-align: left; vertical-align: top; }
-        th { background: #f8fcff; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
-        tr:hover { background: #f7fcff; }
+        th, td { padding: 12px 12px; border-bottom: 1px solid #e2ebf2; text-align: left; vertical-align: top; }
+        th { background: #f1f6fb; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #547288; }
+        tr:hover { background: #f5f9fc; }
         .status-pill { display: inline-block; padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 12px; }
         .status-pending { background: #fff3cd; color: #9a6700; }
         .status-approved { background: #dcfce7; color: #166534; }
         .status-rejected { background: #fee2e2; color: #b91c1c; }
         .status-suspended { background: #ffe4d6; color: #9a3412; }
         .status-draft { background: #e2e8f0; color: #334155; }
+        .status-archived { background: #ede9fe; color: #5b21b6; }
         .subtle { color: var(--muted); font-size: 13px; }
         .empty { text-align: center; color: var(--muted); padding: 26px 0; }
         .section-title { margin-top: 0; margin-bottom: 14px; }
@@ -221,6 +255,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
+            <img src="${pageContext.request.contextPath}/assets/images/sabah-logo.png" class="brand-logo" alt="Logo Sabah">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <h1>Dashboard Pentadbir</h1>
@@ -230,25 +265,18 @@
         <div>
             <span>Selamat datang, <%= session.getAttribute("username") %></span>
             <a href="${pageContext.request.contextPath}/products">Senarai Produk</a>
-            <a href="${pageContext.request.contextPath}/profile">Kemaskini Portal</a>
-            <a href="${pageContext.request.contextPath}/logout" aria-label="Keluar" title="Keluar"><img src="${pageContext.request.contextPath}/assets/images/icon-exit.png" class="icon-inline" alt="Ikon keluar"></a>
+            <div class="nav-dropdown">
+                <button class="nav-dropdown-btn">Kemas Kini Profil &#9662;</button>
+                <div class="nav-dropdown-menu">
+                    <a href="#tetapan-admin">Tetapan</a>
+                    <a href="${pageContext.request.contextPath}/profile">Kemas Kini Portal</a>
+                </div>
+            </div>
+            <a href="${pageContext.request.contextPath}/logout" aria-label="Keluar" title="Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" class="icon-inline" alt="Ikon keluar"></a>
         </div>
     </div>
 
     <div class="container">
-        <div class="hero">
-            <div class="panel">
-                <h2>Pemantauan pentadbiran dengan carian, tapisan, dan eksport</h2>
-                <div class="metric-strip">
-                    <div class="metric-chip">Rekod dipaparkan: <%= request.getAttribute("filtered_application_count") != null ? request.getAttribute("filtered_application_count") : "0" %></div>
-                    <div class="metric-chip">Produk dalam MySQL: <%= request.getAttribute("total_products") != null ? request.getAttribute("total_products") : "0" %></div>
-                    <div class="metric-chip">Pengguna aktif: <%= request.getAttribute("active_users") != null ? request.getAttribute("active_users") : "0" %></div>
-                    <div class="metric-chip">Jumlah pengguna berdaftar: <%= request.getAttribute("registered_users") != null ? request.getAttribute("registered_users") : "0" %></div>
-                    <div class="metric-chip">Pengguna baharu (30 hari): <%= request.getAttribute("new_registered_users") != null ? request.getAttribute("new_registered_users") : "0" %></div>
-                </div>
-            </div>
-        </div>
-
         <div class="stats">
             <div class="stat-card">
                 <h3>Jumlah Permohonan</h3>
@@ -270,6 +298,10 @@
                 <h3>Produk Berdaftar</h3>
                 <div class="number"><%= request.getAttribute("total_products") != null ? request.getAttribute("total_products") : "0" %></div>
             </div>
+            <div class="stat-card">
+                <h3>Diarkib</h3>
+                <div class="number"><%= request.getAttribute("archived_count") != null ? request.getAttribute("archived_count") : "0" %></div>
+            </div>
         </div>
 
         <div class="layout">
@@ -289,6 +321,7 @@
                             <option value="REJECTED" <%= "REJECTED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>REJECTED</option>
                             <option value="SUSPENDED" <%= "SUSPENDED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>SUSPENDED</option>
                             <option value="DRAFT" <%= "DRAFT".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DRAFT</option>
+                            <option value="ARCHIVED" <%= "ARCHIVED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>ARCHIVED</option>
                         </select>
                     </div>
                     <button class="btn btn-primary" type="submit">Tapis</button>
@@ -383,7 +416,7 @@
                                 <td><%= product.get("no") %></td>
                                 <td>
                                     <strong><%= product.get("product_materials") %></strong><br>
-                                    <span class="subtle"><%= product.get("brand") == null ? "-" : product.get("brand") %> • <%= product.get("classification") %></span>
+                                    <span class="subtle"><%= product.get("brand") == null ? "-" : product.get("brand") %> | <%= product.get("classification") %></span>
                                 </td>
                             </tr>
                             <%      }
@@ -528,18 +561,22 @@
                         </tbody>
                     </table>
                 </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="panel">
-            <div class="contact-image" aria-label="Maklumat hubungan Jabatan Air Sabah">
-                <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="height:24px;width:auto;"></strong>
-                <p>SABAH WATER DEPARTMENT</p>
-                <p>Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</p>
-                <p>Kota Kinabalu, Sabah, Malaysia</p>
-                <p>Tel: +60-88-232364 (HQ), Fax: +60-88-232396</p>
-                <p>Email: jans.hq@sabah.gov.my</p>
+                <div class="panel" id="tetapan-admin">
+                    <h3 class="section-title">Tetapan Pentadbir</h3>
+                    <p class="subtle">Akses permohonan yang diarkibkan dan urus semula rekod apabila perlu.</p>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap; margin-top:10px;">
+                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/dashboard?status=ARCHIVED">Lihat Permohonan Diarkib</a>
+                    </div>
+                    <p class="subtle" style="margin-top:10px;">Tip: Buka rekod melalui butang Semak, kemudian klik Keluarkan Dari Arkib untuk unarchive.</p>
+                    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e4edf4;">
+                        <strong style="display:block;margin-bottom:8px;color:#06344f;"><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Hubungi JANS</strong>
+                        <div class="subtle">Telefon: +60-88-232364 (HQ)</div>
+                        <div class="subtle">Fax: +60-88-232396</div>
+                        <div class="subtle">Email: jans.hq@sabah.gov.my</div>
+                    </div>
+                </div>
+                </div>
             </div>
         </div>
     </div>
@@ -597,17 +634,28 @@
         navContainer.appendChild(homeBtn);
     }
 })();
+
+(function () {
+    var idleLimitMs = 10 * 60 * 1000;
+    var logoutUrl = '${pageContext.request.contextPath}/logout?timeout=1';
+    var timerId;
+
+    function triggerAutoLogout() {
+        window.location.href = logoutUrl;
+    }
+
+    function resetTimer() {
+        window.clearTimeout(timerId);
+        timerId = window.setTimeout(triggerAutoLogout, idleLimitMs);
+    }
+
+    ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (eventName) {
+        document.addEventListener(eventName, resetTimer, { passive: true });
+    });
+
+    resetTimer();
+})();
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
 
