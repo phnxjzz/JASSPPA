@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -23,6 +23,11 @@
         .btn-primary { background: linear-gradient(135deg, var(--brand-navy), var(--brand-blue)); color: #fff; }
         .btn-secondary { background: #e5f2f9; color: #06344f; }
         .error { padding: 11px 12px; border-radius: 10px; background: #ffe9e9; color: #b42318; margin-bottom: 14px; }
+                        .contact-box { margin-top: 16px; border: 1px solid #d7e7ef; border-radius: 12px; padding: 12px; background: #f8fcff; }
+                        .contact-box strong { display: block; margin-bottom: 6px; color: #173040; }
+                        .contact-box p { margin: 3px 0; color: #60798b; font-size: 13px; }
+                        .floating-home-btn { position: fixed; right: 16px; top: 16px; z-index: 20; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 999px; border: 1px solid #fff; background: rgba(255,255,255,0.18); }
+                        .floating-home-btn img { width: 18px; height: 18px; object-fit: contain; }
                     /* Enforce visible white border on all clickable buttons */
         button,
         input[type="submit"],
@@ -60,6 +65,7 @@
         }</style>
 </head>
 <body>
+    <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama"></a>
     <div class="card">
         <h1>Lupa Kata Laluan</h1>
         <p class="subtitle">Masukkan nama pengguna dan email berdaftar untuk tetapkan kata laluan baharu.</p>
@@ -90,11 +96,12 @@
                 <a class="btn btn-secondary" href="${pageContext.request.contextPath}/login">Kembali Login</a>
             </div>
         </form>
+        <div class="contact-box">
+            <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Hubungi JANS</strong>
+            <p>Telefon: +60-88-232364 (HQ)</p>
+            <p>Fax: +60-88-232396</p>
+            <p>Email: jans.hq@sabah.gov.my</p>
+        </div>
     </div>
 </body>
 </html>
-
-
-
-
-
