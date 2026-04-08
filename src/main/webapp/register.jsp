@@ -20,15 +20,14 @@
         .info .contact { width: 100%; border-radius: 18px; border: 1px solid rgba(255,255,255,0.25); padding: 14px; background: rgba(6, 52, 79, 0.28); }
         .info .contact strong { display: block; margin-bottom: 8px; }
         .info .contact p { margin: 4px 0; font-size: 13px; }
-        .shell .page-contact { grid-column: 1 / -1; border: 1px solid rgba(255,255,255,0.25); border-radius: 18px; padding: 14px; background: rgba(6, 52, 79, 0.85); color: #ffffff; }
-        .shell .page-contact strong { display: block; margin-bottom: 8px; }
-        .shell .page-contact p { margin: 4px 0; font-size: 13px; }
+        .info .contact strong img { width: 22px; height: 22px; vertical-align: middle; margin-right: 8px; object-fit: contain; }
         .card { padding: 36px; }
         h2 { margin-bottom: 8px; color: #173040; }
         p.form-copy { color: #60798b; margin-bottom: 20px; }
         .field { margin-bottom: 16px; }
         label { display: block; margin-bottom: 6px; font-weight: 700; color: #173040; }
         input { width: 100%; padding: 12px; border: 1px solid #d7e7ef; border-radius: 12px; }
+        .password-help { margin-top: 6px; font-size: 12px; color: #60798b; line-height: 1.5; }
         .error { margin-bottom: 14px; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 10px; }
         .btn { width: 100%; border: 1px solid #fff; border-radius: 12px; padding: 13px; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 100%); color: white; font-weight: 700; cursor: pointer; }
         .footer { margin-top: 18px; text-align: center; color: #64748b; }
@@ -96,6 +95,12 @@
             <div class="logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
             <h1>Akaun Pemohon SPPA</h1>
             <p>Cipta akaun untuk mengisi borang PPP1 secara online, menyemak senarai produk berdaftar, dan memantau keputusan semakan pentadbir.</p>
+            <div class="contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi">Hubungi JANS</strong>
+                <p>Telefon: +60-88-232364 (HQ)</p>
+                <p>Fax: +60-88-232396</p>
+                <p>Email: jans.hq@sabah.gov.my</p>
+            </div>
         </div>
         <div class="card">
         <h2>Daftar Akaun Pemohon</h2>
@@ -120,11 +125,12 @@
             </div>
             <div class="field">
                 <label for="password">Kata Laluan</label>
-                <input id="password" name="password" type="password" required>
+                <input id="password" name="password" type="password" minlength="10" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}" autocomplete="new-password" required>
+                <div class="password-help">Minimum 10 aksara, mesti ada huruf besar, huruf kecil, nombor dan simbol khas.</div>
             </div>
             <div class="field">
                 <label for="confirm_password">Sahkan Kata Laluan</label>
-                <input id="confirm_password" name="confirm_password" type="password" required>
+                <input id="confirm_password" name="confirm_password" type="password" minlength="10" autocomplete="new-password" required>
             </div>
             <button class="btn" type="submit">Daftar Akaun</button>
         </form>
@@ -133,39 +139,33 @@
                 Sudah ada akaun? <a href="${pageContext.request.contextPath}/login">Log masuk di sini</a>
             </div>
         </div>
-        <div class="contact page-contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
-            <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="height:24px;width:auto;"></strong>
-            <p>SABAH WATER DEPARTMENT</p>
-            <p>Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</p>
-            <p>Kota Kinabalu, Sabah, Malaysia</p>
-            <p>Tel: +60-88-232364 (HQ), Fax: +60-88-232396</p>
-            <p>Email: jans.hq@sabah.gov.my</p>
-        </div>
     </div>
     <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama"></a>
 <script>
 (function() {
-    var homeBtn = document.querySelector('.floating-home-btn');
-    if (!homeBtn) return;
+    var form = document.querySelector('form[action$="/register"]');
+    var passwordInput = document.getElementById('password');
+    var confirmInput = document.getElementById('confirm_password');
 
-    var navContainer = document.querySelector('.navbar > div:last-child');
-    if (!navContainer) navContainer = document.querySelector('.navbar');
-    if (!navContainer) return;
+    if (form && passwordInput && confirmInput) {
+        form.addEventListener('submit', function (event) {
+            var passwordValue = passwordInput.value || '';
+            var rule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
+            if (!rule.test(passwordValue)) {
+                event.preventDefault();
+                alert('Kata laluan mesti minimum 10 aksara serta mengandungi huruf besar, huruf kecil, nombor dan simbol khas.');
+                passwordInput.focus();
+                return;
+            }
+            if (passwordValue !== (confirmInput.value || '')) {
+                event.preventDefault();
+                alert('Pengesahan kata laluan tidak sepadan.');
+                confirmInput.focus();
+            }
+        });
 
-    if (homeBtn.parentElement !== navContainer) {
-        navContainer.appendChild(homeBtn);
     }
 })();
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
