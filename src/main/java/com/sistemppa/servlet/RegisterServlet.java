@@ -10,8 +10,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.regex.Pattern;
 
 public class RegisterServlet extends HttpServlet {
+    private static final int MIN_PASSWORD_LENGTH = 10;
+    private static final Pattern UPPERCASE_PATTERN = Pattern.compile("[A-Z]");
+    private static final Pattern LOWERCASE_PATTERN = Pattern.compile("[a-z]");
+    private static final Pattern DIGIT_PATTERN = Pattern.compile("\\d");
+    private static final Pattern SPECIAL_PATTERN = Pattern.compile("[^A-Za-z0-9]");
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -37,6 +44,13 @@ public class RegisterServlet extends HttpServlet {
 
         if (!password.equals(confirmPassword)) {
             request.setAttribute("error", "Pengesahan kata laluan tidak sepadan.");
+            request.getRequestDispatcher("/register.jsp").forward(request, response);
+            return;
+        }
+
+        String passwordPolicyError = validatePasswordPolicy(password);
+        if (passwordPolicyError != null) {
+            request.setAttribute("error", passwordPolicyError);
             request.getRequestDispatcher("/register.jsp").forward(request, response);
             return;
         }
@@ -77,5 +91,24 @@ public class RegisterServlet extends HttpServlet {
 
     private String trim(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private String validatePasswordPolicy(String password) {
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH) {
+            return "Kata laluan mesti sekurang-kurangnya 10 aksara.";
+        }
+        if (!UPPERCASE_PATTERN.matcher(password).find()) {
+            return "Kata laluan mesti mengandungi sekurang-kurangnya satu huruf besar.";
+        }
+        if (!LOWERCASE_PATTERN.matcher(password).find()) {
+            return "Kata laluan mesti mengandungi sekurang-kurangnya satu huruf kecil.";
+        }
+        if (!DIGIT_PATTERN.matcher(password).find()) {
+            return "Kata laluan mesti mengandungi sekurang-kurangnya satu nombor.";
+        }
+        if (!SPECIAL_PATTERN.matcher(password).find()) {
+            return "Kata laluan mesti mengandungi sekurang-kurangnya satu simbol khas (contoh: !@#$%).";
+        }
+        return null;
     }
 }
