@@ -47,6 +47,30 @@
             raw = raw.substring(managedAnnouncementIndex);
         }
 
+        int uploadManagedIndex = raw.toLowerCase(java.util.Locale.ROOT).indexOf("/uploads/sistemppa/announcements/");
+        if (uploadManagedIndex >= 0) {
+            String fileName = raw.substring(uploadManagedIndex + "/uploads/sistemppa/announcements/".length());
+            int slashPos = fileName.indexOf('/');
+            if (slashPos >= 0) {
+                fileName = fileName.substring(0, slashPos);
+            }
+            if (!fileName.isBlank()) {
+                raw = "/announcement-images/" + fileName;
+            }
+        }
+
+        int uploadRelativeIndex = raw.toLowerCase(java.util.Locale.ROOT).indexOf("uploads/sistemppa/announcements/");
+        if (uploadRelativeIndex >= 0) {
+            String fileName = raw.substring(uploadRelativeIndex + "uploads/sistemppa/announcements/".length());
+            int slashPos = fileName.indexOf('/');
+            if (slashPos >= 0) {
+                fileName = fileName.substring(0, slashPos);
+            }
+            if (!fileName.isBlank()) {
+                raw = "/announcement-images/" + fileName;
+            }
+        }
+
         int legacyAnnouncementIndex = raw.indexOf("/assets/images/announcements/");
         if (legacyAnnouncementIndex >= 0) {
             String fileName = raw.substring(legacyAnnouncementIndex + "/assets/images/announcements/".length());
@@ -95,30 +119,27 @@
     <title>Sistem Pendaftaran Produk Air (SPPA)</title>
     <meta name="description" content="Portal rasmi SPPA Jabatan Air Negeri Sabah untuk pendaftaran produk air, pengumuman, dan semakan status permohonan.">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
 
         :root {
-            --brand-blue: #0a8ecf;
-            --brand-navy: #062f48;
-            --brand-sky: #dff4ff;
-            --brand-gold: #ffd857;
+            --brand-blue: #0d5c8f;
+            --brand-navy: #08334d;
+            --brand-sky: #edf4fb;
+            --brand-gold: #e7bf56;
             --surface: #ffffff;
-            --surface-soft: #f3f9fd;
-            --text: #143042;
-            --muted: #5f788a;
-            --ring: rgba(10, 142, 207, 0.22);
+            --surface-soft: #f3f8fc;
+            --text: #1a3040;
+            --muted: #5d7484;
+            --ring: rgba(13, 92, 143, 0.22);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, sans-serif;
+            font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif;
             line-height: 1.6;
             color: var(--text);
-            background:
-                radial-gradient(640px 320px at 105% -20%, rgba(255, 216, 87, 0.55), transparent 60%),
-                radial-gradient(600px 280px at -10% 10%, rgba(10, 142, 207, 0.2), transparent 60%),
-                linear-gradient(180deg, #f9fdff 0%, #f1f8fc 100%);
+            background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%);
             min-height: 100vh;
         }
 
@@ -126,28 +147,28 @@
             position: sticky;
             top: 0;
             z-index: 30;
-            background: rgba(6, 47, 72, 0.9);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(180deg, var(--brand-navy) 0%, #0c4569 100%);
             color: white;
-            padding: 14px 28px;
+            padding: 14px 26px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+            border-bottom: 3px solid var(--brand-gold);
+            box-shadow: 0 12px 28px rgba(8, 51, 77, 0.2);
         }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logos { display: flex; align-items: center; gap: 10px; }
-        .brand-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: contain; padding: 3px; background: rgba(255,255,255,0.07); }
+        .brand-logo { width: 48px; height: 48px; object-fit: contain; }
         .brand-text strong { display: block; font-size: 18px; line-height: 1.1; }
         .brand-text span { font-size: 12px; opacity: 0.88; }
 
         .nav-actions { display: flex; gap: 10px; }
         .nav-link {
-            color: #eaf7ff;
+            color: #ffffff;
             text-decoration: none;
-            font-weight: 600;
-            padding: 10px 14px;
-            border-radius: 999px;
+            font-weight: 700;
+            padding: 9px 13px;
+            border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.2);
             transition: 0.2s ease;
         }
@@ -270,7 +291,25 @@
             background: linear-gradient(135deg, #f5fbff 0%, #e8f4fb 100%);
             border-bottom: 1px solid #d9e7f1;
         }
-        .announcement-header img { width: 22px; height: 22px; object-fit: contain; }
+        .icon-badge {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--brand-blue);
+        }
+        .icon-badge svg {
+            width: 22px;
+            height: 22px;
+            display: block;
+        }
+        .icon-badge img {
+            width: 22px;
+            height: 22px;
+            display: block;
+            object-fit: contain;
+        }
         .announcement-header h3 { margin: 0; font-size: 16px; color: var(--brand-navy); }
         .announcement-list { padding: 0 18px 10px; }
         .announcement-item { padding: 14px 0; border-bottom: 1px dashed #dce9f2; }
@@ -329,6 +368,12 @@
             height: 16px;
             object-fit: contain;
         }
+        .floating-home-btn svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+            color: #ffffff;
+        }
 
         @keyframes riseIn {
             from { opacity: 0; transform: translateY(8px); }
@@ -347,7 +392,7 @@
     <div class="navbar">
         <div class="brand">
             <div class="brand-logos">
-                <img src="${pageContext.request.contextPath}/assets/images/logo-sabah-2025.png?v=3" class="brand-logo" alt="Logo Sabah">
+                <img src="${pageContext.request.contextPath}/assets/images/sabah-logo.png" class="brand-logo" alt="Logo Sabah">
                 <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             </div>
             <div class="brand-text">
@@ -362,7 +407,7 @@
     </div>
 
     <div class="hero">
-        <img src="${pageContext.request.contextPath}/assets/images/jabatan-air-sabah-bg.png" class="hero-watermark" alt="" aria-hidden="true">
+        <img src="${pageContext.request.contextPath}/assets/images/Logo JAS.png" class="hero-watermark" alt="" aria-hidden="true">
         <div class="hero-inner">
             <div>
                 <div class="hero-badges">
@@ -371,7 +416,6 @@
                     <span class="hero-badge">Akses Dalam Talian 24/7</span>
                 </div>
                 <h1>Selamat Datang ke Sistem Pendaftaran Produk Air Negeri Sabah</h1>
-                <p>Urus permohonan produk air dengan lebih tersusun, pantas, dan telus melalui platform digital rasmi Jabatan Air Negeri Sabah.</p>
                 <div class="hero-actions">
                     <a href="${pageContext.request.contextPath}/register" class="hero-btn accent">Daftar Akaun Pemohon</a>
                     <a href="${pageContext.request.contextPath}/login" class="hero-btn">Log Masuk Ke Sistem</a>
@@ -380,28 +424,11 @@
         </div>
     </div>
 
-    <div class="container">
-        <h2 class="section-title">Kemudahan Utama Portal</h2>
-        <p class="section-subtitle">Direka untuk memastikan urusan pemohon lebih lancar dari awal hingga keputusan semakan.</p>
-
-        <div class="quick-grid" aria-label="Kemudahan Utama Portal">
-            <article class="quick-card">
-                <h4>Pendaftaran Akaun Selamat</h4>
-                <p>Cipta akaun pemohon dengan pengesahan maklumat asas secara mudah.</p>
-            </article>
-            <article class="quick-card">
-                <h4>Semakan Status Permohonan</h4>
-                <p>Pantau kemajuan semakan pentadbir tanpa perlu hadir ke kaunter.</p>
-            </article>
-            <article class="quick-card">
-                <h4>Pengumuman Rasmi Terkini</h4>
-                <p>Dapatkan notis penting, hebahan teknikal, dan makluman semasa dari jabatan.</p>
-            </article>
-        </div>
-
         <div class="announcement-section" aria-label="Pengumuman dan info semasa">
             <div class="announcement-header">
-                <img src="${pageContext.request.contextPath}/assets/images/icon-announcement.png" alt="Pengumuman">
+                <span class="icon-badge" aria-hidden="true">
+                    <img src="${pageContext.request.contextPath}/assets/images/icon-announcement.png" alt="Ikon pengumuman">
+                </span>
                 <h3>Pengumuman / Info Terkini</h3>
             </div>
             <div class="announcement-list">
@@ -424,7 +451,12 @@
         </div>
 
         <div class="hero-contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
-            <h3><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="height:24px;width:auto;"></h3>
+            <h3>
+                <span class="icon-badge" aria-hidden="true" style="vertical-align:middle; margin-right:6px;">
+                    <img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Ikon hubungi">
+                </span>
+                Hubungi JANS
+            </h3>
             <p>SABAH WATER DEPARTMENT</p>
             <p>Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</p>
             <p>Kota Kinabalu, Sabah, Malaysia</p>
@@ -442,7 +474,9 @@
             <a href="${pageContext.request.contextPath}/terms">Terma Penggunaan</a>
         </p>
     </footer>
-    <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama"></a>
+    <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama">
+        <img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama" style="width:18px;height:18px;object-fit:contain;">
+    </a>
 <script>
 (function() {
     var homeBtn = document.querySelector('.floating-home-btn');
@@ -459,16 +493,3 @@
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
