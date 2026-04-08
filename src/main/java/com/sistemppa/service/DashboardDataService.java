@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public final class DashboardDataService {
@@ -15,14 +16,18 @@ public final class DashboardDataService {
     }
 
     public static Map<String, Integer> loadAdminStats(Connection conn) throws SQLException {
+        ensureApplicationArchiveTable(conn);
+
         Map<String, Integer> stats = new HashMap<>();
 
         String sql = "SELECT "
-                + "COUNT(*) AS total_applications, "
-                + "SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) AS pending_count, "
-                + "SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count, "
-                + "SUM(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected_count "
-                + "FROM applications";
+                + "COUNT(CASE WHEN aa.application_id IS NULL THEN 1 END) AS total_applications, "
+                + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'PENDING' THEN 1 ELSE 0 END) AS pending_count, "
+                + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count, "
+                + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected_count, "
+                + "SUM(CASE WHEN aa.application_id IS NOT NULL THEN 1 ELSE 0 END) AS archived_count "
+                + "FROM applications a "
+                + "LEFT JOIN application_archives aa ON aa.application_id = a.id";
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
@@ -30,6 +35,7 @@ public final class DashboardDataService {
                 stats.put("pending_count", rs.getInt("pending_count"));
                 stats.put("approved_count", rs.getInt("approved_count"));
                 stats.put("rejected_count", rs.getInt("rejected_count"));
+                stats.put("archived_count", rs.getInt("archived_count"));
             }
         }
 
@@ -148,11 +154,16 @@ public final class DashboardDataService {
 
     public static List<Map<String, Object>> loadApplications(Connection conn, String search, String status, int limit)
             throws SQLException {
+        ensureApplicationArchiveTable(conn);
+
         QueryParts queryParts = buildApplicationFilter(search, status);
-        String sql = "SELECT a.id, a.company_name, a.product_category, a.product_name, a.status, a.submitted_at, "
+        String sql = "SELECT a.id, a.company_name, a.product_category, a.product_name, "
+            + "CASE WHEN aa.application_id IS NOT NULL THEN 'ARCHIVED' ELSE a.status END AS display_status, "
+            + "a.submitted_at, "
                 + "u.full_name, u.email AS user_email "
                 + "FROM applications a "
                 + "JOIN users u ON u.id = a.user_id "
+            + "LEFT JOIN application_archives aa ON aa.application_id = a.id "
                 + queryParts.clause
                 + " ORDER BY a.created_at DESC";
         if (limit > 0) {
@@ -172,7 +183,7 @@ public final class DashboardDataService {
                     row.put("company_name", rs.getString("company_name"));
                     row.put("product_category", rs.getString("product_category"));
                     row.put("product_name", rs.getString("product_name"));
-                    row.put("status", rs.getString("status"));
+                    row.put("status", rs.getString("display_status"));
                     row.put("submitted_at", rs.getTimestamp("submitted_at"));
                     row.put("full_name", rs.getString("full_name"));
                     row.put("user_email", rs.getString("user_email"));
@@ -184,8 +195,13 @@ public final class DashboardDataService {
     }
 
     public static int countApplications(Connection conn, String search, String status) throws SQLException {
+        ensureApplicationArchiveTable(conn);
+
         QueryParts queryParts = buildApplicationFilter(search, status);
-        String sql = "SELECT COUNT(*) FROM applications a JOIN users u ON u.id = a.user_id" + queryParts.clause;
+        String sql = "SELECT COUNT(*) FROM applications a "
+                + "JOIN users u ON u.id = a.user_id "
+                + "LEFT JOIN application_archives aa ON aa.application_id = a.id"
+                + queryParts.clause;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             applyParameters(stmt, queryParts.parameters);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -377,6 +393,7 @@ public final class DashboardDataService {
     private static QueryParts buildApplicationFilter(String search, String status) {
         StringBuilder clause = new StringBuilder(" WHERE 1=1");
         List<Object> parameters = new ArrayList<>();
+        String normalizedStatus = normalizeApplicationStatusFilter(status);
 
         if (search != null && !search.isBlank()) {
             clause.append(" AND (a.company_name LIKE ? OR a.product_name LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?)");
@@ -387,12 +404,34 @@ public final class DashboardDataService {
             parameters.add(keyword);
         }
 
-        if (status != null && !status.isBlank()) {
+        if (normalizedStatus == null) {
+            clause.append(" AND aa.application_id IS NULL");
+        } else if ("ARCHIVED".equals(normalizedStatus)) {
+            clause.append(" AND aa.application_id IS NOT NULL");
+        } else {
+            clause.append(" AND aa.application_id IS NULL");
             clause.append(" AND a.status = ?");
-            parameters.add(status.trim().toUpperCase());
+            parameters.add(normalizedStatus);
         }
 
         return new QueryParts(clause.toString(), parameters);
+    }
+
+    private static String normalizeApplicationStatusFilter(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+
+        String normalized = status.trim().toUpperCase(Locale.ROOT);
+        if ("ARCHIVED".equals(normalized)
+                || "PENDING".equals(normalized)
+                || "APPROVED".equals(normalized)
+                || "REJECTED".equals(normalized)
+                || "SUSPENDED".equals(normalized)
+                || "DRAFT".equals(normalized)) {
+            return normalized;
+        }
+        return null;
     }
 
     private static QueryParts buildProductFilter(String search, String productType) {
@@ -473,6 +512,49 @@ public final class DashboardDataService {
                 + "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, "
                 + "INDEX idx_announcements_active_updated (is_active, updated_at), "
                 + "INDEX idx_announcements_updated_at (updated_at)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.execute();
+        }
+
+        // Backward-compatible migration for older deployments where announcements table exists
+        // but misses newer columns required by current CRUD queries.
+        ensureAnnouncementColumn(conn, "title", "ALTER TABLE announcements ADD COLUMN title VARCHAR(180) NOT NULL");
+        ensureAnnouncementColumn(conn, "content", "ALTER TABLE announcements ADD COLUMN content TEXT NOT NULL");
+        ensureAnnouncementColumn(conn, "image_url", "ALTER TABLE announcements ADD COLUMN image_url VARCHAR(500) NULL");
+        ensureAnnouncementColumn(conn, "is_active", "ALTER TABLE announcements ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1");
+        ensureAnnouncementColumn(conn, "created_by", "ALTER TABLE announcements ADD COLUMN created_by INT NULL");
+        ensureAnnouncementColumn(conn, "updated_by", "ALTER TABLE announcements ADD COLUMN updated_by INT NULL");
+        ensureAnnouncementColumn(conn, "created_at", "ALTER TABLE announcements ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+        ensureAnnouncementColumn(conn, "updated_at", "ALTER TABLE announcements ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+    }
+
+    private static void ensureAnnouncementColumn(Connection conn, String columnName, String alterSql) throws SQLException {
+        if (columnExists(conn, "announcements", columnName)) {
+            return;
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(alterSql)) {
+            stmt.execute();
+        }
+    }
+
+    private static boolean columnExists(Connection conn, String tableName, String columnName) throws SQLException {
+        DatabaseMetaData metaData = conn.getMetaData();
+        String catalog = conn.getCatalog();
+        try (ResultSet rs = metaData.getColumns(catalog, null, tableName, columnName)) {
+            return rs.next();
+        }
+    }
+
+    private static void ensureApplicationArchiveTable(Connection conn) throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS application_archives ("
+                + "application_id INT NOT NULL PRIMARY KEY, "
+                + "archived_by INT NULL, "
+                + "archive_notes VARCHAR(500) NULL, "
+                + "archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+                + "CONSTRAINT fk_application_archives_application FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE, "
+                + "CONSTRAINT fk_application_archives_archived_by FOREIGN KEY (archived_by) REFERENCES users(id) ON DELETE SET NULL, "
+                + "INDEX idx_application_archives_archived_at (archived_at)"
                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.execute();
