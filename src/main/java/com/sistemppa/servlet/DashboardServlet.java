@@ -342,6 +342,30 @@ public class DashboardServlet extends HttpServlet {
             return normalized.substring(index);
         }
 
+        int uploadManagedIndex = normalized.toLowerCase(java.util.Locale.ROOT).indexOf("/uploads/sistemppa/announcements/");
+        if (uploadManagedIndex >= 0) {
+            String fileName = normalized.substring(uploadManagedIndex + "/uploads/sistemppa/announcements/".length());
+            int slashPos = fileName.indexOf('/');
+            if (slashPos >= 0) {
+                fileName = fileName.substring(0, slashPos);
+            }
+            if (!fileName.isBlank()) {
+                return ANNOUNCEMENT_IMAGE_ENDPOINT + fileName;
+            }
+        }
+
+        int uploadRelativeIndex = normalized.toLowerCase(java.util.Locale.ROOT).indexOf("uploads/sistemppa/announcements/");
+        if (uploadRelativeIndex >= 0) {
+            String fileName = normalized.substring(uploadRelativeIndex + "uploads/sistemppa/announcements/".length());
+            int slashPos = fileName.indexOf('/');
+            if (slashPos >= 0) {
+                fileName = fileName.substring(0, slashPos);
+            }
+            if (!fileName.isBlank()) {
+                return ANNOUNCEMENT_IMAGE_ENDPOINT + fileName;
+            }
+        }
+
         int legacyIndex = normalized.indexOf("/assets/images/announcements/");
         if (legacyIndex >= 0) {
             String fileName = normalized.substring(legacyIndex + "/assets/images/announcements/".length());
