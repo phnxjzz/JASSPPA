@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -17,9 +17,6 @@
         .brand-panel .logo { width: 78px; height: 78px; border-radius: 18px; margin-bottom: 18px; object-fit: contain; padding: 6px; display: block; }
         .brand-panel h1 { font-size: 34px; margin-bottom: 10px; }
         .brand-panel p { max-width: 420px; line-height: 1.7; }
-        .brand-panel .contact { width: 100%; max-width: 360px; margin-top: 24px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.25); padding: 14px; background: rgba(6, 52, 79, 0.28); }
-        .brand-panel .contact strong { display: block; margin-bottom: 8px; }
-        .brand-panel .contact p { margin: 4px 0; font-size: 13px; }
         .login-container { padding: 44px; }
         .login-header { margin-bottom: 30px; }
         .login-header h1 { color: #173040; font-size: 28px; margin-bottom: 8px; }
@@ -37,6 +34,11 @@
         .register-link a { color: var(--brand-blue); text-decoration: none; font-weight: 700; }
         .forgot-link { text-align: right; margin-top: -10px; margin-bottom: 14px; }
         .forgot-link a { color: #146594; text-decoration: none; font-size: 13px; font-weight: 700; }
+        .contact-box { margin-top: 16px; border: 1px solid #d7e7ef; border-radius: 12px; padding: 12px; background: #f8fcff; }
+        .contact-box strong { display: block; margin-bottom: 6px; color: #173040; }
+        .contact-box p { margin: 3px 0; color: #60798b; font-size: 13px; }
+        .floating-home-btn { position: fixed; right: 16px; top: 16px; z-index: 20; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 999px; border: 1px solid #fff; background: rgba(255, 255, 255, 0.18); }
+        .floating-home-btn img { width: 18px; height: 18px; object-fit: contain; }
         @media (max-width: 920px) { .login-shell { grid-template-columns: 1fr; } .brand-panel { display:none; } }
                     /* Enforce visible white border on all clickable buttons */
         button,
@@ -77,17 +79,12 @@
 <body>
     <% String selectedRole = (String) request.getAttribute("selected_role"); %>
     <% if (selectedRole == null) { selectedRole = ""; } %>
+    <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama"></a>
     <div class="login-shell">
         <div class="brand-panel">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="logo" alt="Logo Jabatan Air Sabah">
             <h1>SPPA</h1>
             <p>Portal rasmi Jabatan Air Negeri Sabah untuk pendaftaran produk air, semakan permohonan, dan rujukan produk yang telah berdaftar.</p>
-            <div class="contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
-                <strong>Hubungi JANS</strong>
-                <p>Telefon: 088-326888</p>
-                <p>Email: info@jwater.gov.my</p>
-                <p>Kota Kinabalu, Sabah</p>
-            </div>
         </div>
         <div class="login-container">
             <div class="login-header">
@@ -134,12 +131,13 @@
             <div class="register-link">
                 Belum mempunyai akaun? <a href="${pageContext.request.contextPath}/register">Daftar di sini</a>
             </div>
+            <div class="contact-box">
+                <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Hubungi JANS</strong>
+                <p>Telefon: +60-88-232364 (HQ)</p>
+                <p>Fax: +60-88-232396</p>
+                <p>Email: jans.hq@sabah.gov.my</p>
+            </div>
         </div>
     </div>
 </body>
 </html>
-
-
-
-
-
