@@ -18,13 +18,14 @@ public class UserAvatarServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        if(session == null || session.getAttribute("userId") == null) {
+        Integer userId = resolveUserId(session);
+        if (userId == null) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
             return;
         }
 
         try (Connection connection = DatabaseConfig.getConnection()) {
-            String avatarValue = findAvatarValue(connection, (Integer) session.getAttribute("userId"));
+            String avatarValue = findAvatarValue(connection, userId);
             if (avatarValue == null || avatarValue.isBlank()) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Avatar tidak dijumpai");
                 return;
@@ -53,13 +54,49 @@ public class UserAvatarServlet extends HttpServlet {
         }
     }
 
+    private Integer resolveUserId(HttpSession session) {
+        if (session == null) {
+            return null;
+        }
+
+        Object primary = session.getAttribute("user_id");
+        if (primary instanceof Integer) {
+            return (Integer) primary;
+        }
+        if (primary != null) {
+            try {
+                return Integer.parseInt(String.valueOf(primary));
+            } catch (NumberFormatException ignored) {
+                // continue checking fallback key
+            }
+        }
+
+        Object fallback = session.getAttribute("userId");
+        if (fallback instanceof Integer) {
+            return (Integer) fallback;
+        }
+        if (fallback != null) {
+            try {
+                return Integer.parseInt(String.valueOf(fallback));
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
     private String findAvatarValue(Connection conn , int userId) throws SQLException {
-        String sql = "SELECT avatar FROM users WHERE id = ?";
+        String sql = "SELECT avatar_url FROM users WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getString("avatar");
+                    String avatarUrl = rs.getString("avatar_url");
+                    if (avatarUrl != null && !avatarUrl.isBlank()) {
+                        return avatarUrl;
+                    }
+                    return null;
                 }
             }
         }
