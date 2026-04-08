@@ -291,26 +291,4 @@
         </div>
     </div>
     <script>
-        (function () {
-            var idleLimitMs = 10 * 60 * 1000;
-            var logoutUrl = '${pageContext.request.contextPath}/logout?timeout=1';
-            var timerId;
-
-            function triggerAutoLogout() {
-                window.location.href = logoutUrl;
-            }
-
-            function resetTimer() {
-                window.clearTimeout(timerId);
-                timerId = window.setTimeout(triggerAutoLogout, idleLimitMs);
-            }
-
-            ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (eventName) {
-                document.addEventListener(eventName, resetTimer, { passive: true });
-            });
-
-            resetTimer(); 
-        })();
-    </script>
-</body>
-</html>
+        (fun
