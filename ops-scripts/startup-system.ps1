@@ -1,6 +1,4 @@
 # startup-system.ps1
-# Script untuk memulakan Sistem Pendaftaran Produk Air (SPPA)
-# Uso: powershell -ExecutionPolicy Bypass -File startup-system.ps1
 
 param(
     [string]$ProjectRoot = "p:\ProjectLI",
@@ -87,8 +85,8 @@ try {
         Write-Log "Warning: Sistem merespons dengan status $($response.StatusCode)" "WARN"
     }
 } catch {
-    Write-Log "Warning: Tidak boleh menguji koneksian: $_" "WARN"
-    Write-Log "Tomcat mungkin masih startup. Cuba 10 saat lagi." "INFO"
+    Write-Log "Warning: Tidak boleh menguji ketersambungan: $_" "WARN"
+    Write-Log "Tomcat mungkin masih startup. Sila cuba 10 saat lagi." "INFO"
 }
 
 # 5. Buka browser
@@ -96,4 +94,5 @@ Write-Log "" "INFO"
 Write-Log "Membuka sistem di browser..." "INFO"
 Start-Process "http://192.168.1.52:8081/sistemppa/" -ErrorAction SilentlyContinue
 
-Write-Log "✅ Sistem siap digunakan!" "SUCCESS"
+Write-Log "Selamat datang ke Sistem Pendaftaran Produk Air!" "SUCCESS"
+
