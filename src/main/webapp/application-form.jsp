@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.Map" %>
 <!DOCTYPE html>
 <html lang="ms">
@@ -7,20 +7,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Borang Permohonan Online PPP1 - SPPA</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: linear-gradient(180deg, #eff9ff 0%, #f7fbfd 100%); color: #223; }
-        .navbar { background: linear-gradient(130deg, #06344f 0%, #0097d9 74%, #fff212 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        body { font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif; margin: 0; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: #1a3040; }
+        .navbar { background: linear-gradient(180deg, #08334d 0%, #0c4569 100%); border-bottom: 3px solid #e7bf56; color: white; padding: 14px 26px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 12px 28px rgba(8, 51, 77, 0.2); }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: contain; padding: 3px; }
+        .brand-logo { width: 48px; height: 48px; object-fit: contain; }
         .brand strong { display: block; }
         .brand span { font-size: 12px; opacity: 0.88; }
-        .navbar a { color: white; text-decoration: none; margin-left: 16px; }
+        .navbar a { color: white; text-decoration: none; margin-left: 10px; font-weight: 700; padding: 8px 11px; border-radius: 8px; transition: background 0.18s ease; }
+        .navbar a:hover { background: rgba(255,255,255,0.14); }
+        .icon-inline { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
+            .nav-dropdown { position: relative; display: inline-flex; align-items: center; margin-left: 10px; }
+            .nav-dropdown-btn { background: transparent; border: none !important; box-shadow: none !important; color: white; font-weight: 700; font-family: inherit; font-size: 1em; cursor: pointer; padding: 8px 11px; border-radius: 8px; display: flex; align-items: center; gap: 4px; }
+            .nav-dropdown-btn:hover { background: rgba(255,255,255,0.14); }
+            .nav-dropdown-menu { display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 10px; box-shadow: 0 12px 28px rgba(6,52,79,0.18); min-width: 190px; z-index: 100; overflow: hidden; margin-top: 4px; }
+            .nav-dropdown-menu a { display: block; padding: 10px 16px; color: #06344f !important; text-decoration: none; font-weight: 700; margin-left: 0 !important; border-bottom: 1px solid #e4edf4; }
+            .nav-dropdown-menu a:last-child { border-bottom: none; }
+            .nav-dropdown-menu a:hover { background: #eef5fb; }
+            .nav-dropdown:hover .nav-dropdown-menu,
+            .nav-dropdown:focus-within .nav-dropdown-menu { display: block; }
         .container { max-width: 1100px; margin: 28px auto; padding: 0 20px; }
-        .panel { border-radius: 12px; box-shadow: 0 12px 30px rgba(16, 24, 40, 0.08); padding: 24px; margin-bottom: 24px; }
+        .panel { border-radius: 14px; border: 1px solid #d4e1ec; box-shadow: 0 8px 26px rgba(9, 53, 79, 0.07); padding: 22px; margin-bottom: 22px; background: #fff; }
         .hero { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .hero h1 { margin-top: 0; font-size: 30px; }
+        .hero h1 { margin-top: 0; font-size: 28px; color: #103d58; }
         .hero p { color: #556; line-height: 1.6; }
-        .badge { display: inline-block; background: #dbeafe; color: #1d4ed8; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 600; margin-bottom: 10px; }
+        .badge { display: inline-block; background: #edf4fb; color: #17425f; border: 1px solid #cbd9e4; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; margin-bottom: 10px; }
         .docs-box { background: #f8fafc; border: 1px solid #d8e1ee; border-radius: 10px; padding: 16px; }
         .docs-box a { display: block; color: #0f766e; text-decoration: none; margin-bottom: 8px; }
         .section-title { margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; color: #0f172a; }
@@ -28,7 +40,7 @@
         .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
         .field { display: flex; flex-direction: column; gap: 6px; }
         .field label { font-weight: 600; font-size: 14px; color: #334155; }
-        .field input, .field textarea, .field select { width: 100%; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+        .field input, .field textarea, .field select { width: 100%; padding: 11px 12px; border: 1px solid #cbd8e3; border-radius: 8px; font-size: 14px; }
         .field textarea { min-height: 110px; resize: vertical; }
         .field.full { grid-column: 1 / -1; }
         .hint { font-size: 12px; color: #64748b; }
@@ -40,11 +52,8 @@
         .doc-item strong { display: block; margin-bottom: 8px; font-size: 14px; }
         .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
         .btn { border: 1px solid #fff; border-radius: 8px; padding: 12px 18px; font-size: 14px; cursor: pointer; text-decoration: none; }
-        .btn-secondary { background: #e2e8f0; color: #1e293b; }
-        .btn-primary { background: linear-gradient(135deg, #06344f 0%, #0097d9 100%); color: white; }
-        .contact-card { width: 100%; max-width: 420px; border-radius: 12px; border: 1px solid #d8e1ee; background: #f8fbff; padding: 14px; color: #475569; }
-        .contact-card strong { display: block; margin-bottom: 8px; color: #0f172a; }
-        .contact-card p { margin: 4px 0; }
+        .btn-secondary { background: #e2edf5; color: #1f3f57; }
+        .btn-primary { background: linear-gradient(180deg, #0f6fa8 0%, #0d5c8f 100%); color: white; }
         @media (max-width: 900px) { .hero, .grid, .grid-3, .doc-list { grid-template-columns: 1fr; } }
                     /* Enforce visible white border on all clickable buttons */
         button,
@@ -57,7 +66,7 @@
         .attachment-list button,
         a.btn {
             border: 1px solid #fff !important;
-            box-shadow: inset 0 0 0 1px #fff, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+            box-shadow: inset 0 0 0 1px #f0e6e6, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
         }
 
         button:hover,
@@ -85,6 +94,7 @@
 <body>
     <div class="navbar">
         <div class="brand">
+            <img src="${pageContext.request.contextPath}/assets/images/sabah-logo.png" class="brand-logo" alt="Logo Sabah">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <strong>SPPA - Permohonan Online PPP1</strong>
@@ -92,8 +102,15 @@
             </div>
         </div>
         <div>
+            <a href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" alt="Laman utama"></a>
             <a href="${pageContext.request.contextPath}/dashboard">Kembali ke Dashboard</a>
-            <a href="${pageContext.request.contextPath}/logout">Log Keluar</a>
+            <div class="nav-dropdown">
+                <button class="nav-dropdown-btn">Kemas Kini Profil &#9662;</button>
+                <div class="nav-dropdown-menu">
+                    <a href="${pageContext.request.contextPath}/profile">Tetapan</a>
+                </div>
+            </div>
+            <a href="${pageContext.request.contextPath}/logout" aria-label="Log Keluar" title="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" alt="Log Keluar"></a>
         </div>
     </div>
 
@@ -116,7 +133,7 @@
                 </p>
                 <p>
                     Permohonan baharu dan pembaharuan kedua-duanya disokong. Untuk pembaharuan, sijil/perakuan lama JANS perlu
-                    dilampirkan dan pembaharuan perlu dibuat sekurang-kurangnya enam bulan sebelum tarikh tamat.
+                    dilampirkan dan pembaharuan perlu dibuat sekurang-kurangnya <strong>enam bulan sebelum tarikh tamat.</strong>
                 </p>
             </div>
             <div class="docs-box">
@@ -293,19 +310,35 @@
             </div>
         </form>
 
-        <div class="panel" style="padding:18px;">
-            <strong style="display:block;margin-bottom:12px;">Hubungi Jabatan Air Sabah</strong>
-            <div class="contact-card" aria-label="Maklumat hubungan Jabatan Air Sabah">
-                <strong>Hubungi JANS</strong>
-                <p>Telefon: 088-326888</p>
-                <p>Email: info@jwater.gov.my</p>
-                <p>Kota Kinabalu, Sabah</p>
-            </div>
+        <div class="panel">
+            <h2 class="section-title"><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Hubungi JANS</h2>
+            <p style="margin:6px 0;color:#556;">Telefon: +60-88-232364 (HQ)</p>
+            <p style="margin:6px 0;color:#556;">Fax: +60-88-232396</p>
+            <p style="margin:6px 0;color:#556;">Email: jans.hq@sabah.gov.my</p>
         </div>
+
     </div>
+    <script>
+        (function () {
+            var idleLimitMs = 10 * 60 * 1000;
+            var logoutUrl = '${pageContext.request.contextPath}/logout?timeout=1';
+            var timerId;
+
+            function triggerAutoLogout() {
+                window.location.href = logoutUrl;
+            }
+
+            function resetTimer() {
+                window.clearTimeout(timerId);
+                timerId = window.setTimeout(triggerAutoLogout, idleLimitMs);
+            }
+
+            ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (eventName) {
+                document.addEventListener(eventName, resetTimer, { passive: true });
+            });
+
+            resetTimer();
+        })();
+    </script>
 </body>
 </html>
-
-
-
-
