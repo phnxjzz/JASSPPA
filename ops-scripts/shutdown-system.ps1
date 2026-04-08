@@ -1,6 +1,4 @@
 # shutdown-system.ps1
-# Script untuk menutup Sistem Pendaftaran Produk Air (SPPA)
-# Uso: powershell -ExecutionPolicy Bypass -File shutdown-system.ps1
 
 param(
     [string]$TomcatHome = "p:\ProjectLI\runtime\apache-tomcat-11.0.18",
