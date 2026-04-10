@@ -186,6 +186,8 @@ public class DashboardServlet extends HttpServlet {
     private void loadAdminDashboard(Connection conn, HttpServletRequest request) throws SQLException {
         String search = trim(request.getParameter("q"));
         String status = trim(request.getParameter("status"));
+        String dateFrom = trim(request.getParameter("date_from"));
+        String dateTo = trim(request.getParameter("date_to"));
 
         Map<String, Integer> stats = DashboardDataService.loadAdminStats(conn);
         for (Map.Entry<String, Integer> entry : stats.entrySet()) {
@@ -194,10 +196,12 @@ public class DashboardServlet extends HttpServlet {
 
         request.setAttribute("search_query", search == null ? "" : search);
         request.setAttribute("selected_status", status == null ? "" : status);
+        request.setAttribute("date_from", dateFrom == null ? "" : dateFrom);
+        request.setAttribute("date_to", dateTo == null ? "" : dateTo);
         request.setAttribute("pending_applications",
-                DashboardDataService.loadApplications(conn, search, status, ADMIN_APPLICATION_LIMIT));
+                DashboardDataService.loadApplications(conn, search, status, dateFrom, dateTo, ADMIN_APPLICATION_LIMIT));
         request.setAttribute("filtered_application_count",
-                DashboardDataService.countApplications(conn, search, status));
+                DashboardDataService.countApplications(conn, search, status, dateFrom, dateTo));
         request.setAttribute("registered_users_list",
             DashboardDataService.loadRegisteredUsers(conn, null, false, 0));
         request.setAttribute("new_registered_users_list",
@@ -236,14 +240,36 @@ public class DashboardServlet extends HttpServlet {
             request.setAttribute(entry.getKey(), entry.getValue());
         }
 
-        request.setAttribute("application_count", DashboardDataService.countUserApplications(conn, userId));
-        request.setAttribute("applications", DashboardDataService.loadUserApplications(conn, userId));
+        int totalApplications = DashboardDataService.countUserApplications(conn, userId);
+        int pageSize = 10;
+        int page = 1;
+        try {
+            String pageParam = request.getParameter("appPage");
+            if (pageParam != null && !pageParam.isBlank()) {
+                page = Math.max(1, Integer.parseInt(pageParam.trim()));
+            }
+        } catch (NumberFormatException ignored) { }
+        int totalPages = (int) Math.ceil((double) totalApplications / pageSize);
+        if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
+
+        request.setAttribute("application_count", totalApplications);
+        request.setAttribute("pending_count", DashboardDataService.countPendingUserApplications(conn, userId));
+        request.setAttribute("applications", DashboardDataService.loadUserApplicationsPaged(conn, userId, page, pageSize));
+        request.setAttribute("current_page", page);
+        request.setAttribute("total_pages", totalPages);
         request.setAttribute("product_catalog",
                 DashboardDataService.loadProducts(conn, null, null, DASHBOARD_PRODUCT_LIMIT));
         request.setAttribute("product_count", DashboardDataService.countProducts(conn, null, null));
         request.setAttribute("account_status", user.get("status"));
+        request.setAttribute("last_login", request.getSession(false) != null ? request.getSession(false).getAttribute("login_time") : null);
+        request.setAttribute("unread_notification_count", DashboardDataService.countUnreadNotifications(conn, userId));
+        request.setAttribute("notifications", DashboardDataService.loadUserNotifications(conn, userId, 10));
+        DashboardDataService.markAllNotificationsRead(conn, userId);
         request.setAttribute("announcements",
             DashboardDataService.loadActiveAnnouncements(conn, HOMEPAGE_ANNOUNCEMENT_LIMIT));
+        request.setAttribute("status_history",
+            DashboardDataService.loadUserApplicationStatusHistory(conn, userId));
     }
 
     private String trim(String value) {
