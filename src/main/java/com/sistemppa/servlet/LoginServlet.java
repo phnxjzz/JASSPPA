@@ -14,7 +14,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.logging.Logger;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class LoginServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(LoginServlet.class.getName());
@@ -29,6 +31,10 @@ public class LoginServlet extends HttpServlet {
             request.setAttribute("selected_role", normalizeRole(request.getParameter("role")));
             if (request.getParameter("registered") != null) {
                 request.setAttribute("success", "Akaun berjaya didaftarkan. Sila log masuk.");
+            } else if (request.getParameter("verify_pending") != null) {
+                request.setAttribute("success", "Akaun berjaya didaftarkan. Sila semak e-mel anda untuk mengaktifkan akaun.");
+            } else if (request.getParameter("verified") != null) {
+                request.setAttribute("success", "E-mel berjaya disahkan! Sila log masuk.");
             } else if (request.getParameter("reset") != null) {
                 request.setAttribute("success", "Kata laluan berjaya diset semula. Sila log masuk.");
             }
@@ -74,7 +80,10 @@ public class LoginServlet extends HttpServlet {
 
                         String status = rs.getString("status");
                         if (!"ACTIVE".equals(status)) {
-                            request.setAttribute("error", "Akaun anda telah digantung atau tidak aktif.");
+                            String statusMsg = "SUSPENDED".equals(status)
+                                ? "Akaun anda telah digantung. Sila hubungi pentadbir."
+                                : "Akaun anda belum disahkan. Sila semak e-mel anda atau hubungi pentadbir.";
+                            request.setAttribute("error", statusMsg);
                             request.setAttribute("selected_role", selectedRole);
                             request.getRequestDispatcher("/login.jsp").forward(request, response);
                             return;
@@ -88,7 +97,10 @@ public class LoginServlet extends HttpServlet {
                             return;
                         }
 
-                        if (storedPassword != null && storedPassword.equals(password)) {
+                        // Migrate plain-text or SHA-256 hashes to BCrypt on successful login
+                        boolean alreadyBcrypt = storedPassword != null
+                                && (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$"));
+                        if (!alreadyBcrypt) {
                             migratePasswordHash(conn, rs.getInt("id"), password);
                         }
 
@@ -96,6 +108,7 @@ public class LoginServlet extends HttpServlet {
                         session.setAttribute("user_id", rs.getInt("id"));
                         session.setAttribute("username", rs.getString("username"));
                         session.setAttribute("role", userRole);
+                        session.setAttribute("login_time", new Timestamp(System.currentTimeMillis()));
 
                         LOGGER.info("User logged in: " + username);
                         response.sendRedirect(request.getContextPath() + "/dashboard");
@@ -133,7 +146,18 @@ public class LoginServlet extends HttpServlet {
         if (storedPassword == null || storedPassword.isBlank()) {
             return false;
         }
-
+        // BCrypt hash (starts with $2a$, $2b$, or $2y$)
+        if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$")) {
+            // jBCrypt 0.4 only supports $2a$ prefix — normalize $2b$ and $2y$ before checking
+            String normalizedHash = storedPassword.replaceFirst("^\\$2[by]\\$", "\\$2a\\$");
+            try {
+                return BCrypt.checkpw(inputPassword, normalizedHash);
+            } catch (IllegalArgumentException e) {
+                LOGGER.warning("BCrypt check failed (invalid hash format): " + e.getMessage());
+                return false;
+            }
+        }
+        // Legacy SHA-256 or plain-text fallback
         String hashedInput = sha256Hex(inputPassword);
         return storedPassword.equalsIgnoreCase(hashedInput) || storedPassword.equals(inputPassword);
     }
@@ -157,11 +181,13 @@ public class LoginServlet extends HttpServlet {
     }
 
     private void migratePasswordHash(Connection conn, int userId, String password) throws SQLException {
-        String updateSql = "UPDATE users SET password_hash = SHA2(?, 256) WHERE id = ?";
+        String bcryptHash = BCrypt.hashpw(password, BCrypt.gensalt(12));
+        String updateSql = "UPDATE users SET password_hash = ? WHERE id = ?";
         try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
-            updateStmt.setString(1, password);
+            updateStmt.setString(1, bcryptHash);
             updateStmt.setInt(2, userId);
             updateStmt.executeUpdate();
+            LOGGER.info("Migrated password to BCrypt for user_id: " + userId);
         }
     }
 }
