@@ -68,7 +68,7 @@
     <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama"></a>
     <div class="card">
         <h1>Lupa Kata Laluan</h1>
-        <p class="subtitle">Masukkan nama pengguna dan email berdaftar untuk tetapkan kata laluan baharu.</p>
+        <p class="subtitle">Masukkan maklumat akaun berdaftar anda untuk tetapkan kata laluan baharu.</p>
 
         <% if (request.getAttribute("error") != null) { %>
             <div class="error"><%= request.getAttribute("error") %></div>
@@ -80,12 +80,22 @@
                 <input id="username" name="username" type="text" required value="<%= request.getAttribute("username") == null ? "" : request.getAttribute("username") %>">
             </div>
             <div class="field">
+                <label for="full_name">Nama Penuh</label>
+                <input id="full_name" name="full_name" type="text" required placeholder="Seperti dalam kad pengenalan" value="<%= request.getAttribute("full_name") == null ? "" : request.getAttribute("full_name") %>">
+            </div>
+            <div class="field">
                 <label for="email">Email Berdaftar</label>
                 <input id="email" name="email" type="email" required value="<%= request.getAttribute("email") == null ? "" : request.getAttribute("email") %>">
             </div>
             <div class="field">
                 <label for="new_password">Kata Laluan Baharu</label>
-                <input id="new_password" name="new_password" type="password" required>
+                <input id="new_password" name="new_password" type="password" required oninput="checkStrength(this.value)">
+                <div id="pw-strength" style="margin-top:6px;font-size:12px;color:#60798b;"></div>
+                <ul style="margin:4px 0 0 16px;padding:0;font-size:12px;color:#60798b;">
+                    <li>Sekurang-kurangnya 8 aksara</li>
+                    <li>Sekurang-kurangnya satu nombor (0-9)</li>
+                    <li>Sekurang-kurangnya satu aksara khas (contoh: !@#$%)</li>
+                </ul>
             </div>
             <div class="field">
                 <label for="confirm_password">Sahkan Kata Laluan Baharu</label>
@@ -96,6 +106,23 @@
                 <a class="btn btn-secondary" href="${pageContext.request.contextPath}/login">Kembali Login</a>
             </div>
         </form>
+        <script>
+        function checkStrength(pw) {
+            var el = document.getElementById('pw-strength');
+            if (!pw) { el.textContent = ''; return; }
+            var issues = [];
+            if (pw.length < 8) issues.push('terlalu pendek');
+            if (!/\d/.test(pw)) issues.push('tiada nombor');
+            if (!/[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>\/?]/.test(pw)) issues.push('tiada aksara khas');
+            if (issues.length === 0) {
+                el.textContent = '✓ Kata laluan kukuh';
+                el.style.color = '#0a7c2e';
+            } else {
+                el.textContent = 'Lemah: ' + issues.join(', ');
+                el.style.color = '#b42318';
+            }
+        }
+        </script>
         <div class="contact-box">
             <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Hubungi JANS</strong>
             <p>Telefon: +60-88-232364 (HQ)</p>
