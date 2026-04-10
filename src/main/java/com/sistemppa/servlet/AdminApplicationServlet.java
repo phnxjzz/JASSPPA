@@ -1,6 +1,7 @@
 package com.sistemppa.servlet;
 
 import com.sistemppa.config.DatabaseConfig;
+import com.sistemppa.service.DashboardDataService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,9 +9,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +38,7 @@ public class AdminApplicationServlet extends HttpServlet {
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             ensureApplicationArchiveTable(conn);
+            DashboardDataService.ensureCertificateColumns(conn);
             renderApplicationPage(conn, request, response, Integer.parseInt(applicationId), null);
         } catch (SQLException e) {
             LOGGER.severe("Failed to load admin application review page: " + e.getMessage());
@@ -58,10 +62,12 @@ public class AdminApplicationServlet extends HttpServlet {
         int applicationId = applicationIdValue;
         String action = request.getParameter("action");
         String adminNotes = trim(request.getParameter("admin_notes"));
+        String validUntilStr = trim(request.getParameter("valid_until"));
         Integer adminUserId = (Integer) request.getSession(false).getAttribute("user_id");
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             ensureApplicationArchiveTable(conn);
+            DashboardDataService.ensureCertificateColumns(conn);
 
             if ("reject".equals(action) && (adminNotes == null || adminNotes.isBlank())) {
                 request.setAttribute("error", "Sebab penolakan wajib diisi sebelum permohonan ditolak.");
@@ -70,11 +76,11 @@ public class AdminApplicationServlet extends HttpServlet {
             }
 
             if ("approve".equals(action)) {
-                updateApplicationStatus(conn, applicationId, "APPROVED", adminNotes);
+                updateApplicationStatus(conn, applicationId, "APPROVED", adminNotes, adminUserId, validUntilStr);
             } else if ("reject".equals(action)) {
-                updateApplicationStatus(conn, applicationId, "REJECTED", adminNotes);
+                updateApplicationStatus(conn, applicationId, "REJECTED", adminNotes, adminUserId, null);
             } else if ("suspend_application".equals(action)) {
-                updateApplicationStatus(conn, applicationId, "SUSPENDED", adminNotes);
+                updateApplicationStatus(conn, applicationId, "SUSPENDED", adminNotes, adminUserId, null);
             } else if ("suspend_user".equals(action)) {
                 suspendUserByApplication(conn, applicationId, adminNotes);
             } else if ("archive".equals(action)) {
@@ -162,6 +168,9 @@ public class AdminApplicationServlet extends HttpServlet {
                 row.put("archived_at", rs.getTimestamp("archived_at"));
                 row.put("archive_notes", rs.getString("archive_notes"));
                 row.put("archived_by", rs.getObject("archived_by"));
+                row.put("certificate_number", rs.getString("certificate_number"));
+                row.put("issued_at", rs.getDate("issued_at"));
+                row.put("valid_until", rs.getDate("valid_until"));
                 return row;
             }
         }
@@ -223,13 +232,85 @@ public class AdminApplicationServlet extends HttpServlet {
         return documents;
     }
 
-    private void updateApplicationStatus(Connection conn, int applicationId, String status, String adminNotes) throws SQLException {
+    private void updateApplicationStatus(Connection conn, int applicationId, String status,
+            String adminNotes, Integer changedBy, String validUntilStr) throws SQLException {
+        // Fetch previous status for history
+        String oldStatus = null;
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "SELECT status FROM applications WHERE id = ? LIMIT 1")) {
+            stmt.setInt(1, applicationId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    oldStatus = rs.getString("status");
+                }
+            }
+        }
+
         String sql = "UPDATE applications SET status = ?, admin_notes = ?, reviewed_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, status);
             stmt.setString(2, adminNotes);
             stmt.setInt(3, applicationId);
             stmt.executeUpdate();
+        }
+
+        // Generate and store Perakuan Pendaftaran when approved
+        if ("APPROVED".equals(status)) {
+            String certNumber = String.format("JANS/PPP/%d/%04d",
+                    java.time.Year.now().getValue(), applicationId);
+            LocalDate validUntil;
+            if (validUntilStr != null && !validUntilStr.isBlank()) {
+                try {
+                    validUntil = LocalDate.parse(validUntilStr);
+                } catch (Exception e) {
+                    validUntil = LocalDate.now().plusYears(2);
+                }
+            } else {
+                validUntil = LocalDate.now().plusYears(2);
+            }
+            String certSql = "UPDATE applications SET certificate_number = ?, issued_at = CURRENT_DATE, valid_until = ? WHERE id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(certSql)) {
+                ps.setString(1, certNumber);
+                ps.setDate(2, Date.valueOf(validUntil));
+                ps.setInt(3, applicationId);
+                ps.executeUpdate();
+            }
+        }
+
+        // Record status change in history
+        DashboardDataService.recordStatusHistory(conn, applicationId, oldStatus, status, changedBy, adminNotes);
+
+        // Notify the applicant
+        int userId = getApplicationUserId(conn, applicationId);
+        if (userId > 0) {
+            String message;
+            String type;
+            if ("APPROVED".equals(status)) {
+                String certRef = String.format("JANS/PPP/%d/%04d",
+                        java.time.Year.now().getValue(), applicationId);
+                message = "Permohonan #" + applicationId + " anda telah DILULUSKAN. Perakuan Pendaftaran " + certRef + " telah dikeluarkan.";
+                type = "SUCCESS";
+            } else if ("REJECTED".equals(status)) {
+                message = "Permohonan #" + applicationId + " anda telah DITOLAK."
+                        + (adminNotes != null && !adminNotes.isBlank() ? " Sebab: " + adminNotes : "");
+                type = "ERROR";
+            } else if ("SUSPENDED".equals(status)) {
+                message = "Permohonan #" + applicationId + " anda telah DIGANTUNG.";
+                type = "WARNING";
+            } else {
+                message = "Status permohonan #" + applicationId + " telah dikemas kini kepada " + status + ".";
+                type = "INFO";
+            }
+            DashboardDataService.insertNotification(conn, userId, message, type);
+        }
+    }
+
+    private int getApplicationUserId(Connection conn, int applicationId) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT user_id FROM applications WHERE id = ?")) {
+            stmt.setInt(1, applicationId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("user_id") : 0;
+            }
         }
     }
 
