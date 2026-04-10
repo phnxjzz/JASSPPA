@@ -100,6 +100,19 @@
         <div class="panel">
             <h2>Permohonan #<%= applicationData.get("id") %></h2>
             <p>Status semasa: <span class="status"><%= applicationData.get("status") %></span></p>
+            <% if ("APPROVED".equals(applicationData.get("status")) && applicationData.get("certificate_number") != null) { %>
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin:10px 0;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+                <div>
+                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#16a34a;">Perakuan Pendaftaran</div>
+                    <div style="font-size:18px;font-weight:bold;color:#15803d;font-family:monospace;"><%= applicationData.get("certificate_number") %></div>
+                </div>
+                <div>
+                    <div style="font-size:12px;color:#166534;">Tarikh Dikeluarkan: <strong><%= applicationData.get("issued_at") %></strong></div>
+                    <div style="font-size:12px;color:#166534;">Tamat Tempoh: <strong><%= applicationData.get("valid_until") %></strong></div>
+                </div>
+                <a class="btn" style="background:#15803d;text-decoration:none;padding:10px 16px;" href="${pageContext.request.contextPath}/certificate?id=<%= applicationData.get("id") %>" target="_blank">&#128196; Lihat Perakuan</a>
+            </div>
+            <% } %>
             <% if (applicationData.get("archived_at") != null) { %>
                 <p>Status arkib: <span class="status">ARCHIVED sejak <%= applicationData.get("archived_at") %></span></p>
             <% } %>
@@ -197,8 +210,16 @@
                 <input type="hidden" name="id" value="<%= applicationData.get("id") %>">
                 <div class="label">Sebab Penolakan / Nota Pentadbir (wajib jika Tolak)</div>
                 <textarea name="admin_notes" id="adminNotes"><%= applicationData.get("admin_notes") != null ? applicationData.get("admin_notes") : "" %></textarea>
+                <% if (!"APPROVED".equals(String.valueOf(applicationData.get("status")))) { %>
+                <div style="margin-top:14px;">
+                    <div class="label">Tarikh Tamat Tempoh Perakuan &mdash; <em style="font-size:11px;font-weight:normal;">(pilihan; lalai: 2 tahun dari hari ini)</em></div>
+                    <input type="date" name="valid_until" id="validUntilInput" style="border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;font-size:14px;margin-top:4px;">
+                </div>
+                <% } %>
                 <div class="actions">
+                    <% if (!"APPROVED".equals(String.valueOf(applicationData.get("status")))) { %>
                     <button class="btn approve" type="submit" name="action" value="approve">Luluskan</button>
+                    <% } %>
                     <button class="btn reject" type="submit" name="action" value="reject" onclick="return validateRejectReason();">Tolak</button>
                     <button class="btn suspend" type="submit" name="action" value="suspend_application">Gantung Permohonan</button>
                     <button class="btn suspend" type="submit" name="action" value="suspend_user">Gantung Pengguna</button>
@@ -228,6 +249,17 @@
             if (!notesField) {
                 return true;
             }
+
+        // Default valid_until to 2 years from today
+        (function () {
+            var vu = document.getElementById('validUntilInput');
+            if (!vu) return;
+            var d = new Date();
+            d.setFullYear(d.getFullYear() + 2);
+            var month = String(d.getMonth() + 1).padStart(2, '0');
+            var day   = String(d.getDate()).padStart(2, '0');
+            vu.value = d.getFullYear() + '-' + month + '-' + day;
+        })();
             var reason = notesField.value == null ? '' : notesField.value.trim();
             if (reason.length === 0) {
                 alert('Sila isi sebab penolakan sebelum menolak permohonan.');
@@ -260,9 +292,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
