@@ -144,12 +144,14 @@
         .hero p { color: var(--muted); line-height: 1.7; max-width: 760px; }
         .metric-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
         .metric-chip { background: var(--surface-soft); border: 1px solid #cbd9e4; padding: 9px 13px; border-radius: 999px; font-weight: 700; color: #17425f; }
-        .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-bottom: 20px; }
         .stat-card { background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); padding: 18px; border-radius: 14px; border: 1px solid #d3e1ed; box-shadow: 0 8px 22px rgba(6, 52, 79, 0.06); }
         .stat-card h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #557286; }
         .stat-card .number { font-size: 30px; font-weight: 800; color: var(--brand-navy); }
+        .stat-bar { margin-top: 10px; height: 6px; border-radius: 999px; background: #dde8f0; overflow: hidden; }
+        .stat-bar-fill { height: 100%; border-radius: 999px; }
         .layout { display: grid; grid-template-columns: 1.9fr 1fr; gap: 20px; }
-        .toolbar { display: grid; grid-template-columns: minmax(240px, 2fr) minmax(160px, 1fr) auto minmax(280px, 1.6fr) auto; gap: 12px; align-items: end; margin-bottom: 16px; }
+        .toolbar { display: grid; grid-template-columns: minmax(200px, 2fr) minmax(140px, 1fr) minmax(130px, 1fr) minmax(130px, 1fr) auto minmax(240px, 1.5fr) auto; gap: 10px; align-items: end; margin-bottom: 16px; }
         .export-control { min-width: 0; }
         .export-help { margin-top: 6px; font-size: 12px; color: var(--muted); }
         .field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
@@ -264,6 +266,7 @@
         </div>
         <div>
             <span>Selamat datang, <%= session.getAttribute("username") %></span>
+            <a href="${pageContext.request.contextPath}/admin/users">Senarai Pengguna</a>
             <a href="${pageContext.request.contextPath}/products">Senarai Produk</a>
             <div class="nav-dropdown">
                 <button class="nav-dropdown-btn">Kemas Kini Profil &#9662;</button>
@@ -278,29 +281,57 @@
 
     <div class="container">
         <div class="stats">
+            <%
+                int totApp = request.getAttribute("total_applications") != null ? (int) request.getAttribute("total_applications") : 0;
+                int pendCount = request.getAttribute("pending_count") != null ? (int) request.getAttribute("pending_count") : 0;
+                int appCount = request.getAttribute("approved_count") != null ? (int) request.getAttribute("approved_count") : 0;
+                int rejCount = request.getAttribute("rejected_count") != null ? (int) request.getAttribute("rejected_count") : 0;
+                int suspCount = request.getAttribute("suspended_count") != null ? (int) request.getAttribute("suspended_count") : 0;
+                int draftCount = request.getAttribute("draft_count") != null ? (int) request.getAttribute("draft_count") : 0;
+                int archCount = request.getAttribute("archived_count") != null ? (int) request.getAttribute("archived_count") : 0;
+                int activeUsers = request.getAttribute("active_users") != null ? (int) request.getAttribute("active_users") : 0;
+                int denom = totApp > 0 ? totApp : 1;
+            %>
             <div class="stat-card">
                 <h3>Jumlah Permohonan</h3>
-                <div class="number"><%= request.getAttribute("total_applications") != null ? request.getAttribute("total_applications") : "0" %></div>
+                <div class="number"><%= totApp %></div>
             </div>
             <div class="stat-card">
                 <h3>Menunggu</h3>
-                <div class="number"><%= request.getAttribute("pending_count") != null ? request.getAttribute("pending_count") : "0" %></div>
+                <div class="number" style="color:#9a6700;"><%= pendCount %></div>
+                <div class="stat-bar"><div class="stat-bar-fill" style="width:<%= pendCount*100/denom %>%;background:#e9a21b;"></div></div>
             </div>
             <div class="stat-card">
                 <h3>Diluluskan</h3>
-                <div class="number"><%= request.getAttribute("approved_count") != null ? request.getAttribute("approved_count") : "0" %></div>
+                <div class="number" style="color:#166534;"><%= appCount %></div>
+                <div class="stat-bar"><div class="stat-bar-fill" style="width:<%= appCount*100/denom %>%;background:#22c55e;"></div></div>
             </div>
             <div class="stat-card">
                 <h3>Ditolak</h3>
-                <div class="number"><%= request.getAttribute("rejected_count") != null ? request.getAttribute("rejected_count") : "0" %></div>
+                <div class="number" style="color:#b91c1c;"><%= rejCount %></div>
+                <div class="stat-bar"><div class="stat-bar-fill" style="width:<%= rejCount*100/denom %>%;background:#ef4444;"></div></div>
+            </div>
+            <div class="stat-card">
+                <h3>Digantung</h3>
+                <div class="number" style="color:#9a3412;"><%= suspCount %></div>
+                <div class="stat-bar"><div class="stat-bar-fill" style="width:<%= suspCount*100/denom %>%;background:#f97316;"></div></div>
+            </div>
+            <div class="stat-card">
+                <h3>Draf</h3>
+                <div class="number" style="color:#475569;"><%= draftCount %></div>
+                <div class="stat-bar"><div class="stat-bar-fill" style="width:<%= draftCount*100/denom %>%;background:#94a3b8;"></div></div>
+            </div>
+            <div class="stat-card">
+                <h3>Diarkib</h3>
+                <div class="number" style="color:#5b21b6;"><%= archCount %></div>
+            </div>
+            <div class="stat-card">
+                <h3>Pengguna Aktif</h3>
+                <div class="number" style="color:#0369a1;"><%= activeUsers %></div>
             </div>
             <div class="stat-card">
                 <h3>Produk Berdaftar</h3>
                 <div class="number"><%= request.getAttribute("total_products") != null ? request.getAttribute("total_products") : "0" %></div>
-            </div>
-            <div class="stat-card">
-                <h3>Diarkib</h3>
-                <div class="number"><%= request.getAttribute("archived_count") != null ? request.getAttribute("archived_count") : "0" %></div>
             </div>
         </div>
 
@@ -323,6 +354,14 @@
                             <option value="DRAFT" <%= "DRAFT".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DRAFT</option>
                             <option value="ARCHIVED" <%= "ARCHIVED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>ARCHIVED</option>
                         </select>
+                    </div>
+                    <div class="field">
+                        <label for="date_from">Dari Tarikh</label>
+                        <input id="date_from" name="date_from" type="date" value="<%= request.getAttribute("date_from") != null ? request.getAttribute("date_from") : "" %>">
+                    </div>
+                    <div class="field">
+                        <label for="date_to">Hingga Tarikh</label>
+                        <input id="date_to" name="date_to" type="date" value="<%= request.getAttribute("date_to") != null ? request.getAttribute("date_to") : "" %>">
                     </div>
                     <button class="btn btn-primary" type="submit">Tapis</button>
                     <div class="field export-control">
@@ -658,4 +697,3 @@
 </script>
 </body>
 </html>
-
