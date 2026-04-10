@@ -1,18 +1,27 @@
 package com.sistemppa.servlet;
 
 import com.sistemppa.config.DatabaseConfig;
+import com.sistemppa.service.DashboardDataService;
+import com.sistemppa.util.EmailUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.Base64;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class RegisterServlet extends HttpServlet {
+    private static final Logger LOGGER = Logger.getLogger(RegisterServlet.class.getName());
     private static final int MIN_PASSWORD_LENGTH = 10;
     private static final Pattern UPPERCASE_PATTERN = Pattern.compile("[A-Z]");
     private static final Pattern LOWERCASE_PATTERN = Pattern.compile("[a-z]");
@@ -62,20 +71,100 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            String sql = "INSERT INTO users (username, email, password_hash, role, full_name, status) VALUES (?, ?, SHA2(?, 256), 'USER', ?, 'ACTIVE')";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String bcryptHash = BCrypt.hashpw(password, BCrypt.gensalt(12));
+            int newUserId = -1;
+            String sql = "INSERT INTO users (username, email, password_hash, role, full_name, status) VALUES (?, ?, ?, 'USER', ?, 'INACTIVE')";
+            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, username);
                 stmt.setString(2, email);
-                stmt.setString(3, password);
+                stmt.setString(3, bcryptHash);
                 stmt.setString(4, fullName);
                 stmt.executeUpdate();
+                try (ResultSet keys = stmt.getGeneratedKeys()) {
+                    if (keys.next()) {
+                        newUserId = keys.getInt(1);
+                    }
+                }
             }
 
-            response.sendRedirect(request.getContextPath() + "/login?registered=1");
+            // Try to send verification email
+            boolean emailSent = false;
+            if (newUserId > 0) {
+                emailSent = sendVerificationEmail(request, conn, newUserId, email, fullName);
+            }
+
+            // If email could not be sent, activate user directly (graceful degradation)
+            if (!emailSent && newUserId > 0) {
+                activateUserDirectly(conn, newUserId);
+                response.sendRedirect(request.getContextPath() + "/login?registered=1");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/login?verify_pending=1");
+            }
+
         } catch (SQLException e) {
+            LOGGER.severe("Registration failed: " + e.getMessage());
             request.setAttribute("error", "Pendaftaran gagal. Sila cuba lagi.");
             request.getRequestDispatcher("/register.jsp").forward(request, response);
         }
+    }
+
+    private boolean sendVerificationEmail(HttpServletRequest request, Connection conn,
+            int userId, String email, String fullName) {
+        String smtpHost = getContextParam(request, "smtp.host", "");
+        if (smtpHost.isBlank()) {
+            return false; // SMTP not configured
+        }
+        try {
+            int smtpPort = Integer.parseInt(getContextParam(request, "smtp.port", "587"));
+            boolean smtpAuth = Boolean.parseBoolean(getContextParam(request, "smtp.auth", "true"));
+            boolean smtpTls = Boolean.parseBoolean(getContextParam(request, "smtp.tls", "true"));
+            String smtpUser = getContextParam(request, "smtp.username", "");
+            String smtpPass = getContextParam(request, "smtp.password", "");
+            String smtpFrom = getContextParam(request, "smtp.from", smtpUser);
+            String baseUrl = getContextParam(request, "app.base.url",
+                    request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath());
+
+            String token = generateToken();
+            Timestamp expires = new Timestamp(System.currentTimeMillis() + 24L * 60 * 60 * 1000);
+            DashboardDataService.storeVerificationToken(conn, userId, token, expires);
+
+            String verifyUrl = baseUrl + "/verify-email?token=" + token;
+            String subject = "Pengesahan E-mel \u2013 Sistem Pendaftaran Produk Air";
+            String body = "<p>Salam " + escapeHtml(fullName) + ",</p>"
+                    + "<p>Terima kasih kerana mendaftar. Sila klik pautan di bawah untuk mengaktifkan akaun anda:</p>"
+                    + "<p><a href=\"" + verifyUrl + "\">" + verifyUrl + "</a></p>"
+                    + "<p>Pautan ini akan tamat dalam 24 jam.</p>"
+                    + "<p>Jika anda tidak mendaftar, abaikan e-mel ini.</p>";
+
+            EmailUtil emailUtil = new EmailUtil(smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, smtpAuth, smtpTls);
+            return emailUtil.sendHtml(email, subject, body);
+        } catch (Exception e) {
+            LOGGER.warning("Failed to send verification email to " + email + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    private void activateUserDirectly(Connection conn, int userId) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement("UPDATE users SET status = 'ACTIVE' WHERE id = ?")) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private String generateToken() {
+        byte[] bytes = new byte[32];
+        new SecureRandom().nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private String getContextParam(HttpServletRequest request, String name, String defaultValue) {
+        String value = request.getServletContext().getInitParameter(name);
+        return (value == null || value.isBlank()) ? defaultValue : value.trim();
+    }
+
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
     }
 
     private boolean userExists(Connection conn, String username, String email) throws SQLException {
