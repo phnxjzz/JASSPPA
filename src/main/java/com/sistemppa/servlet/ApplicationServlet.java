@@ -20,7 +20,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -37,8 +40,104 @@ public class ApplicationServlet extends HttpServlet {
             return;
         }
 
-        request.setAttribute("requiredDocuments", buildRequiredDocuments());
-        request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+        String pathInfo = request.getPathInfo(); // e.g. "/new" or "/6"
+        if (pathInfo == null || "/new".equals(pathInfo)) {
+            request.setAttribute("requiredDocuments", buildRequiredDocuments());
+            request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+        } else {
+            try {
+                int applicationId = Integer.parseInt(pathInfo.substring(1));
+                showUserApplication(request, response, session, applicationId);
+            } catch (NumberFormatException e) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            }
+        }
+    }
+
+    private void showUserApplication(HttpServletRequest request, HttpServletResponse response,
+            HttpSession session, int applicationId) throws ServletException, IOException {
+        Integer userId = (Integer) session.getAttribute("user_id");
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            String sql = "SELECT a.*, ad.application_type, ad.supplier_name, ad.supplier_address, ad.supplier_phone, "
+                    + "ad.manufacturer_name, ad.manufacturer_address, ad.manufacturer_phone, "
+                    + "ad.principal_name, ad.principal_address, ad.principal_phone, "
+                    + "ad.standard_name, ad.certification_license, ad.certification_valid_until, "
+                    + "ad.test_report_reference, ad.test_report_date, ad.warranty_years, "
+                    + "ad.sabah_rep_name, ad.sabah_rep_address, ad.sabah_rep_phone, "
+                    + "ad.declaration_name, ad.declaration_position "
+                    + "FROM applications a LEFT JOIN application_details ad ON ad.application_id = a.id "
+                    + "WHERE a.id = ? AND a.user_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, applicationId);
+                stmt.setInt(2, userId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (!rs.next()) {
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                        return;
+                    }
+                    Map<String, Object> app = new HashMap<>();
+                    app.put("id", rs.getInt("id"));
+                    app.put("product_name", rs.getString("product_name"));
+                    app.put("product_category", rs.getString("product_category"));
+                    app.put("product_description", rs.getString("product_description"));
+                    app.put("company_name", rs.getString("company_name"));
+                    app.put("company_address", rs.getString("company_address"));
+                    app.put("contact_number", rs.getString("contact_number"));
+                    app.put("email", rs.getString("email"));
+                    app.put("status", rs.getString("status"));
+                    app.put("admin_notes", rs.getString("admin_notes"));
+                    app.put("submitted_at", rs.getTimestamp("submitted_at"));
+                    app.put("certificate_number", rs.getString("certificate_number"));
+                    app.put("issued_at", rs.getDate("issued_at"));
+                    app.put("valid_until", rs.getDate("valid_until"));
+                    app.put("application_type", rs.getString("application_type"));
+                    app.put("supplier_name", rs.getString("supplier_name"));
+                    app.put("supplier_address", rs.getString("supplier_address"));
+                    app.put("supplier_phone", rs.getString("supplier_phone"));
+                    app.put("manufacturer_name", rs.getString("manufacturer_name"));
+                    app.put("manufacturer_address", rs.getString("manufacturer_address"));
+                    app.put("manufacturer_phone", rs.getString("manufacturer_phone"));
+                    app.put("principal_name", rs.getString("principal_name"));
+                    app.put("principal_address", rs.getString("principal_address"));
+                    app.put("principal_phone", rs.getString("principal_phone"));
+                    app.put("standard_name", rs.getString("standard_name"));
+                    app.put("certification_license", rs.getString("certification_license"));
+                    app.put("certification_valid_until", rs.getDate("certification_valid_until"));
+                    app.put("test_report_reference", rs.getString("test_report_reference"));
+                    app.put("test_report_date", rs.getDate("test_report_date"));
+                    app.put("warranty_years", rs.getBigDecimal("warranty_years"));
+                    app.put("sabah_rep_name", rs.getString("sabah_rep_name"));
+                    app.put("sabah_rep_address", rs.getString("sabah_rep_address"));
+                    app.put("sabah_rep_phone", rs.getString("sabah_rep_phone"));
+                    app.put("declaration_name", rs.getString("declaration_name"));
+                    app.put("declaration_position", rs.getString("declaration_position"));
+                    request.setAttribute("application", app);
+                }
+            }
+
+            List<Map<String, Object>> documents = new ArrayList<>();
+            String docSql = "SELECT id, document_type, original_filename, content_type, file_size FROM application_documents WHERE application_id = ? ORDER BY id ASC";
+            try (PreparedStatement stmt = conn.prepareStatement(docSql)) {
+                stmt.setInt(1, applicationId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> doc = new HashMap<>();
+                        doc.put("id", rs.getInt("id"));
+                        doc.put("document_type", rs.getString("document_type"));
+                        doc.put("original_filename", rs.getString("original_filename"));
+                        doc.put("content_type", rs.getString("content_type"));
+                        doc.put("file_size", rs.getLong("file_size"));
+                        documents.add(doc);
+                    }
+                }
+            }
+            request.setAttribute("documents", documents);
+            request.setAttribute("requiredDocuments", buildRequiredDocuments());
+            request.getRequestDispatcher("/view-application.jsp").forward(request, response);
+        } catch (SQLException e) {
+            LOGGER.severe("Failed to load application #" + applicationId + ": " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override
@@ -58,6 +157,27 @@ public class ApplicationServlet extends HttpServlet {
 
         if (supplierName.isEmpty() || productName.isEmpty() || productCategory.isEmpty() || applicationType.isEmpty()) {
             request.setAttribute("error", "Sila lengkapkan bahagian wajib borang PPP1.");
+            request.setAttribute("requiredDocuments", buildRequiredDocuments());
+            request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+            return;
+        }
+
+        // Check active application limit (max 3 PENDING or DRAFT)
+        try (Connection limitConn = DatabaseConfig.getConnection();
+             PreparedStatement limitPs = limitConn.prepareStatement(
+                 "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status IN ('PENDING', 'DRAFT')")) {
+            limitPs.setInt(1, userId);
+            try (ResultSet limitRs = limitPs.executeQuery()) {
+                if (limitRs.next() && limitRs.getInt(1) >= 3) {
+                    request.setAttribute("error", "Anda telah mencapai had maksimum 3 permohonan aktif (PENDING/DRAFT). Sila tunggu sehingga permohonan sedia ada diselesaikan sebelum membuat permohonan baharu.");
+                    request.setAttribute("requiredDocuments", buildRequiredDocuments());
+                    request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+                    return;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.severe("Failed to check application limit: " + e.getMessage());
+            request.setAttribute("error", "Ralat semasa memeriksa had permohonan. Sila cuba lagi.");
             request.setAttribute("requiredDocuments", buildRequiredDocuments());
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
             return;
