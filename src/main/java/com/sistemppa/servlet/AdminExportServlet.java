@@ -63,7 +63,7 @@ public class AdminExportServlet extends HttpServlet {
                 return;
             }
 
-            List<Map<String, Object>> applications = DashboardDataService.loadApplications(conn, search, status, 0);
+            List<Map<String, Object>> applications = DashboardDataService.loadApplications(conn, search, status, null, null, 0);
             if ("pdf".equalsIgnoreCase(format)) {
                 exportPdf(response, applications, search, status);
                 return;
