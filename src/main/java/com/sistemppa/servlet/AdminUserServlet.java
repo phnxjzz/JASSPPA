@@ -94,7 +94,8 @@ public class AdminUserServlet extends HttpServlet {
         }
 
         HttpSession session = request.getSession(false);
-        Object sessionUserId = session != null ? session.getAttribute("userId") : null;
+        // Use 'user_id' (consistent with LoginServlet and all other servlets)
+        Object sessionUserId = session != null ? session.getAttribute("user_id") : null;
         int currentAdminId = sessionUserId != null ? Integer.parseInt(sessionUserId.toString()) : -1;
 
         switch (action) {
@@ -145,6 +146,9 @@ public class AdminUserServlet extends HttpServlet {
                 ps.setInt(1, targetUserId);
                 ps.executeUpdate();
             }
+            insertAdminAuditLog(conn, currentAdminId, "DELETE_USER",
+                    "Admin #" + currentAdminId + " memadam pengguna #" + targetUserId,
+                    request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to delete user: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/admin/users?error=db_error");
@@ -193,6 +197,9 @@ public class AdminUserServlet extends HttpServlet {
                 ps.setInt(1, targetUserId);
                 ps.executeUpdate();
             }
+            insertAdminAuditLog(conn, currentAdminId, "TOGGLE_USER_STATUS",
+                    "Admin #" + currentAdminId + " tukar status pengguna #" + targetUserId,
+                    request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to toggle user status: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/admin/users?error=db_error");
@@ -214,6 +221,9 @@ public class AdminUserServlet extends HttpServlet {
                 ps.setInt(2, targetUserId);
                 ps.executeUpdate();
             }
+            insertAdminAuditLog(conn, currentAdminId, "RESET_PASSWORD",
+                    "Admin #" + currentAdminId + " reset kata laluan pengguna #" + targetUserId,
+                    request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to reset password: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/admin/users?error=db_error");
@@ -241,5 +251,21 @@ public class AdminUserServlet extends HttpServlet {
             return false;
         }
         return true;
+    }
+
+    private void insertAdminAuditLog(Connection conn, int adminId, String action,
+            String details, String ip) {
+        try {
+            String sql = "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, adminId);
+                ps.setString(2, action);
+                ps.setString(3, details);
+                ps.setString(4, ip);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            LOGGER.warning("Failed to write audit log: " + e.getMessage());
+        }
     }
 }
