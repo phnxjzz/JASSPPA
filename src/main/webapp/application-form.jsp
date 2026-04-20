@@ -7,32 +7,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Borang Permohonan Online PPP1 - SPPA</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
         * { box-sizing: border-box; }
-        body { font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif; margin: 0; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: #1a3040; }
-        .navbar { background: linear-gradient(180deg, #08334d 0%, #0c4569 100%); border-bottom: 3px solid #e7bf56; color: white; padding: 14px 26px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 12px 28px rgba(8, 51, 77, 0.2); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: linear-gradient(180deg, #eff9ff 0%, #f7fbfd 100%); color: #223; }
+        .navbar { background: linear-gradient(130deg, #0F6BAE 0%, #2A9D8F 30%, #6DBE45 58%, #CDE11D 80%, #F2F72E 100%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 48px; height: 48px; object-fit: contain; }
+        .brand-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: contain; padding: 3px; }
         .brand strong { display: block; }
         .brand span { font-size: 12px; opacity: 0.88; }
-        .navbar a { color: white; text-decoration: none; margin-left: 10px; font-weight: 700; padding: 8px 11px; border-radius: 8px; transition: background 0.18s ease; }
-        .navbar a:hover { background: rgba(255,255,255,0.14); }
-        .icon-inline { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
-            .nav-dropdown { position: relative; display: inline-flex; align-items: center; margin-left: 10px; }
-            .nav-dropdown-btn { background: transparent; border: none !important; box-shadow: none !important; color: white; font-weight: 700; font-family: inherit; font-size: 1em; cursor: pointer; padding: 8px 11px; border-radius: 8px; display: flex; align-items: center; gap: 4px; }
-            .nav-dropdown-btn:hover { background: rgba(255,255,255,0.14); }
-            .nav-dropdown-menu { display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 10px; box-shadow: 0 12px 28px rgba(6,52,79,0.18); min-width: 190px; z-index: 100; overflow: hidden; margin-top: 4px; }
-            .nav-dropdown-menu a { display: block; padding: 10px 16px; color: #06344f !important; text-decoration: none; font-weight: 700; margin-left: 0 !important; border-bottom: 1px solid #e4edf4; }
-            .nav-dropdown-menu a:last-child { border-bottom: none; }
-            .nav-dropdown-menu a:hover { background: #eef5fb; }
-            .nav-dropdown:hover .nav-dropdown-menu,
-            .nav-dropdown:focus-within .nav-dropdown-menu { display: block; }
+        .navbar a { color: white; text-decoration: none; margin-left: 16px; }
         .container { max-width: 1100px; margin: 28px auto; padding: 0 20px; }
-        .panel { border-radius: 14px; border: 1px solid #d4e1ec; box-shadow: 0 8px 26px rgba(9, 53, 79, 0.07); padding: 22px; margin-bottom: 22px; background: #fff; }
+        .panel { border-radius: 12px; box-shadow: 0 12px 30px rgba(16, 24, 40, 0.08); padding: 24px; margin-bottom: 24px; }
         .hero { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .hero h1 { margin-top: 0; font-size: 28px; color: #103d58; }
+        .hero h1 { margin-top: 0; font-size: 30px; }
         .hero p { color: #556; line-height: 1.6; }
-        .badge { display: inline-block; background: #edf4fb; color: #17425f; border: 1px solid #cbd9e4; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+        .badge { display: inline-block; background: #dbeafe; color: #1d4ed8; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 600; margin-bottom: 10px; }
         .docs-box { background: #f8fafc; border: 1px solid #d8e1ee; border-radius: 10px; padding: 16px; }
         .docs-box a { display: block; color: #0f766e; text-decoration: none; margin-bottom: 8px; }
         .section-title { margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; color: #0f172a; }
@@ -40,20 +28,97 @@
         .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
         .field { display: flex; flex-direction: column; gap: 6px; }
         .field label { font-weight: 600; font-size: 14px; color: #334155; }
-        .field input, .field textarea, .field select { width: 100%; padding: 11px 12px; border: 1px solid #cbd8e3; border-radius: 8px; font-size: 14px; }
+        .field input, .field textarea, .field select { width: 100%; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
         .field textarea { min-height: 110px; resize: vertical; }
         .field.full { grid-column: 1 / -1; }
         .hint { font-size: 12px; color: #64748b; }
         .alert { padding: 14px 16px; border-radius: 8px; margin-bottom: 18px; }
         .alert.error { background: #fef2f2; color: #b91c1c; }
         .alert.success { background: #ecfdf5; color: #047857; }
+        .alert-with-gif { display: flex; align-items: center; gap: 10px; }
+        .success-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            z-index: 1300;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            min-width: 280px;
+            max-width: min(94vw, 420px);
+            padding: 28px 24px;
+            border-radius: 16px;
+            border: 1px solid #b8e7c6;
+            background: #ffffff;
+            color: #166534;
+            font-size: 16px;
+            line-height: 1.35;
+            box-shadow: 0 16px 32px rgba(10, 64, 38, 0.2);
+            transform: translate(-50%, -58%) scale(0.97);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.22s ease, opacity 0.22s ease;
+        }
+        .success-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .unsuccessful-popup {
+            border: 1px solid #fecaca;
+            background: #fef2f2;
+            color: #991b1b;
+            box-shadow: 0 16px 32px rgba(127, 29, 29, 0.2);
+        }
+        .unsuccessful-title { color: #991b1b; font-size: 20px; line-height: 1.2; font-weight: 800; text-align: center; }
+        .unsuccessful-ok { align-self: center; margin-top: 4px; border: 1px solid #7f1d1d !important; background: #b91c1c; color: #fff; border-radius: 10px; padding: 10px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .unsuccessful-icon {
+            width: 52px;
+            height: 52px;
+            object-fit: contain;
+            flex-shrink: 0;
+            filter: drop-shadow(0 3px 8px rgba(127, 29, 29, 0.35));
+        }
+        .success-popup-content { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .success-title { font-size: 22px; line-height: 1.1; font-weight: 800; color: #0f5132; letter-spacing: 0.02em; text-transform: none; text-align: center; }
+        .success-text { display: none; }
+        .success-ok { align-self: center; margin-top: 4px; border: 1px solid #0f5132 !important; background: #166534; color: #fff; border-radius: 10px; padding: 10px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .success-gif {
+            width: 84px;
+            height: 84px;
+            padding: 0;
+            object-fit: contain;
+            flex-shrink: 0;
+            background: transparent;
+            border-radius: 0;
+            border: none;
+            mix-blend-mode: normal;
+            filter: drop-shadow(0 3px 8px rgba(22, 101, 52, 0.22)) saturate(1.05);
+            transform-origin: center;
+            animation: successGifPop 420ms ease-out 1, successGifPulse 1.9s ease-in-out infinite 520ms;
+        }
+        @keyframes successGifPop {
+            0% { transform: scale(0.72) translateY(3px); opacity: 0.65; }
+            70% { transform: scale(1.14) translateY(-1px); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes successGifPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
         .doc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         .doc-item { padding: 14px; border: 1px solid #dbe2ea; border-radius: 10px; background: #fcfdff; }
         .doc-item strong { display: block; margin-bottom: 8px; font-size: 14px; }
+        .doc-item strong .required-mark { color: #b91c1c; margin-left: 4px; }
         .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
         .btn { border: 1px solid #fff; border-radius: 8px; padding: 12px 18px; font-size: 14px; cursor: pointer; text-decoration: none; }
-        .btn-secondary { background: #e2edf5; color: #1f3f57; }
-        .btn-primary { background: linear-gradient(180deg, #0f6fa8 0%, #0d5c8f 100%); color: white; }
+        .btn-secondary { background: #e2e8f0; color: #1e293b; }
+        .btn-primary { background: linear-gradient(135deg, #0F6BAE 0%, #2A9D8F 45%, #6DBE45 100%); color: white; }
+        .contact-card { width: 100%; max-width: 420px; border-radius: 12px; border: 1px solid #d8e1ee; background: #f8fbff; padding: 14px; color: #475569; }
+        .contact-card strong { display: block; margin-bottom: 8px; color: #0f172a; }
+        .contact-card p { margin: 4px 0; }
         @media (max-width: 900px) { .hero, .grid, .grid-3, .doc-list { grid-template-columns: 1fr; } }
                     /* Enforce visible white border on all clickable buttons */
         button,
@@ -66,7 +131,7 @@
         .attachment-list button,
         a.btn {
             border: 1px solid #fff !important;
-            box-shadow: inset 0 0 0 1px #f0e6e6, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+            box-shadow: inset 0 0 0 1px #fff, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
         }
 
         button:hover,
@@ -89,12 +154,14 @@
         a.btn:focus {
             border: 1px solid #fff !important;
             box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
-        }</style>
-</head>
+        }
+        .icon-inline { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; }
+        .icon-link { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.38); transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; }
+        .icon-link img { width: 20px; height: 20px; object-fit: contain; }
+        .icon-link:hover { transform: translateY(-1px) scale(1.03); background: rgba(255,255,255,0.26); }</style>
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/sabah-logo.png" class="brand-logo" alt="Logo Sabah">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <strong>SPPA - Permohonan Online PPP1</strong>
@@ -102,15 +169,9 @@
             </div>
         </div>
         <div>
-            <a href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" alt="Laman utama"></a>
             <a href="${pageContext.request.contextPath}/dashboard">Kembali ke Dashboard</a>
-            <div class="nav-dropdown">
-                <button class="nav-dropdown-btn">Kemas Kini Profil &#9662;</button>
-                <div class="nav-dropdown-menu">
-                    <a href="${pageContext.request.contextPath}/profile">Tetapan</a>
-                </div>
-            </div>
-            <a href="${pageContext.request.contextPath}/logout" aria-label="Log Keluar" title="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" alt="Log Keluar"></a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
         </div>
     </div>
 
@@ -119,8 +180,22 @@
             <div class="alert error"><%= request.getAttribute("error") %></div>
         <% } %>
         <% if (request.getParameter("success") != null) { %>
-            <div class="alert success">Permohonan online berjaya dihantar. ID permohonan anda ialah <strong>#<%= request.getParameter("id") %></strong>.</div>
+            <div id="successPopup" class="success-popup show" role="dialog" aria-live="polite" aria-label="Notifikasi berjaya">
+                <img class="success-gif" src="${pageContext.request.contextPath}/assets/images/success.png" alt="Berjaya">
+                <div class="success-popup-content">
+                    <div class="success-title">Berjaya!</div>
+                    <div class="success-text"></div>
+                    <button type="button" class="success-ok" data-close-success-popup>OK</button>
+                </div>
+            </div>
         <% } %>
+        <div id="unsuccessfulPopup" class="success-popup unsuccessful-popup" role="dialog" aria-live="polite" aria-label="Notifikasi gagal">
+            <img class="unsuccessful-icon" src="${pageContext.request.contextPath}/assets/images/unsuccessful.png" alt="Tidak berjaya">
+            <div class="success-popup-content">
+                <div class="unsuccessful-title">Tidak Berjaya Sila Lengkapkan Dokumen yang diperlukan!</div>
+                <button type="button" class="unsuccessful-ok" data-close-unsuccessful-popup>OK</button>
+            </div>
+        </div>
 
         <div class="panel hero">
             <div>
@@ -133,7 +208,7 @@
                 </p>
                 <p>
                     Permohonan baharu dan pembaharuan kedua-duanya disokong. Untuk pembaharuan, sijil/perakuan lama JANS perlu
-                    dilampirkan dan pembaharuan perlu dibuat sekurang-kurangnya <strong>enam bulan sebelum tarikh tamat.</strong>
+                    dilampirkan dan pembaharuan perlu dibuat sekurang-kurangnya enam bulan sebelum tarikh tamat.
                 </p>
             </div>
             <div class="docs-box">
@@ -144,7 +219,8 @@
             </div>
         </div>
 
-        <form class="panel" method="post" action="${pageContext.request.contextPath}/applications/new" enctype="multipart/form-data">
+        <form id="applicationForm" class="panel" method="post" action="${pageContext.request.contextPath}/applications/new" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="${csrf_token}">
             <h2 class="section-title">Bahagian A: Maklumat Pembekal / Pembuat / Prinsipal</h2>
             <div class="grid-3">
                 <div class="field">
@@ -280,12 +356,24 @@
             <p class="hint">Muat naik dokumen dalam format PDF. Untuk pembaharuan, lampiran sijil/perakuan lama adalah wajib. Medan â€œjika adaâ€ boleh dibiarkan kosong.</p>
             <div class="doc-list">
                 <% Map<String, String> requiredDocuments = (Map<String, String>) request.getAttribute("requiredDocuments");
+                   java.util.Set<String> mandatoryDocKeys = new java.util.HashSet<>();
+                   mandatoryDocKeys.add("official_application_letter");
+                   mandatoryDocKeys.add("principal_appointment_letter");
+                   mandatoryDocKeys.add("certification_license_file");
+                   mandatoryDocKeys.add("test_report_file");
+                   mandatoryDocKeys.add("brochure_catalogue");
+                   mandatoryDocKeys.add("price_list");
+                   mandatoryDocKeys.add("product_benefit_summary");
+                   mandatoryDocKeys.add("project_reference");
+                   mandatoryDocKeys.add("sop_document");
+                   mandatoryDocKeys.add("performance_monitoring_program");
                    if (requiredDocuments != null) {
                        for (Map.Entry<String, String> doc : requiredDocuments.entrySet()) {
+                           boolean isMandatory = mandatoryDocKeys.contains(doc.getKey());
                 %>
                 <div class="doc-item">
-                    <strong><%= doc.getValue() %></strong>
-                    <input type="file" name="<%= doc.getKey() %>" accept="application/pdf" />
+                    <strong><%= doc.getValue() %><% if (isMandatory) { %><span class="required-mark">*</span><% } %></strong>
+                    <input type="file" name="<%= doc.getKey() %>" data-doc-key="<%= doc.getKey() %>" accept="application/pdf" />
                 </div>
                 <%   }
                    }
@@ -310,35 +398,81 @@
             </div>
         </form>
 
-        <div class="panel">
-            <h2 class="section-title"><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Hubungi JANS</h2>
-            <p style="margin:6px 0;color:#556;">Telefon: +60-88-232364 (HQ)</p>
-            <p style="margin:6px 0;color:#556;">Fax: +60-88-232396</p>
-            <p style="margin:6px 0;color:#556;">Email: jans.hq@sabah.gov.my</p>
+        <div class="panel" style="padding:18px;">
+            <strong style="display:block;margin-bottom:12px;">Hubungi Jabatan Air Sabah</strong>
+            <div class="contact-card" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                <strong>Hubungi JANS</strong>
+                <p>Telefon: 088-326888</p>
+                <p>Email: info@jwater.gov.my</p>
+                <p>Kota Kinabalu, Sabah</p>
+            </div>
         </div>
-
     </div>
-    <script>
-        (function () {
-            var idleLimitMs = 10 * 60 * 1000;
-            var logoutUrl = '${pageContext.request.contextPath}/logout?timeout=1';
-            var timerId;
+<script>
+(function() {
+    var applicationForm = document.getElementById('applicationForm');
+    var unsuccessfulPopup = document.getElementById('unsuccessfulPopup');
+    var popup = document.getElementById('successPopup');
+    var mandatoryDocKeys = [
+        'official_application_letter',
+        'principal_appointment_letter',
+        'certification_license_file',
+        'test_report_file',
+        'brochure_catalogue',
+        'price_list',
+        'product_benefit_summary',
+        'project_reference',
+        'sop_document',
+        'performance_monitoring_program'
+    ];
 
-            function triggerAutoLogout() {
-                window.location.href = logoutUrl;
+    function closeUnsuccessfulPopup() {
+        if (!unsuccessfulPopup) return;
+        unsuccessfulPopup.classList.remove('show');
+    }
+
+    if (unsuccessfulPopup) {
+        var closeUnsuccessfulBtn = unsuccessfulPopup.querySelector('[data-close-unsuccessful-popup]');
+        if (closeUnsuccessfulBtn) closeUnsuccessfulBtn.addEventListener('click', closeUnsuccessfulPopup);
+        unsuccessfulPopup.addEventListener('click', function(e) {
+            if (e.target === unsuccessfulPopup) closeUnsuccessfulPopup();
+        });
+    }
+
+    if (applicationForm) {
+        applicationForm.addEventListener('submit', function(e) {
+            var applicationTypeField = document.getElementById('application_type');
+            var applicationType = applicationTypeField ? applicationTypeField.value : '';
+            var keysToCheck = mandatoryDocKeys.slice();
+
+            if (applicationType === 'PEMBAHARUAN') {
+                keysToCheck.push('renewal_certificate');
             }
 
-            function resetTimer() {
-                window.clearTimeout(timerId);
-                timerId = window.setTimeout(triggerAutoLogout, idleLimitMs);
-            }
-
-            ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (eventName) {
-                document.addEventListener(eventName, resetTimer, { passive: true });
+            var hasMissingRequiredDoc = keysToCheck.some(function(docKey) {
+                var fileInput = applicationForm.querySelector('input[type="file"][data-doc-key="' + docKey + '"]');
+                return !fileInput || !fileInput.files || fileInput.files.length === 0;
             });
 
-            resetTimer();
-        })();
-    </script>
+            if (hasMissingRequiredDoc) {
+                e.preventDefault();
+                if (unsuccessfulPopup) {
+                    unsuccessfulPopup.classList.add('show');
+                }
+            }
+        });
+    }
+
+    if (!popup) return;
+    function closePopup() {
+        popup.classList.remove('show');
+        window.setTimeout(function() {
+            if (popup && popup.parentNode) popup.parentNode.removeChild(popup);
+        }, 260);
+    }
+    var closeBtn = popup.querySelector('[data-close-success-popup]');
+    if (closeBtn) closeBtn.addEventListener('click', closePopup);
+})();
+</script>
 </body>
 </html>
