@@ -4,24 +4,33 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 public class DatabaseConfig {
+    private static final Logger LOGGER = Logger.getLogger(DatabaseConfig.class.getName());
     private static HikariDataSource dataSource;
 
     static {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        
-        // Support both environment variables (cloud) and defaults (local development)
-        String dbUrl = System.getenv("DATABASE_URL");
+
+        // Read connection details from environment variables.
+        // For local development set DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD
+        // in your shell profile or Tomcat setenv.bat/setenv.sh.
+        String dbUrl  = System.getenv("DATABASE_URL");
         String dbUser = System.getenv("DATABASE_USER");
         String dbPass = System.getenv("DATABASE_PASSWORD");
-        
-        // Default untuk development (jika env vars tidak set)
+
         if (dbUrl == null || dbUrl.isEmpty()) {
-            dbUrl = "jdbc:mysql://localhost:3306/sistemppa";
+            LOGGER.warning("DATABASE_URL env var not set – falling back to localhost dev defaults. "
+                    + "Set DATABASE_URL / DATABASE_USER / DATABASE_PASSWORD for production.");
+            dbUrl  = "jdbc:mysql://localhost:3306/sistemppa";
+        }
+        if (dbUser == null || dbUser.isEmpty()) {
             dbUser = "root";
-            dbPass = "JASSPPA@2000";
+        }
+        if (dbPass == null) {
+            dbPass = "";
         }
         
         config.setJdbcUrl(dbUrl);
