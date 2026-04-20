@@ -18,6 +18,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 import java.util.logging.Logger;
+import org.mindrot.jbcrypt.BCrypt;
+import com.sistemppa.util.ValidationUtil;
 
 @MultipartConfig(maxFileSize = 5 * 1024 * 1024, maxRequestSize = 8 * 1024 * 1024)
 public class ProfileServlet extends HttpServlet {
@@ -80,10 +82,23 @@ public class ProfileServlet extends HttpServlet {
             }
 
             Part avatarFile = request.getPart("avatar_file");
-            if (avatarFile != null && avatarFile.getSize() > 0 && !isSupportedImage(avatarFile)) {
-                request.setAttribute("error", "Gambar profil mesti fail imej PNG, JPG, GIF atau WEBP.");
-                request.getRequestDispatcher("/profile.jsp").forward(request, response);
-                return;
+            if (avatarFile != null && avatarFile.getSize() > 0) {
+                // Validate with both declared MIME type AND magic bytes
+                if (!isSupportedImage(avatarFile) || !ValidationUtil.isValidImageMagicBytes(avatarFile)) {
+                    request.setAttribute("error", "Gambar profil mesti fail imej PNG, JPG, GIF atau WEBP yang sah.");
+                    request.getRequestDispatcher("/profile.jsp").forward(request, response);
+                    return;
+                }
+            }
+
+            if (!isBlank(password)) {
+                // Validate new password against unified policy before saving
+                String policyError = ValidationUtil.validatePasswordPolicy(password);
+                if (policyError != null) {
+                    request.setAttribute("error", policyError);
+                    request.getRequestDispatcher("/profile.jsp").forward(request, response);
+                    return;
+                }
             }
 
             if (existsDuplicateUser(conn, userId, username, email)) {
@@ -196,21 +211,29 @@ public class ProfileServlet extends HttpServlet {
     private void updateProfile(Connection conn, int userId, String fullName, String username, String email,
                                String avatarUrl, String password) throws SQLException {
         boolean hasPassword = !isBlank(password);
-        String sql = hasPassword
-                ? "UPDATE users SET full_name = ?, username = ?, email = ?, avatar_url = ?, password_hash = SHA2(?, 256) WHERE id = ?"
-                : "UPDATE users SET full_name = ?, username = ?, email = ?, avatar_url = ? WHERE id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, fullName);
-            stmt.setString(2, username);
-            stmt.setString(3, email);
-            stmt.setString(4, isBlank(avatarUrl) ? null : avatarUrl);
-            if (hasPassword) {
-                stmt.setString(5, password);
+        if (hasPassword) {
+            // Use BCrypt (NOT SHA2 in SQL) so the hash is consistent with login / registration
+            String hashed = BCrypt.hashpw(password, BCrypt.gensalt(12));
+            String sql = "UPDATE users SET full_name = ?, username = ?, email = ?, avatar_url = ?, password_hash = ? WHERE id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, fullName);
+                stmt.setString(2, username);
+                stmt.setString(3, email);
+                stmt.setString(4, isBlank(avatarUrl) ? null : avatarUrl);
+                stmt.setString(5, hashed);
                 stmt.setInt(6, userId);
-            } else {
-                stmt.setInt(5, userId);
+                stmt.executeUpdate();
             }
-            stmt.executeUpdate();
+        } else {
+            String sql = "UPDATE users SET full_name = ?, username = ?, email = ?, avatar_url = ? WHERE id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, fullName);
+                stmt.setString(2, username);
+                stmt.setString(3, email);
+                stmt.setString(4, isBlank(avatarUrl) ? null : avatarUrl);
+                stmt.setInt(5, userId);
+                stmt.executeUpdate();
+            }
         }
     }
 
