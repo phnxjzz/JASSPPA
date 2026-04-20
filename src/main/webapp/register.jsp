@@ -7,11 +7,14 @@
     <title>Daftar Pemohon - SPPA</title>
     <style>
         :root {
-            --brand-blue: #0097d9;
-            --brand-navy: #06344f;
+            --brand-blue: #2A9D8F;
+            --brand-navy: #0F6BAE;
+            --brand-green: #6DBE45;
+            --brand-lime: #CDE11D;
+            --brand-yellow: #F2F72E;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #06344f 0%, #0097d9 58%, #fff9b8 150%); min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-yellow) 100%); min-height: 100vh; display: grid; place-items: center; padding: 24px; }
         .shell { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 1040px; border-radius: 24px; overflow: hidden; box-shadow: 0 22px 58px rgba(6, 52, 79, 0.2); }
         .info { background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%); color: white; padding: 40px; }
         .info .logo { width: 78px; height: 78px; border-radius: 18px; margin-bottom: 18px; display: grid; place-items: center; color: var(--brand-navy); font-size: 22px; font-weight: 800; letter-spacing: 0.08em; }
@@ -111,6 +114,7 @@
         <% } %>
 
         <form method="post" action="${pageContext.request.contextPath}/register">
+            <input type="hidden" name="_csrf" value="${csrf_token}">
             <div class="field">
                 <label for="full_name">Nama Penuh</label>
                 <input id="full_name" name="full_name" type="text" required>
