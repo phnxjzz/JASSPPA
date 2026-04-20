@@ -1,6 +1,7 @@
 package com.sistemppa.servlet;
 
 import com.sistemppa.config.DatabaseConfig;
+import com.sistemppa.filter.RateLimitFilter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,13 +57,6 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        if (selectedRole == null) {
-            request.setAttribute("error", "Sila pilih peranan portal sebelum log masuk.");
-            request.setAttribute("selected_role", "");
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
-            return;
-        }
-
         try (Connection conn = DatabaseConfig.getConnection()) {
             String sql = "SELECT id, username, role, status, password_hash FROM users WHERE username = ? LIMIT 1";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -72,6 +66,7 @@ public class LoginServlet extends HttpServlet {
                     if (rs.next()) {
                         String storedPassword = rs.getString("password_hash");
                         if (!passwordMatches(password, storedPassword)) {
+                            RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
                             request.setAttribute("error", "Username atau kata laluan tidak sah.");
                             request.setAttribute("selected_role", selectedRole);
                             request.getRequestDispatcher("/login.jsp").forward(request, response);
@@ -80,6 +75,7 @@ public class LoginServlet extends HttpServlet {
 
                         String status = rs.getString("status");
                         if (!"ACTIVE".equals(status)) {
+                            RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
                             String statusMsg = "SUSPENDED".equals(status)
                                 ? "Akaun anda telah digantung. Sila hubungi pentadbir."
                                 : "Akaun anda belum disahkan. Sila semak e-mel anda atau hubungi pentadbir.";
@@ -90,8 +86,13 @@ public class LoginServlet extends HttpServlet {
                         }
 
                         String userRole = rs.getString("role");
-                        if (!selectedRole.equals(userRole)) {
-                            request.setAttribute("error", "Akaun ini tidak sepadan dengan portal yang dipilih.");
+                        if (selectedRole != null && !selectedRole.equals(userRole)) {
+                            RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
+                            if ("ADMIN".equals(selectedRole) && "USER".equals(userRole)) {
+                                request.setAttribute("portal_error", "Sila Pergi ke Portal Pemohon!");
+                            } else {
+                                request.setAttribute("error", "Akaun ini tidak sepadan dengan portal yang dipilih.");
+                            }
                             request.setAttribute("selected_role", selectedRole);
                             request.getRequestDispatcher("/login.jsp").forward(request, response);
                             return;
@@ -104,6 +105,9 @@ public class LoginServlet extends HttpServlet {
                             migratePasswordHash(conn, rs.getInt("id"), password);
                         }
 
+                        // Successful login: clear rate-limit record
+                        RateLimitFilter.clearRecord(RateLimitFilter.resolveClientIp(request));
+
                         HttpSession session = request.getSession();
                         session.setAttribute("user_id", rs.getInt("id"));
                         session.setAttribute("username", rs.getString("username"));
@@ -113,6 +117,7 @@ public class LoginServlet extends HttpServlet {
                         LOGGER.info("User logged in: " + username);
                         response.sendRedirect(request.getContextPath() + "/dashboard");
                     } else {
+                        RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
                         request.setAttribute("error", "Username atau kata laluan tidak sah.");
                         request.setAttribute("selected_role", selectedRole);
                         request.getRequestDispatcher("/login.jsp").forward(request, response);
