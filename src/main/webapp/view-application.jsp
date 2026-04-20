@@ -12,19 +12,22 @@
     String status = app.get("status") == null ? "" : String.valueOf(app.get("status"));
     String certNum = app.get("certificate_number") == null ? null : String.valueOf(app.get("certificate_number"));
     int appId = (Integer) app.get("id");
+    String appIdFormatted = String.format("PPP%03d", appId);
 %>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Butiran Permohonan #<%= appId %> - SPPA</title>
+    <title>Butiran Permohonan <%= appIdFormatted %> - SPPA</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
         :root {
-            --brand-blue: #0d5c8f;
-            --brand-navy: #08334d;
-            --brand-gold: #e7bf56;
+            --brand-blue: #2A9D8F;
+            --brand-navy: #0F6BAE;
+            --brand-green: #6DBE45;
+            --brand-lime: #CDE11D;
+            --brand-gold: #F2F72E;
             --surface: #ffffff;
             --line: #d4e1ec;
             --text: #1a3040;
@@ -32,7 +35,7 @@
         }
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: var(--text); }
-        .navbar { background: linear-gradient(180deg, var(--brand-navy) 0%, #0c4569 100%); border-bottom: 3px solid var(--brand-gold); color: white; padding: 14px 26px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 12px 28px rgba(8,51,77,0.2); }
+        .navbar { background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%); border-bottom: 3px solid var(--brand-gold); color: white; padding: 14px 26px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 12px 28px rgba(8,51,77,0.2); }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 52px; height: 52px; object-fit: contain; }
         .brand h1 { margin: 0; font-size: 21px; letter-spacing: 0.02em; }
@@ -40,6 +43,9 @@
         .navbar a { color: white; text-decoration: none; margin-left: 10px; font-weight: 700; padding: 8px 11px; border-radius: 8px; transition: background 0.18s ease; }
         .navbar a:hover { background: rgba(255,255,255,0.14); }
         .icon-inline { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
+        .icon-link { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.38); transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; }
+        .icon-link img { width: 20px; height: 20px; object-fit: contain; }
+        .icon-link:hover { transform: translateY(-1px) scale(1.03); background: rgba(255,255,255,0.26); }
         .container { max-width: 960px; margin: 28px auto; padding: 0 20px 40px; }
         .breadcrumb { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
         .breadcrumb a { color: var(--brand-blue); text-decoration: none; }
@@ -66,7 +72,7 @@
         .alert-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
         .btn { display: inline-block; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; cursor: pointer; border: 1px solid #fff !important; box-shadow: inset 0 0 0 1px #fff, 0 1px 2px rgba(0,0,0,0.18) !important; transition: transform 0.16s ease; }
         .btn:hover { transform: translateY(-1px); }
-        .btn-primary { background: linear-gradient(180deg,#0f6fa8 0%,#0d5c8f 100%); color: white; }
+        .btn-primary { background: linear-gradient(180deg, var(--brand-navy) 0%, var(--brand-blue) 55%, var(--brand-green) 100%); color: white; }
         .btn-secondary { background: #e2edf5; color: var(--brand-navy); }
         .btn-green { background: linear-gradient(180deg,#16a34a 0%,#15803d 100%); color: white; }
         .doc-list { list-style: none; margin: 0; padding: 0; }
@@ -90,19 +96,20 @@
             <p>Sistem Pendaftaran Produk Air - Jabatan Air Negeri Sabah</p>
         </div>
     </div>
-    <div>
+    <div style="display:flex;align-items:center;">
         <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a>
         <a href="${pageContext.request.contextPath}/profile">Profil</a>
-        <a href="${pageContext.request.contextPath}/logout" title="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" class="icon-inline" alt="Log Keluar"></a>
+        <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
+        <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
     </div>
 </div>
 
 <div class="container">
     <div class="breadcrumb">
-        <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a> &rsaquo; Permohonan #<%= appId %>
+        <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a> &rsaquo; Permohonan <%= appIdFormatted %>
     </div>
 
-    <div class="page-title">Permohonan #<%= appId %></div>
+    <div class="page-title">Permohonan <%= appIdFormatted %></div>
     <div class="page-sub">
         <%= app.get("product_name") %>
         &mdash;
@@ -112,29 +119,29 @@
     <%-- Status notices --%>
     <% if ("APPROVED".equals(status) && certNum != null) { %>
     <div class="alert alert-success">
-        &#10003; Permohonan ini telah <strong>diluluskan</strong>. No. Perakuan: <strong><%= certNum %></strong>.
+        Permohonan ini telah <strong>diluluskan</strong>. No. Perakuan: <strong><%= certNum %></strong>.
         Sah sehingga: <strong><%= app.get("valid_until") %></strong>.
-        <a class="btn btn-green" style="margin-left:12px;padding:6px 14px;font-size:13px;" href="${pageContext.request.contextPath}/certificate?id=<%= appId %>" target="_blank">&#128196; Lihat Perakuan</a>
+        <a class="btn btn-green" style="margin-left:12px;padding:6px 14px;font-size:13px;" href="${pageContext.request.contextPath}/certificate?id=<%= appId %>" target="_blank">Lihat Perakuan</a>
     </div>
     <% } else if ("APPROVED".equals(status)) { %>
-    <div class="alert alert-success">&#10003; Permohonan ini telah <strong>diluluskan</strong>.</div>
+    <div class="alert alert-success">Permohonan ini telah <strong>diluluskan</strong>.</div>
     <% } else if ("REJECTED".equals(status)) { %>
-    <div class="alert alert-danger">&#10007; Permohonan ini telah <strong>ditolak</strong>.
+    <div class="alert alert-danger">Permohonan ini telah <strong>ditolak</strong>.
         <% String notes = app.get("admin_notes") == null ? "" : String.valueOf(app.get("admin_notes")); if (!notes.isBlank()) { %>
         Sebab: <%= notes %>
         <% } %>
     </div>
     <% } else if ("SUSPENDED".equals(status)) { %>
-    <div class="alert alert-warning">&#9888; Permohonan ini sedang <strong>digantung</strong>.</div>
+        <div class="alert alert-warning">Permohonan ini sedang <strong>digantung</strong>.</div>
     <% } else if ("PENDING".equals(status)) { %>
-    <div class="alert alert-info">&#8987; Permohonan sedang dalam semakan. Anda akan dimaklumkan apabila terdapat keputusan.</div>
+        <div class="alert alert-info">Permohonan sedang dalam semakan. Anda akan dimaklumkan apabila terdapat keputusan.</div>
     <% } %>
 
     <%-- Main application info --%>
     <div class="card">
         <div class="card-header">
-            <h2>&#128196; Maklumat Permohonan</h2>
-            <span style="font-size:13px;color:var(--muted);">Dihantar: <%= app.get("submitted_at") != null ? String.valueOf(app.get("submitted_at")).substring(0,19) : "Belum dihantar" %></span>
+            <h2>Maklumat Permohonan</h2>
+                <span style="font-size:13px;color:var(--muted);">Dihantar: <%= app.get("submitted_at") != null ? String.valueOf(app.get("submitted_at")).substring(0,19) : "Belum dihantar" %></span>
         </div>
         <div class="card-body">
             <div class="detail-grid">
@@ -164,7 +171,7 @@
 
     <%-- Supplier / Company --%>
     <div class="card">
-        <div class="card-header"><h2>&#127970; Maklumat Pembekal</h2></div>
+        <div class="card-header"><h2>Maklumat Pembekal</h2></div>
         <div class="card-body">
             <div class="detail-grid">
                 <div class="detail-item">
@@ -187,7 +194,7 @@
     <% boolean hasMfr = app.get("manufacturer_name") != null && !String.valueOf(app.get("manufacturer_name")).isBlank(); %>
     <% if (hasMfr) { %>
     <div class="card">
-        <div class="card-header"><h2>&#127981; Maklumat Pengilang</h2></div>
+        <div class="card-header"><h2>Maklumat Pengilang</h2></div>
         <div class="card-body">
             <div class="detail-grid">
                 <div class="detail-item">
@@ -209,7 +216,7 @@
 
     <%-- Certification & Standards --%>
     <div class="card">
-        <div class="card-header"><h2>&#127942; Persijilan &amp; Standard</h2></div>
+        <div class="card-header"><h2>Persijilan &amp; Standard</h2></div>
         <div class="card-body">
             <div class="detail-grid">
                 <div class="detail-item">
@@ -244,7 +251,7 @@
     <% boolean hasRep = app.get("sabah_rep_name") != null && !String.valueOf(app.get("sabah_rep_name")).isBlank(); %>
     <% if (hasRep) { %>
     <div class="card">
-        <div class="card-header"><h2>&#128101; Wakil di Sabah</h2></div>
+        <div class="card-header"><h2>Wakil di Sabah</h2></div>
         <div class="card-body">
             <div class="detail-grid">
                 <div class="detail-item">
@@ -266,10 +273,10 @@
 
     <%-- Documents --%>
     <div class="card">
-        <div class="card-header"><h2>&#128196; Dokumen Dimuat Naik</h2></div>
+        <div class="card-header"><h2>Dokumen Dimuat Naik</h2></div>
         <div class="card-body">
             <% if (documents == null || documents.isEmpty()) { %>
-            <p style="color:var(--muted);font-style:italic;">Tiada dokumen dimuat naik.</p>
+                <p style="color:var(--muted);font-style:italic;">Tiada dokumen dimuat naik.</p>
             <% } else { %>
             <ul class="doc-list">
                 <% for (Map<String, Object> doc : documents) {
@@ -281,7 +288,7 @@
                 %>
                 <li class="doc-item">
                     <div>
-                        <div class="doc-name">&#128196; <%= label %></div>
+                        <div class="doc-name"><%= label %></div>
                         <div class="doc-meta"><%= doc.get("original_filename") %> &mdash; <%= sizeStr %></div>
                     </div>
                     <a href="${pageContext.request.contextPath}/documents/download?id=<%= docId %>" class="btn btn-secondary" style="padding:6px 12px;font-size:12px;">Muat Turun</a>
@@ -296,18 +303,18 @@
     <% String adminNotes = app.get("admin_notes") == null ? "" : String.valueOf(app.get("admin_notes")); %>
     <% if (!adminNotes.isBlank()) { %>
     <div class="card">
-        <div class="card-header"><h2>&#128221; Nota Pentadbir</h2></div>
+        <div class="card-header"><h2>Nota Pentadbir</h2></div>
         <div class="card-body" style="white-space:pre-wrap;"><%= adminNotes %></div>
     </div>
     <% } %>
 
     <div style="display:flex;gap:12px;margin-top:8px;">
-        <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-secondary">&#8592; Kembali ke Dashboard</a>
+        <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-secondary">Kembali ke Dashboard</a>
         <% if ("DRAFT".equals(status) || "PENDING".equals(status)) { %>
-        <a href="${pageContext.request.contextPath}/applications/<%= appId %>/edit" class="btn btn-primary">&#9998; Kemaskini Permohonan</a>
+        <a href="${pageContext.request.contextPath}/applications/<%= appId %>/edit" class="btn btn-primary">Kemaskini Permohonan</a>
         <% } %>
         <% if ("APPROVED".equals(status) && certNum != null) { %>
-        <a href="${pageContext.request.contextPath}/certificate?id=<%= appId %>" class="btn btn-green" target="_blank">&#128196; Lihat Perakuan</a>
+        <a href="${pageContext.request.contextPath}/certificate?id=<%= appId %>" class="btn btn-green" target="_blank">Lihat Perakuan</a>
         <% } %>
     </div>
 </div>
