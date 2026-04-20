@@ -11,6 +11,7 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.DashboardDataService;
+import com.sistemppa.util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -142,13 +143,13 @@ public class AdminExportServlet extends HttpServlet {
             int rowIndex = 1;
             for (Map<String, Object> application : applications) {
                 Row row = sheet.createRow(rowIndex++);
-                row.createCell(0).setCellValue(String.valueOf(application.get("id")));
-                row.createCell(1).setCellValue(String.valueOf(application.get("company_name")));
-                row.createCell(2).setCellValue(String.valueOf(application.get("full_name")));
-                row.createCell(3).setCellValue(String.valueOf(application.get("user_email")));
-                row.createCell(4).setCellValue(String.valueOf(application.get("product_name")));
-                row.createCell(5).setCellValue(String.valueOf(application.get("product_category")));
-                row.createCell(6).setCellValue(String.valueOf(application.get("status")));
+                row.createCell(0).setCellValue(ValidationUtil.sanitizeXlsxCell(application.get("id")));
+                row.createCell(1).setCellValue(ValidationUtil.sanitizeXlsxCell(application.get("company_name")));
+                row.createCell(2).setCellValue(ValidationUtil.sanitizeXlsxCell(application.get("full_name")));
+                row.createCell(3).setCellValue(ValidationUtil.sanitizeXlsxCell(application.get("user_email")));
+                row.createCell(4).setCellValue(ValidationUtil.sanitizeXlsxCell(application.get("product_name")));
+                row.createCell(5).setCellValue(ValidationUtil.sanitizeXlsxCell(application.get("product_category")));
+                row.createCell(6).setCellValue(ValidationUtil.sanitizeXlsxCell(application.get("status")));
                 row.createCell(7).setCellValue(application.get("submitted_at") == null
                         ? "-" : String.valueOf(application.get("submitted_at")));
             }
@@ -220,11 +221,11 @@ public class AdminExportServlet extends HttpServlet {
             int rowIndex = 1;
             for (Map<String, Object> user : users) {
                 Row row = sheet.createRow(rowIndex++);
-                row.createCell(0).setCellValue(String.valueOf(user.get("id")));
-                row.createCell(1).setCellValue(String.valueOf(user.get("username")));
-                row.createCell(2).setCellValue(String.valueOf(user.get("full_name")));
-                row.createCell(3).setCellValue(String.valueOf(user.get("email")));
-                row.createCell(4).setCellValue(String.valueOf(user.get("status")));
+                row.createCell(0).setCellValue(ValidationUtil.sanitizeXlsxCell(user.get("id")));
+                row.createCell(1).setCellValue(ValidationUtil.sanitizeXlsxCell(user.get("username")));
+                row.createCell(2).setCellValue(ValidationUtil.sanitizeXlsxCell(user.get("full_name")));
+                row.createCell(3).setCellValue(ValidationUtil.sanitizeXlsxCell(user.get("email")));
+                row.createCell(4).setCellValue(ValidationUtil.sanitizeXlsxCell(user.get("status")));
                 row.createCell(5).setCellValue(user.get("created_at") == null ? "-" : String.valueOf(user.get("created_at")));
             }
 
