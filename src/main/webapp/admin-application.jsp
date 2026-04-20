@@ -10,13 +10,12 @@
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #eff8ff 0%, #f7fbfd 100%); margin: 0; color: #1e293b; }
-        .navbar { background: linear-gradient(130deg, #06344f 0%, #0097d9 74%, #fff212 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .navbar { background: linear-gradient(130deg, #0F6BAE 0%, #2A9D8F 30%, #6DBE45 58%, #CDE11D 80%, #F2F72E 100%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 48px; height: 48px; object-fit: contain; }
+        .brand-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: contain; padding: 3px; }
         .brand strong { display: block; }
         .brand span { font-size: 12px; opacity: 0.88; }
         .navbar a { color: white; text-decoration: none; margin-left: 16px; }
-        .icon-inline { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
         .container { max-width: 1200px; margin: 28px auto; padding: 0 20px; }
         .panel { border-radius: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); padding: 24px; margin-bottom: 20px; }
         .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -34,9 +33,9 @@
         .secondary { background: #475569; text-decoration: none; display: inline-block; }
         .status { font-weight: 700; }
         .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 10px; padding: 12px; margin-bottom: 14px; }
-        .contact-panel { background: #f8fbff; border: 1px solid #d7e7ef; border-radius: 12px; padding: 14px; margin-bottom: 20px; }
-        .contact-panel h4 { margin: 0 0 8px; color: #06344f; }
-        .contact-panel p { margin: 4px 0; color: #334155; }
+        .contact-card { width: 100%; max-width: 420px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fbff; padding: 14px; color: #475569; }
+        .contact-card strong { display: block; margin-bottom: 8px; color: #0f172a; }
+        .contact-card p { margin: 4px 0; }
                     /* Enforce visible white border on all clickable buttons */
         button,
         input[type="submit"],
@@ -71,12 +70,14 @@
         a.btn:focus {
             border: 1px solid #fff !important;
             box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
-        }</style>
-</head>
+        }
+        .icon-inline { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; }
+        .icon-link { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.38); transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; }
+        .icon-link img { width: 20px; height: 20px; object-fit: contain; }
+        .icon-link:hover { transform: translateY(-1px) scale(1.03); background: rgba(255,255,255,0.26); }</style>
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/sabah-logo.png" class="brand-logo" alt="Logo Sabah">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <strong>SPPA - Semakan Permohonan</strong>
@@ -85,9 +86,8 @@
         </div>
         <div>
             <a href="${pageContext.request.contextPath}/dashboard">Kembali ke Dashboard</a>
-            <a href="${pageContext.request.contextPath}/dashboard?status=ARCHIVED">Tetapan Arkib</a>
-            <a href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" class="icon-inline" alt="Laman utama"></a>
-            <a href="${pageContext.request.contextPath}/logout">Log Keluar</a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
         </div>
     </div>
 
@@ -98,24 +98,8 @@
             List<Map<String, Object>> documents = (List<Map<String, Object>>) request.getAttribute("documents");
         %>
         <div class="panel">
-            <h2>Permohonan #<%= applicationData.get("id") %></h2>
+            <h2>Permohonan <%= String.format("PPP%03d", ((Number)applicationData.get("id")).intValue()) %></h2>
             <p>Status semasa: <span class="status"><%= applicationData.get("status") %></span></p>
-            <% if ("APPROVED".equals(applicationData.get("status")) && applicationData.get("certificate_number") != null) { %>
-            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin:10px 0;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-                <div>
-                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#16a34a;">Perakuan Pendaftaran</div>
-                    <div style="font-size:18px;font-weight:bold;color:#15803d;font-family:monospace;"><%= applicationData.get("certificate_number") %></div>
-                </div>
-                <div>
-                    <div style="font-size:12px;color:#166534;">Tarikh Dikeluarkan: <strong><%= applicationData.get("issued_at") %></strong></div>
-                    <div style="font-size:12px;color:#166534;">Tamat Tempoh: <strong><%= applicationData.get("valid_until") %></strong></div>
-                </div>
-                <a class="btn" style="background:#15803d;text-decoration:none;padding:10px 16px;" href="${pageContext.request.contextPath}/certificate?id=<%= applicationData.get("id") %>" target="_blank">&#128196; Lihat Perakuan</a>
-            </div>
-            <% } %>
-            <% if (applicationData.get("archived_at") != null) { %>
-                <p>Status arkib: <span class="status">ARCHIVED sejak <%= applicationData.get("archived_at") %></span></p>
-            <% } %>
             <div class="grid">
                 <div>
                     <div class="label">Pemohon</div>
@@ -207,40 +191,28 @@
             <div class="alert-error"><%= adminError %></div>
             <% } %>
             <form method="post" action="${pageContext.request.contextPath}/admin/application" id="adminActionForm">
+                <input type="hidden" name="_csrf" value="${csrf_token}">
                 <input type="hidden" name="id" value="<%= applicationData.get("id") %>">
                 <div class="label">Sebab Penolakan / Nota Pentadbir (wajib jika Tolak)</div>
                 <textarea name="admin_notes" id="adminNotes"><%= applicationData.get("admin_notes") != null ? applicationData.get("admin_notes") : "" %></textarea>
-                <% if (!"APPROVED".equals(String.valueOf(applicationData.get("status")))) { %>
-                <div style="margin-top:14px;">
-                    <div class="label">Tarikh Tamat Tempoh Perakuan &mdash; <em style="font-size:11px;font-weight:normal;">(pilihan; lalai: 2 tahun dari hari ini)</em></div>
-                    <input type="date" name="valid_until" id="validUntilInput" style="border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;font-size:14px;margin-top:4px;">
-                </div>
-                <% } %>
                 <div class="actions">
-                    <% if (!"APPROVED".equals(String.valueOf(applicationData.get("status")))) { %>
                     <button class="btn approve" type="submit" name="action" value="approve">Luluskan</button>
-                    <% } %>
                     <button class="btn reject" type="submit" name="action" value="reject" onclick="return validateRejectReason();">Tolak</button>
                     <button class="btn suspend" type="submit" name="action" value="suspend_application">Gantung Permohonan</button>
                     <button class="btn suspend" type="submit" name="action" value="suspend_user">Gantung Pengguna</button>
-                    <% String currentStatus = String.valueOf(applicationData.get("status")); %>
-                    <% boolean archived = applicationData.get("archived_at") != null; %>
-                    <% if (!archived && ("APPROVED".equals(currentStatus) || "REJECTED".equals(currentStatus) || "SUSPENDED".equals(currentStatus))) { %>
-                        <button class="btn secondary" type="submit" name="action" value="archive" onclick="return confirm('Arkibkan permohonan ini? Rekod akan dipindahkan ke kategori ARCHIVED.');">Arkibkan Permohonan</button>
-                    <% } %>
-                    <% if (archived) { %>
-                        <button class="btn secondary" type="submit" name="action" value="unarchive" onclick="return confirm('Keluarkan permohonan ini dari arkib?');">Keluarkan Dari Arkib</button>
-                    <% } %>
                     <a class="btn secondary" href="${pageContext.request.contextPath}/dashboard">Kembali</a>
                 </div>
             </form>
         </div>
 
-        <div class="contact-panel">
-            <h4><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Hubungi JANS</h4>
-            <p>Telefon: +60-88-232364 (HQ)</p>
-            <p>Fax: +60-88-232396</p>
-            <p>Email: jans.hq@sabah.gov.my</p>
+        <div class="panel">
+            <h3>Hubungan Rasmi</h3>
+            <div class="contact-card" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                <strong>Hubungi JANS</strong>
+                <p>Telefon: 088-326888</p>
+                <p>Email: info@jwater.gov.my</p>
+                <p>Kota Kinabalu, Sabah</p>
+            </div>
         </div>
     </div>
     <script>
@@ -249,17 +221,6 @@
             if (!notesField) {
                 return true;
             }
-
-        // Default valid_until to 2 years from today
-        (function () {
-            var vu = document.getElementById('validUntilInput');
-            if (!vu) return;
-            var d = new Date();
-            d.setFullYear(d.getFullYear() + 2);
-            var month = String(d.getMonth() + 1).padStart(2, '0');
-            var day   = String(d.getDate()).padStart(2, '0');
-            vu.value = d.getFullYear() + '-' + month + '-' + day;
-        })();
             var reason = notesField.value == null ? '' : notesField.value.trim();
             if (reason.length === 0) {
                 alert('Sila isi sebab penolakan sebelum menolak permohonan.');
@@ -268,27 +229,10 @@
             }
             return true;
         }
-
-        (function () {
-            var idleLimitMs = 10 * 60 * 1000;
-            var logoutUrl = '${pageContext.request.contextPath}/logout?timeout=1';
-            var timerId;
-
-            function triggerAutoLogout() {
-                window.location.href = logoutUrl;
-            }
-
-            function resetTimer() {
-                window.clearTimeout(timerId);
-                timerId = window.setTimeout(triggerAutoLogout, idleLimitMs);
-            }
-
-            ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (eventName) {
-                document.addEventListener(eventName, resetTimer, { passive: true });
-            });
-
-            resetTimer();
-        })();
     </script>
 </body>
 </html>
+
+
+
+
