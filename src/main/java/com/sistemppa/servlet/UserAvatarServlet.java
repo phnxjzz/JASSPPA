@@ -13,10 +13,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 public class UserAvatarServlet extends HttpServlet {
+    private static final Logger LOGGER = Logger.getLogger(UserAvatarServlet.class.getName());
+
     @Override
-    protected void doGet(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         Integer userId = resolveUserId(session);
         if (userId == null) {
@@ -34,19 +38,40 @@ public class UserAvatarServlet extends HttpServlet {
             if (avatarValue.startsWith("http://") || avatarValue.startsWith("https://")) {
                 response.sendRedirect(avatarValue);
                 return;
-
             }
 
-            Path avatarPath = Path.of(avatarValue);
+            // Path traversal protection: ensure the resolved path is inside the
+            // expected upload base directory.
+            Path uploadBase = Path.of(
+                    System.getProperty("catalina.base", System.getProperty("user.dir")),
+                    "uploads", "sistemppa");
+            Path avatarPath = Path.of(avatarValue).normalize();
+
+            // toRealPath() requires the file to exist – check existence first
             if (!Files.exists(avatarPath)) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Fail avatar tidak dijumpai");
                 return;
+            }
 
+            try {
+                Path realBase   = uploadBase.toRealPath();
+                Path realAvatar = avatarPath.toRealPath();
+                if (!realAvatar.startsWith(realBase)) {
+                    LOGGER.warning("Path traversal attempt blocked for user " + userId
+                            + ": " + avatarPath);
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Akses tidak dibenarkan");
+                    return;
+                }
+            } catch (IOException e) {
+                LOGGER.warning("Unable to resolve avatar path for user " + userId + ": " + e.getMessage());
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Fail avatar tidak dijumpai");
+                return;
             }
 
             String contentType = Files.probeContentType(avatarPath);
             response.setContentType(contentType != null ? contentType : "application/octet-stream");
-            response.setHeader("Content-Disposition", "inline; filename=\"" + avatarPath.getFileName() +  "\"");
+            response.setHeader("Content-Disposition",
+                    "inline; filename=\"" + avatarPath.getFileName() + "\"");
             response.setContentLengthLong(Files.size(avatarPath));
             Files.copy(avatarPath, response.getOutputStream());
         } catch (SQLException ex) {
