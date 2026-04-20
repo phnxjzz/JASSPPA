@@ -21,10 +21,12 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -162,6 +164,15 @@ public class ApplicationServlet extends HttpServlet {
             return;
         }
 
+        List<String> missingMandatoryDocs = findMissingMandatoryDocuments(request, applicationType);
+        if (!missingMandatoryDocs.isEmpty()) {
+            request.setAttribute("error", "Tidak Berjaya Sila Lengkapkan Dokumen yang diperlukan!");
+            request.setAttribute("requiredDocuments", buildRequiredDocuments());
+            request.setAttribute("missingMandatoryDocuments", missingMandatoryDocs);
+            request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+            return;
+        }
+
         // Check active application limit (max 3 PENDING or DRAFT)
         try (Connection limitConn = DatabaseConfig.getConnection();
              PreparedStatement limitPs = limitConn.prepareStatement(
@@ -186,17 +197,30 @@ public class ApplicationServlet extends HttpServlet {
         try (Connection conn = DatabaseConfig.getConnection()) {
             ensureOnlineApplicationSchema(conn);
             conn.setAutoCommit(false);
-
-            int applicationId = insertApplication(conn, userId, request);
-            insertApplicationDetails(conn, applicationId, request);
-            saveUploadedDocuments(conn, applicationId, request);
-            insertAuditLog(conn, userId, request.getRemoteAddr(), applicationId);
-
-            conn.commit();
-            response.sendRedirect(request.getContextPath() + "/applications/new?success=1&id=" + applicationId);
+            boolean committed = false;
+            try {
+                int applicationId = insertApplication(conn, userId, request);
+                insertApplicationDetails(conn, applicationId, request);
+                saveUploadedDocuments(conn, applicationId, request);
+                insertAuditLog(conn, userId, request.getRemoteAddr(), applicationId);
+                conn.commit();
+                committed = true;
+                response.sendRedirect(request.getContextPath() + "/applications/new?success=1&id=" + applicationId);
+            } finally {
+                if (!committed) {
+                    try { conn.rollback(); } catch (SQLException rb) {
+                        LOGGER.severe("Rollback failed: " + rb.getMessage());
+                    }
+                }
+            }
         } catch (SQLException e) {
             LOGGER.severe("Failed to save application: " + e.getMessage());
             request.setAttribute("error", "Permohonan tidak berjaya disimpan. Sila cuba lagi.");
+            request.setAttribute("requiredDocuments", buildRequiredDocuments());
+            request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+        } catch (IOException | ServletException e) {
+            LOGGER.severe("IO/Servlet error saving application: " + e.getMessage());
+            request.setAttribute("error", "Ralat sistem semasa menghantar permohonan. Sila cuba lagi.");
             request.setAttribute("requiredDocuments", buildRequiredDocuments());
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
         }
@@ -372,6 +396,44 @@ public class ApplicationServlet extends HttpServlet {
         docs.put("sop_document", "SOP pengendalian dan penyimpanan produk");
         docs.put("performance_monitoring_program", "Program pemantauan prestasi produk / track record 5 tahun");
         return docs;
+    }
+
+    private Set<String> buildMandatoryDocuments(String applicationType) {
+        Set<String> mandatoryDocs = new java.util.LinkedHashSet<>();
+        mandatoryDocs.add("official_application_letter");
+        mandatoryDocs.add("principal_appointment_letter");
+        mandatoryDocs.add("certification_license_file");
+        mandatoryDocs.add("test_report_file");
+        mandatoryDocs.add("brochure_catalogue");
+        mandatoryDocs.add("price_list");
+        mandatoryDocs.add("product_benefit_summary");
+        mandatoryDocs.add("project_reference");
+        mandatoryDocs.add("sop_document");
+        mandatoryDocs.add("performance_monitoring_program");
+
+        if ("PEMBAHARUAN".equalsIgnoreCase(trim(applicationType))) {
+            mandatoryDocs.add("renewal_certificate");
+        }
+        return mandatoryDocs;
+    }
+
+    private List<String> findMissingMandatoryDocuments(HttpServletRequest request, String applicationType)
+            throws IOException, ServletException {
+        Map<String, String> allDocs = buildRequiredDocuments();
+        Set<String> mandatoryDocKeys = buildMandatoryDocuments(applicationType);
+        List<String> missing = new ArrayList<>();
+
+        for (String docKey : mandatoryDocKeys) {
+            Part part = request.getPart(docKey);
+            if (part == null || part.getSize() == 0) {
+                missing.add(allDocs.getOrDefault(docKey, docKey));
+            }
+        }
+
+        if (missing.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return missing;
     }
 
     private String buildApplicationSummary(HttpServletRequest request) {
