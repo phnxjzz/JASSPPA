@@ -7,11 +7,14 @@
     <title>Lupa Kata Laluan - SPPA</title>
     <style>
         :root {
-            --brand-blue: #0097d9;
-            --brand-navy: #06344f;
+            --brand-blue: #2A9D8F;
+            --brand-navy: #0F6BAE;
+            --brand-green: #6DBE45;
+            --brand-lime: #CDE11D;
+            --brand-yellow: #F2F72E;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: linear-gradient(135deg, #06344f 0%, #0097d9 60%, #fff3a5 160%); }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-yellow) 100%); }
         .card { width: 100%; max-width: 520px; background: #fff; border-radius: 18px; box-shadow: 0 22px 60px rgba(6, 52, 79, 0.25); padding: 28px; }
         h1 { margin: 0 0 8px; color: #173040; }
         .subtitle { margin: 0 0 20px; color: #60798b; }
@@ -20,8 +23,8 @@
         .field input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d7e7ef; }
         .actions { display: flex; gap: 10px; margin-top: 8px; }
         .btn { border: 1px solid #fff; border-radius: 12px; padding: 12px 16px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-        .btn-primary { background: linear-gradient(135deg, var(--brand-navy), var(--brand-blue)); color: #fff; }
-        .btn-secondary { background: #e5f2f9; color: #06344f; }
+        .btn-primary { background: linear-gradient(135deg, var(--brand-navy), var(--brand-blue), var(--brand-green)); color: #fff; }
+        .btn-secondary { background: #e5f2f9; color: #0F6BAE; }
         .error { padding: 11px 12px; border-radius: 10px; background: #ffe9e9; color: #b42318; margin-bottom: 14px; }
                         .contact-box { margin-top: 16px; border: 1px solid #d7e7ef; border-radius: 12px; padding: 12px; background: #f8fcff; }
                         .contact-box strong { display: block; margin-bottom: 6px; color: #173040; }
@@ -75,6 +78,7 @@
         <% } %>
 
         <form method="post" action="${pageContext.request.contextPath}/forgot-password">
+            <input type="hidden" name="_csrf" value="${csrf_token}">
             <div class="field">
                 <label for="username">Nama Pengguna</label>
                 <input id="username" name="username" type="text" required value="<%= request.getAttribute("username") == null ? "" : request.getAttribute("username") %>">
@@ -115,7 +119,7 @@
             if (!/\d/.test(pw)) issues.push('tiada nombor');
             if (!/[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>\/?]/.test(pw)) issues.push('tiada aksara khas');
             if (issues.length === 0) {
-                el.textContent = '✓ Kata laluan kukuh';
+                el.textContent = 'Kata laluan kukuh';
                 el.style.color = '#0a7c2e';
             } else {
                 el.textContent = 'Lemah: ' + issues.join(', ');
