@@ -44,30 +44,6 @@
             raw = raw.substring(managedAnnouncementIndex);
         }
 
-        int uploadManagedIndex = raw.toLowerCase(java.util.Locale.ROOT).indexOf("/uploads/sistemppa/announcements/");
-        if (uploadManagedIndex >= 0) {
-            String fileName = raw.substring(uploadManagedIndex + "/uploads/sistemppa/announcements/".length());
-            int slashPos = fileName.indexOf('/');
-            if (slashPos >= 0) {
-                fileName = fileName.substring(0, slashPos);
-            }
-            if (!fileName.isBlank()) {
-                raw = "/announcement-images/" + fileName;
-            }
-        }
-
-        int uploadRelativeIndex = raw.toLowerCase(java.util.Locale.ROOT).indexOf("uploads/sistemppa/announcements/");
-        if (uploadRelativeIndex >= 0) {
-            String fileName = raw.substring(uploadRelativeIndex + "uploads/sistemppa/announcements/".length());
-            int slashPos = fileName.indexOf('/');
-            if (slashPos >= 0) {
-                fileName = fileName.substring(0, slashPos);
-            }
-            if (!fileName.isBlank()) {
-                raw = "/announcement-images/" + fileName;
-            }
-        }
-
         int legacyAnnouncementIndex = raw.indexOf("/assets/images/announcements/");
         if (legacyAnnouncementIndex >= 0) {
             String fileName = raw.substring(legacyAnnouncementIndex + "/assets/images/announcements/".length());
@@ -107,67 +83,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Pentadbir - SPPA</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
         :root {
-            --brand-blue: #0d5c8f;
-            --brand-navy: #08334d;
-            --brand-gold: #e7bf56;
+            --brand-blue: #2A9D8F;
+            --brand-navy: #0F6BAE;
+            --brand-green: #6DBE45;
+            --brand-lime: #CDE11D;
+            --brand-yellow: #F2F72E;
             --surface: #ffffff;
-            --surface-soft: #f3f8fc;
-            --line: #d4e1ec;
-            --text: #1a3040;
-            --muted: #5d7484;
+            --surface-soft: #f7fbff;
+            --line: #d9e7f1;
+            --text: #183244;
+            --muted: #637d8d;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: var(--text); }
-        .navbar { background: linear-gradient(180deg, var(--brand-navy) 0%, #0c4569 100%); border-bottom: 3px solid var(--brand-gold); color: white; padding: 14px 26px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 12px 28px rgba(8, 51, 77, 0.2); }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
+        .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-yellow) 100%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 52px; height: 52px; object-fit: contain; }
-        .brand h1 { margin: 0; font-size: 21px; letter-spacing: 0.02em; }
-        .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.9; }
-        .navbar a { color: white; text-decoration: none; margin-left: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border-radius: 8px; transition: background 0.18s ease; }
-        .navbar a:hover { background: rgba(255,255,255,0.14); }
-        .icon-inline { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
-        .nav-dropdown { position: relative; display: inline-flex; align-items: center; margin-left: 10px; }
-        .nav-dropdown-btn { background: transparent; border: none !important; box-shadow: none !important; color: white; font-weight: 700; font-family: inherit; font-size: 1em; cursor: pointer; padding: 8px 11px; border-radius: 8px; display: flex; align-items: center; gap: 4px; }
-        .nav-dropdown-btn:hover { background: rgba(255,255,255,0.14); }
-        .nav-dropdown-menu { display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 10px; box-shadow: 0 12px 28px rgba(6,52,79,0.18); min-width: 190px; z-index: 100; overflow: hidden; margin-top: 4px; }
-        .nav-dropdown-menu a { display: block; padding: 10px 16px; color: #06344f !important; text-decoration: none; font-weight: 700; margin-left: 0 !important; border-bottom: 1px solid #e4edf4; }
-        .nav-dropdown-menu a:last-child { border-bottom: none; }
-        .nav-dropdown-menu a:hover { background: #eef5fb; }
-        .nav-dropdown:hover .nav-dropdown-menu,
-        .nav-dropdown:focus-within .nav-dropdown-menu { display: block; }
+        .brand-logo { width: 54px; height: 54px; border-radius: 16px; object-fit: contain; padding: 4px; }
+        .brand h1 { margin: 0; font-size: 20px; }
+        .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
+        .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .icon-inline { width: 14px; height: 14px; object-fit: contain; vertical-align: middle; }
         .container { max-width: 1320px; margin: 28px auto; padding: 0 20px 32px; }
         .hero { display: grid; grid-template-columns: 1.8fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 26px rgba(9, 53, 79, 0.07); padding: 20px; }
-        .hero h2 { margin-top: 0; font-size: 28px; color: #103d58; }
+        .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 16px 40px rgba(6, 52, 79, 0.08); padding: 22px; }
+        .hero h2 { margin-top: 0; font-size: 30px; }
         .hero p { color: var(--muted); line-height: 1.7; max-width: 760px; }
         .metric-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-        .metric-chip { background: var(--surface-soft); border: 1px solid #cbd9e4; padding: 9px 13px; border-radius: 999px; font-weight: 700; color: #17425f; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-bottom: 20px; }
-        .stat-card { background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); padding: 18px; border-radius: 14px; border: 1px solid #d3e1ed; box-shadow: 0 8px 22px rgba(6, 52, 79, 0.06); }
-        .stat-card h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #557286; }
+        .metric-chip { background: var(--surface-soft); border: 1px solid var(--line); padding: 10px 14px; border-radius: 999px; font-weight: 700; }
+        .jans-contact-section { background: linear-gradient(135deg,rgba(240,248,255,0.5) 0%,rgba(220,240,255,0.35) 100%); border: 1px solid rgba(42,157,143,0.24); border-radius: 16px; padding: 24px 28px; margin-top: 28px; }
+        .jans-contact-section h3 { color: #0F6BAE; font-size: 16px; font-weight: 700; margin: 0 0 14px; letter-spacing: 0.3px; }
+        .contact-line { display: flex; align-items: flex-start; gap: 10px; margin: 8px 0; font-size: 14px; color: #334155; }
+        .contact-icon { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
+        .contact-address-link { color: #0F6BAE; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+        .contact-address-link:hover { color: #0d4f77; }
+        .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: var(--surface); padding: 18px; border-radius: 18px; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(6, 52, 79, 0.06); }
+        .stat-card h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
         .stat-card .number { font-size: 30px; font-weight: 800; color: var(--brand-navy); }
-        .stat-bar { margin-top: 10px; height: 6px; border-radius: 999px; background: #dde8f0; overflow: hidden; }
-        .stat-bar-fill { height: 100%; border-radius: 999px; }
         .layout { display: grid; grid-template-columns: 1.9fr 1fr; gap: 20px; }
-        .toolbar { display: grid; grid-template-columns: minmax(200px, 2fr) minmax(140px, 1fr) minmax(130px, 1fr) minmax(130px, 1fr) auto minmax(240px, 1.5fr) auto; gap: 10px; align-items: end; margin-bottom: 16px; }
+        .toolbar { display: grid; grid-template-columns: minmax(240px, 2fr) minmax(160px, 1fr) auto minmax(280px, 1.6fr) auto; gap: 12px; align-items: end; margin-bottom: 16px; }
         .export-control { min-width: 0; }
         .export-help { margin-top: 6px; font-size: 12px; color: var(--muted); }
         .field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
         .field input, .field select { width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); }
-        .btn { padding: 11px 15px; border-radius: 10px; border: 1px solid #fff; text-decoration: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.16s ease, box-shadow 0.16s ease; }
-        .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(9,53,79,0.16); }
-        .btn-primary { background: linear-gradient(180deg, #0f6fa8 0%, #0d5c8f 100%); color: white; }
-        .btn-secondary { background: #e2edf5; color: var(--brand-navy); }
+        .btn { padding: 11px 15px; border-radius: 12px; border: 1px solid #fff; text-decoration: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-primary { background: var(--brand-blue); color: white; }
+        .btn-secondary { background: #dcecf6; color: var(--brand-navy); }
         .btn-accent { background: #fff7b0; color: #6a5a00; }
         .section-stack { display: grid; gap: 18px; }
-        .announcement-panel { border-top: 4px solid #0097d9; }
+        .announcement-panel { border-top: 4px solid var(--brand-blue); }
         .announcement-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
         .announcement-head img { width: 18px; height: 18px; object-fit: contain; }
         .announce-alert { margin-bottom: 12px; border-radius: 10px; padding: 10px 12px; font-size: 13px; }
         .announce-success { background: #e7f9ec; color: #166534; border: 1px solid #b8e7c6; }
         .announce-error { background: #fff1f2; color: #b91c1c; border: 1px solid #fecdd3; }
+        .announce-with-gif { display: flex; align-items: center; gap: 10px; }
+        .success-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            z-index: 1300;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            min-width: 280px;
+            max-width: min(94vw, 420px);
+            padding: 28px 24px;
+            border-radius: 16px;
+            border: 1px solid #b8e7c6;
+            background: #ffffff;
+            color: #166534;
+            font-size: 16px;
+            line-height: 1.35;
+            box-shadow: 0 16px 32px rgba(10, 64, 38, 0.2);
+            transform: translate(-50%, -58%) scale(0.97);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.22s ease, opacity 0.22s ease;
+        }
+        .success-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .success-popup-content { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .success-title { font-size: 22px; line-height: 1.1; font-weight: 800; color: #0f5132; letter-spacing: 0.02em; text-transform: none; text-align: center; }
+        .success-text { display: none; }
+        .success-ok { align-self: center; margin-top: 4px; border: 1px solid #0f5132 !important; background: #166534; color: #fff; border-radius: 10px; padding: 10px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .success-gif {
+            width: 84px;
+            height: 84px;
+            padding: 0;
+            object-fit: contain;
+            flex-shrink: 0;
+            background: transparent;
+            border-radius: 0;
+            border: none;
+            mix-blend-mode: normal;
+            filter: drop-shadow(0 3px 8px rgba(22, 101, 52, 0.22)) saturate(1.05);
+            transform-origin: center;
+            animation: successGifPop 420ms ease-out 1, successGifPulse 1.9s ease-in-out infinite 520ms;
+        }
+        @keyframes successGifPop {
+            0% { transform: scale(0.72) translateY(3px); opacity: 0.65; }
+            70% { transform: scale(1.14) translateY(-1px); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes successGifPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
         .announcement-form { display: grid; gap: 10px; margin-bottom: 14px; }
         .announcement-form input[type="text"], .announcement-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; }
         .announcement-form input[type="file"] { width: 100%; border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; background: #f9fcff; }
@@ -184,16 +212,15 @@
         .icon-btn { width: 14px; height: 14px; object-fit: contain; }
         .table-card h3 { margin-top: 0; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 12px; border-bottom: 1px solid #e2ebf2; text-align: left; vertical-align: top; }
-        th { background: #f1f6fb; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #547288; }
-        tr:hover { background: #f5f9fc; }
+        th, td { padding: 13px 12px; border-bottom: 1px solid #e4edf4; text-align: left; vertical-align: top; }
+        th { background: #f8fcff; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+        tr:hover { background: #f7fcff; }
         .status-pill { display: inline-block; padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 12px; }
         .status-pending { background: #fff3cd; color: #9a6700; }
         .status-approved { background: #dcfce7; color: #166534; }
         .status-rejected { background: #fee2e2; color: #b91c1c; }
         .status-suspended { background: #ffe4d6; color: #9a3412; }
         .status-draft { background: #e2e8f0; color: #334155; }
-        .status-archived { background: #ede9fe; color: #5b21b6; }
         .subtle { color: var(--muted); font-size: 13px; }
         .empty { text-align: center; color: var(--muted); padding: 26px 0; }
         .section-title { margin-top: 0; margin-bottom: 14px; }
@@ -233,31 +260,14 @@
             border: 1px solid #fff !important;
             box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
         }
-        .floating-home-btn {
-            position: static;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            margin-left: 12px;
-            border-radius: 999px;
-            border: 1px solid #fff;
-            background: rgba(255, 255, 255, 0.12);
-            text-decoration: none;
-            vertical-align: middle;
-        }
-        .floating-home-btn img {
-            width: 16px;
-            height: 16px;
-            object-fit: contain;
-        }
+        .icon-link { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.38); transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; }
+        .icon-link img { width: 20px; height: 20px; object-fit: contain; }
+        .icon-link:hover { transform: translateY(-1px) scale(1.03); background: rgba(255,255,255,0.26); }
         </style>
 </head>
 <body>
     <div class="navbar">
         <div class="brand">
-            <img src="${pageContext.request.contextPath}/assets/images/sabah-logo.png" class="brand-logo" alt="Logo Sabah">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <h1>Dashboard Pentadbir</h1>
@@ -268,66 +278,29 @@
             <span>Selamat datang, <%= session.getAttribute("username") %></span>
             <a href="${pageContext.request.contextPath}/admin/users">Senarai Pengguna</a>
             <a href="${pageContext.request.contextPath}/products">Senarai Produk</a>
-            <div class="nav-dropdown">
-                <button class="nav-dropdown-btn">Kemas Kini Profil &#9662;</button>
-                <div class="nav-dropdown-menu">
-                    <a href="#tetapan-admin">Tetapan</a>
-                    <a href="${pageContext.request.contextPath}/profile">Kemas Kini Portal</a>
-                </div>
-            </div>
-            <a href="${pageContext.request.contextPath}/logout" aria-label="Keluar" title="Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" class="icon-inline" alt="Ikon keluar"></a>
+            <a href="${pageContext.request.contextPath}/profile">Kemaskini Profil</a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
         </div>
     </div>
 
     <div class="container">
         <div class="stats">
-            <%
-                int totApp = request.getAttribute("total_applications") != null ? (int) request.getAttribute("total_applications") : 0;
-                int pendCount = request.getAttribute("pending_count") != null ? (int) request.getAttribute("pending_count") : 0;
-                int appCount = request.getAttribute("approved_count") != null ? (int) request.getAttribute("approved_count") : 0;
-                int rejCount = request.getAttribute("rejected_count") != null ? (int) request.getAttribute("rejected_count") : 0;
-                int suspCount = request.getAttribute("suspended_count") != null ? (int) request.getAttribute("suspended_count") : 0;
-                int draftCount = request.getAttribute("draft_count") != null ? (int) request.getAttribute("draft_count") : 0;
-                int archCount = request.getAttribute("archived_count") != null ? (int) request.getAttribute("archived_count") : 0;
-                int activeUsers = request.getAttribute("active_users") != null ? (int) request.getAttribute("active_users") : 0;
-                int denom = totApp > 0 ? totApp : 1;
-            %>
             <div class="stat-card">
                 <h3>Jumlah Permohonan</h3>
-                <div class="number"><%= totApp %></div>
+                <div class="number"><%= request.getAttribute("total_applications") != null ? request.getAttribute("total_applications") : "0" %></div>
             </div>
             <div class="stat-card">
                 <h3>Menunggu</h3>
-                <div class="number" style="color:#9a6700;"><%= pendCount %></div>
-                <div class="stat-bar"><div class="stat-bar-fill" style="width:<%= pendCount*100/denom %>%;background:#e9a21b;"></div></div>
+                <div class="number"><%= request.getAttribute("pending_count") != null ? request.getAttribute("pending_count") : "0" %></div>
             </div>
             <div class="stat-card">
                 <h3>Diluluskan</h3>
-                <div class="number" style="color:#166534;"><%= appCount %></div>
-                <div class="stat-bar"><div class="stat-bar-fill" style="width:<%= appCount*100/denom %>%;background:#22c55e;"></div></div>
+                <div class="number"><%= request.getAttribute("approved_count") != null ? request.getAttribute("approved_count") : "0" %></div>
             </div>
             <div class="stat-card">
                 <h3>Ditolak</h3>
-                <div class="number" style="color:#b91c1c;"><%= rejCount %></div>
-                <div class="stat-bar"><div class="stat-bar-fill" style="width:<%= rejCount*100/denom %>%;background:#ef4444;"></div></div>
-            </div>
-            <div class="stat-card">
-                <h3>Digantung</h3>
-                <div class="number" style="color:#9a3412;"><%= suspCount %></div>
-                <div class="stat-bar"><div class="stat-bar-fill" style="width:<%= suspCount*100/denom %>%;background:#f97316;"></div></div>
-            </div>
-            <div class="stat-card">
-                <h3>Draf</h3>
-                <div class="number" style="color:#475569;"><%= draftCount %></div>
-                <div class="stat-bar"><div class="stat-bar-fill" style="width:<%= draftCount*100/denom %>%;background:#94a3b8;"></div></div>
-            </div>
-            <div class="stat-card">
-                <h3>Diarkib</h3>
-                <div class="number" style="color:#5b21b6;"><%= archCount %></div>
-            </div>
-            <div class="stat-card">
-                <h3>Pengguna Aktif</h3>
-                <div class="number" style="color:#0369a1;"><%= activeUsers %></div>
+                <div class="number"><%= request.getAttribute("rejected_count") != null ? request.getAttribute("rejected_count") : "0" %></div>
             </div>
             <div class="stat-card">
                 <h3>Produk Berdaftar</h3>
@@ -352,16 +325,7 @@
                             <option value="REJECTED" <%= "REJECTED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>REJECTED</option>
                             <option value="SUSPENDED" <%= "SUSPENDED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>SUSPENDED</option>
                             <option value="DRAFT" <%= "DRAFT".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DRAFT</option>
-                            <option value="ARCHIVED" <%= "ARCHIVED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>ARCHIVED</option>
                         </select>
-                    </div>
-                    <div class="field">
-                        <label for="date_from">Dari Tarikh</label>
-                        <input id="date_from" name="date_from" type="date" value="<%= request.getAttribute("date_from") != null ? request.getAttribute("date_from") : "" %>">
-                    </div>
-                    <div class="field">
-                        <label for="date_to">Hingga Tarikh</label>
-                        <input id="date_to" name="date_to" type="date" value="<%= request.getAttribute("date_to") != null ? request.getAttribute("date_to") : "" %>">
                     </div>
                     <button class="btn btn-primary" type="submit">Tapis</button>
                     <div class="field export-control">
@@ -407,7 +371,7 @@
                                 String status = String.valueOf(applicationRow.get("status")).toLowerCase();
                         %>
                         <tr>
-                            <td><strong>#<%= applicationRow.get("id") %></strong></td>
+                            <td><strong><%= String.format("PPP%03d", ((Number)applicationRow.get("id")).intValue()) %></strong></td>
                             <td>
                                 <strong><%= applicationRow.get("company_name") %></strong><br>
                                 <span class="subtle">Pemohon: <%= applicationRow.get("full_name") %><br>Email: <%= applicationRow.get("user_email") %></span>
@@ -455,7 +419,7 @@
                                 <td><%= product.get("no") %></td>
                                 <td>
                                     <strong><%= product.get("product_materials") %></strong><br>
-                                    <span class="subtle"><%= product.get("brand") == null ? "-" : product.get("brand") %> | <%= product.get("classification") %></span>
+                                    <span class="subtle"><%= product.get("brand") == null ? "-" : product.get("brand") %> • <%= product.get("classification") %></span>
                                 </td>
                             </tr>
                             <%      }
@@ -468,14 +432,21 @@
                     </div>
                 </div>
 
-                <div class="panel announcement-panel">
+                <div class="panel announcement-panel" id="announcementPanel">
                     <div class="announcement-head">
                         <img src="${pageContext.request.contextPath}/assets/images/icon-announcement.png" alt="Pengumuman">
                         <h3 class="section-title" style="margin:0;">Pengurusan Pengumuman / Info</h3>
                     </div>
 
                     <% if (request.getAttribute("announcement_success") != null) { %>
-                        <div class="announce-alert announce-success"><%= request.getAttribute("announcement_success") %></div>
+                        <div id="successPopup" class="success-popup show" role="dialog" aria-live="polite" aria-label="Notifikasi berjaya">
+                            <img class="success-gif" src="${pageContext.request.contextPath}/assets/images/success.png" alt="Berjaya">
+                            <div class="success-popup-content">
+                                <div class="success-title">Berjaya!</div>
+                                <div class="success-text"></div>
+                                <button type="button" class="success-ok" data-close-success-popup>OK</button>
+                            </div>
+                        </div>
                     <% } %>
                     <% if (request.getAttribute("announcement_error") != null) { %>
                         <div class="announce-alert announce-error"><%= request.getAttribute("announcement_error") %></div>
@@ -495,7 +466,8 @@
                         }
                     %>
 
-                    <form method="post" action="${pageContext.request.contextPath}/dashboard" class="announcement-form" enctype="multipart/form-data">
+                    <form method="post" action="${pageContext.request.contextPath}/dashboard" class="announcement-form" enctype="multipart/form-data" data-announcement-action="true">
+                        <input type="hidden" name="_csrf" value="${csrf_token}">
                         <input type="hidden" name="announcement_action" value="<%= (announcementEditing != null && !announcementEditing.isEmpty()) ? "update_announcement" : "create_announcement" %>">
                         <% if (announcementEditing != null && !announcementEditing.isEmpty()) { %>
                             <input type="hidden" name="announcement_id" value="<%= announcementEditing.get("id") %>">
@@ -539,7 +511,7 @@
                                 <% } %>
                             </button>
                             <% if (announcementEditing != null && !announcementEditing.isEmpty()) { %>
-                                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/dashboard">Batal</a>
+                                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/dashboard#announcementPanel" data-announcement-action="true">Batal</a>
                             <% } %>
                         </div>
                     </form>
@@ -581,10 +553,11 @@
                                 </td>
                                 <td>
                                     <div class="announcement-actions">
-                                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/dashboard?announcement_id=<%= ann.get("id") %>">
+                                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/dashboard?announcement_id=<%= ann.get("id") %>#announcementPanel" data-announcement-action="true">
                                             <img src="${pageContext.request.contextPath}/assets/images/icon-edit.png" class="icon-btn" alt="Edit"> Edit
                                         </a>
-                                        <form method="post" action="${pageContext.request.contextPath}/dashboard" onsubmit="return confirm('Hapus pengumuman ini?');" style="margin:0;">
+                                        <form method="post" action="${pageContext.request.contextPath}/dashboard" onsubmit="return confirm('Hapus pengumuman ini?');" style="margin:0;" data-announcement-action="true">
+                                            <input type="hidden" name="_csrf" value="${csrf_token}">
                                             <input type="hidden" name="announcement_action" value="delete_announcement">
                                             <input type="hidden" name="announcement_id" value="<%= ann.get("id") %>">
                                             <button class="btn btn-accent" type="submit">
@@ -601,21 +574,123 @@
                     </table>
                 </div>
 
-                <div class="panel" id="tetapan-admin">
-                    <h3 class="section-title">Tetapan Pentadbir</h3>
-                    <p class="subtle">Akses permohonan yang diarkibkan dan urus semula rekod apabila perlu.</p>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap; margin-top:10px;">
-                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/dashboard?status=ARCHIVED">Lihat Permohonan Diarkib</a>
+                <div class="panel">
+                    <h3 class="section-title">Senarai Pengguna Berdaftar</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Tarikh Daftar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%
+                                List<Map<String, Object>> registeredUsers = (List<Map<String, Object>>) request.getAttribute("registered_users_list");
+                                if (registeredUsers == null || registeredUsers.isEmpty()) {
+                            %>
+                            <tr>
+                                <td colspan="4" class="empty">Tiada pengguna berdaftar.</td>
+                            </tr>
+                            <% } else {
+                                int shown = 0;
+                                for (Map<String, Object> userRow : registeredUsers) {
+                                    if (shown >= 8) {
+                                        break;
+                                    }
+                                    shown++;
+                            %>
+                            <tr>
+                                <td>
+                                    <strong><%= escapeHtml(String.valueOf(userRow.get("full_name"))) %></strong><br>
+                                    <span class="subtle">@<%= escapeHtml(String.valueOf(userRow.get("username"))) %></span>
+                                </td>
+                                <td><%= escapeHtml(String.valueOf(userRow.get("email"))) %></td>
+                                <td><span class="status-pill status-<%= String.valueOf(userRow.get("status")).toLowerCase() %>"><%= escapeHtml(String.valueOf(userRow.get("status"))) %></span></td>
+                                <td><%= userRow.get("created_at") == null ? "-" : escapeHtml(String.valueOf(userRow.get("created_at"))) %></td>
+                            </tr>
+                            <%      }
+                                }
+                            %>
+                        </tbody>
+                    </table>
+                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                        <a class="btn btn-primary" href="${pageContext.request.contextPath}/admin/users">Urus Pengguna</a>
+                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/export?format=xlsx&scope=users">Eksport Excel</a>
+                        <a class="btn btn-accent" href="${pageContext.request.contextPath}/admin/export?format=pdf&scope=users">Eksport PDF</a>
                     </div>
-                    <p class="subtle" style="margin-top:10px;">Tip: Buka rekod melalui butang Semak, kemudian klik Keluarkan Dari Arkib untuk unarchive.</p>
-                    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e4edf4;">
-                        <strong style="display:block;margin-bottom:8px;color:#06344f;"><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Hubungi JANS</strong>
-                        <div class="subtle">Telefon: +60-88-232364 (HQ)</div>
-                        <div class="subtle">Fax: +60-88-232396</div>
-                        <div class="subtle">Email: jans.hq@sabah.gov.my</div>
+                </div>
+
+                <div class="panel">
+                    <h3 class="section-title">Pengguna Baharu (30 Hari)</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Tarikh Daftar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%
+                                List<Map<String, Object>> newUsers = (List<Map<String, Object>>) request.getAttribute("new_registered_users_list");
+                                if (newUsers == null || newUsers.isEmpty()) {
+                            %>
+                            <tr>
+                                <td colspan="4" class="empty">Tiada pengguna baharu dalam tempoh 30 hari.</td>
+                            </tr>
+                            <% } else {
+                                int shownRecent = 0;
+                                for (Map<String, Object> userRow : newUsers) {
+                                    if (shownRecent >= 8) {
+                                        break;
+                                    }
+                                    shownRecent++;
+                            %>
+                            <tr>
+                                <td>
+                                    <strong><%= escapeHtml(String.valueOf(userRow.get("full_name"))) %></strong><br>
+                                    <span class="subtle">@<%= escapeHtml(String.valueOf(userRow.get("username"))) %></span>
+                                </td>
+                                <td><%= escapeHtml(String.valueOf(userRow.get("email"))) %></td>
+                                <td><span class="status-pill status-<%= String.valueOf(userRow.get("status")).toLowerCase() %>"><%= escapeHtml(String.valueOf(userRow.get("status"))) %></span></td>
+                                <td><%= userRow.get("created_at") == null ? "-" : escapeHtml(String.valueOf(userRow.get("created_at"))) %></td>
+                            </tr>
+                            <%      }
+                                }
+                            %>
+                        </tbody>
+                    </table>
+                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/export?format=xlsx&scope=users&recent=1">Eksport Excel (30 Hari)</a>
+                        <a class="btn btn-accent" href="${pageContext.request.contextPath}/admin/export?format=pdf&scope=users&recent=1">Eksport PDF (30 Hari)</a>
                     </div>
                 </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="jans-contact-section">
+                <h3>&#128222; Hubungi JANS</h3>
+                <p class="contact-line">
+                    <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/address.png" alt="Alamat">
+                    <a class="contact-address-link" href="https://www.bing.com/maps/directions?FORM=HDRSC6&style=r&rtp=%7Epos.5.981967926025391_116.12310028076172_Kota%2520Kinabalu%252C%2520Sabah%252088825_Kota%2520Kinabalu%252C%2520Sabah%252088825_&cp=5.981892%7E116.123260&lvl=20.8" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT / JABATAN AIR SABAH, Jalan Penampang, 88200 Kota Kinabalu, Sabah</a>
+                </p>
+                <p class="contact-line">
+                    <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/phone.png" alt="Telefon">
+                    <span>+60-88-232364 (HQ)</span>
+                </p>
+                <p class="contact-line">
+                    <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/fax.png" alt="Faks">
+                    <span>+60-88-232396</span>
+                </p>
+                <p class="contact-line">
+                    <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/email.png" alt="E-mel">
+                    <span>jans.hq@sabah.gov.my</span>
+                </p>
             </div>
         </div>
     </div>
@@ -659,41 +734,55 @@
         });
     })();
 </script>
-    <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama"></a>
 <script>
 (function() {
-    var homeBtn = document.querySelector('.floating-home-btn');
-    if (!homeBtn) return;
+    var announcementPanel = document.getElementById('announcementPanel');
+    if (announcementPanel) {
+        var scrollStateKey = 'adminDashboardAnnouncementFocus';
 
-    var navContainer = document.querySelector('.navbar > div:last-child');
-    if (!navContainer) navContainer = document.querySelector('.navbar');
-    if (!navContainer) return;
+        function markAnnouncementFocus() {
+            try {
+                sessionStorage.setItem(scrollStateKey, '1');
+            } catch (e) {
+                // Ignore storage errors and continue normal flow.
+            }
+        }
 
-    if (homeBtn.parentElement !== navContainer) {
-        navContainer.appendChild(homeBtn);
+        if (window.location.hash === '#announcementPanel') {
+            announcementPanel.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+
+        try {
+            if (sessionStorage.getItem(scrollStateKey) === '1') {
+                announcementPanel.scrollIntoView({ behavior: 'auto', block: 'start' });
+                sessionStorage.removeItem(scrollStateKey);
+            }
+        } catch (e) {
+            // Ignore storage errors and continue normal flow.
+        }
+
+        var announcementTriggers = announcementPanel.querySelectorAll('[data-announcement-action="true"]');
+        announcementTriggers.forEach(function(trigger) {
+            if (trigger.tagName === 'FORM') {
+                trigger.addEventListener('submit', markAnnouncementFocus);
+            } else {
+                trigger.addEventListener('click', markAnnouncementFocus);
+            }
+        });
     }
-})();
 
-(function () {
-    var idleLimitMs = 10 * 60 * 1000;
-    var logoutUrl = '${pageContext.request.contextPath}/logout?timeout=1';
-    var timerId;
-
-    function triggerAutoLogout() {
-        window.location.href = logoutUrl;
+    var popup = document.getElementById('successPopup');
+    if (!popup) return;
+    function closePopup() {
+        popup.classList.remove('show');
+        window.setTimeout(function() {
+            if (popup && popup.parentNode) popup.parentNode.removeChild(popup);
+        }, 260);
     }
-
-    function resetTimer() {
-        window.clearTimeout(timerId);
-        timerId = window.setTimeout(triggerAutoLogout, idleLimitMs);
-    }
-
-    ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (eventName) {
-        document.addEventListener(eventName, resetTimer, { passive: true });
-    });
-
-    resetTimer();
+    var closeBtn = popup.querySelector('[data-close-success-popup]');
+    if (closeBtn) closeBtn.addEventListener('click', closePopup);
 })();
 </script>
+
 </body>
 </html>
