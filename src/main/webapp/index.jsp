@@ -122,15 +122,17 @@
         @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
 
         :root {
-            --brand-blue: #0d5c8f;
-            --brand-navy: #08334d;
+            --brand-blue: #2A9D8F;
+            --brand-navy: #0F6BAE;
+            --brand-green: #6DBE45;
+            --brand-lime: #CDE11D;
             --brand-sky: #edf4fb;
-            --brand-gold: #e7bf56;
+            --brand-gold: #F2F72E;
             --surface: #ffffff;
             --surface-soft: #f3f8fc;
             --text: #1a3040;
             --muted: #5d7484;
-            --ring: rgba(13, 92, 143, 0.22);
+            --ring: rgba(15, 107, 174, 0.22);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -147,7 +149,7 @@
             position: sticky;
             top: 0;
             z-index: 30;
-            background: linear-gradient(180deg, var(--brand-navy) 0%, #0c4569 100%);
+            background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%);
             color: white;
             padding: 14px 26px;
             display: flex;
@@ -174,7 +176,7 @@
         }
         .nav-link:hover, .nav-link:focus { background: rgba(255, 255, 255, 0.12); }
         .nav-link.primary {
-            background: linear-gradient(135deg, #2ba5e0 0%, #0a8ecf 100%);
+            background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 45%, var(--brand-green) 100%);
             border-color: rgba(255,255,255,0.35);
             color: #ffffff;
         }
@@ -182,7 +184,7 @@
         .hero {
             position: relative;
             overflow: hidden;
-            background: linear-gradient(128deg, #05283e 0%, #0a8ecf 63%, #ffd857 180%);
+            background: linear-gradient(128deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%);
             color: white;
             padding: 72px 28px;
             border-bottom-left-radius: 28px;
@@ -253,6 +255,86 @@
         .hero-btn:hover, .hero-btn:focus { transform: translateY(-1px); background: rgba(255, 255, 255, 0.22); }
         .hero-btn.accent { background: #ffffff; color: #0a5f8b; border-color: #ffffff; }
         .hero-btn.accent:hover, .hero-btn.accent:focus { background: #f0f9ff; }
+
+        .role-choice-wrap {
+            max-width: 1020px;
+            margin: -28px auto 26px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 2;
+        }
+        .role-choice-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+        .role-card {
+            background: rgba(255, 255, 255, 0.76);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            border-radius: 20px;
+            box-shadow: 0 16px 30px rgba(6, 47, 72, 0.14);
+            padding: 18px;
+            min-height: 190px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+        }
+        .role-card:hover,
+        .role-card:focus-within {
+            transform: translateY(-5px);
+            box-shadow: 0 22px 40px rgba(6, 47, 72, 0.2);
+            border-color: rgba(15, 107, 174, 0.45);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .role-card h3 {
+            margin: 0 0 6px;
+            font-size: 22px;
+            color: #0d4568;
+        }
+        .role-card p {
+            margin: 0;
+            color: #2d556d;
+            font-size: 15px;
+        }
+        .role-card .role-login-btn {
+            margin-top: 14px;
+            align-self: center;
+            width: min(260px, 100%);
+            text-align: center;
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 800;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 45%, var(--brand-green) 100%);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+            box-shadow: 0 10px 20px rgba(6, 47, 72, 0.18);
+        }
+        .role-card .role-login-btn:hover,
+        .role-card .role-login-btn:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 24px rgba(6, 47, 72, 0.24);
+            filter: brightness(1.03);
+        }
+        .first-signin-wrap {
+            margin-top: 14px;
+            display: flex;
+            justify-content: center;
+        }
+        .first-signin-btn {
+            text-decoration: none;
+            display: inline-block;
+            padding: 11px 24px;
+            border-radius: 999px;
+            border: 1px solid #d4e7f4;
+            background: rgba(255, 255, 255, 0.88);
+            color: #0f5d88;
+            font-weight: 800;
+            box-shadow: 0 8px 18px rgba(6, 47, 72, 0.12);
+        }
 
         .container { max-width: 1200px; margin: 0 auto; padding: 42px 20px 56px; }
 
@@ -329,6 +411,17 @@
         }
         .hero-contact h3 { margin: 0 0 10px; font-size: 16px; color: var(--brand-navy); }
         .hero-contact p { margin: 6px 0; font-size: 14px; color: #27485a; }
+        .contact-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .contact-line .contact-icon {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            flex: 0 0 16px;
+        }
 
         footer {
             background: #072d43;
@@ -385,6 +478,8 @@
             .navbar { flex-direction: column; align-items: flex-start; gap: 12px; }
             .nav-actions { width: 100%; }
             .nav-link { flex: 1; text-align: center; }
+            .role-choice-grid { grid-template-columns: 1fr; }
+            .role-choice-wrap { margin-top: -18px; }
         }
         </style>
 </head>
@@ -416,13 +511,31 @@
                     <span class="hero-badge">Akses Dalam Talian 24/7</span>
                 </div>
                 <h1>Selamat Datang ke Sistem Pendaftaran Produk Air Negeri Sabah</h1>
-                <div class="hero-actions">
-                    <a href="${pageContext.request.contextPath}/register" class="hero-btn accent">Daftar Akaun Pemohon</a>
-                    <a href="${pageContext.request.contextPath}/login" class="hero-btn">Log Masuk Ke Sistem</a>
-                </div>
             </div>
         </div>
     </div>
+
+    <section class="role-choice-wrap" aria-label="Pilih peranan log masuk">
+        <div class="role-choice-grid">
+            <article class="role-card">
+                <div>
+                    <h3>Portal Pentadbir</h3>
+                    <p>Untuk pengurusan aplikasi, semakan pengguna, dan pemantauan sistem SPPA.</p>
+                </div>
+                <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=ADMIN">Log Masuk Sebagai Admin</a>
+            </article>
+            <article class="role-card">
+                <div>
+                    <h3>Portal Pemohon</h3>
+                    <p>Untuk pendaftaran produk air, kemas kini maklumat, dan semakan status permohonan.</p>
+                </div>
+                <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=USER">Log Masuk Sebagai Pemohon</a>
+            </article>
+        </div>
+        <div class="first-signin-wrap">
+            <a class="first-signin-btn" href="${pageContext.request.contextPath}/register">Daftar akaun baharu</a>
+        </div>
+    </section>
 
         <div class="announcement-section" aria-label="Pengumuman dan info semasa">
             <div class="announcement-header">
@@ -457,11 +570,26 @@
                 </span>
                 Hubungi JANS
             </h3>
-            <p>SABAH WATER DEPARTMENT</p>
-            <p>Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</p>
-            <p>Kota Kinabalu, Sabah, Malaysia</p>
-            <p>Tel: +60-88-232364 (HQ), Fax: +60-88-232396</p>
-            <p>Email: jans.hq@sabah.gov.my</p>
+            <p class="contact-line">
+                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/address.png" alt="Ikon alamat">
+                <span>
+                    SABAH WATER DEPARTMENT / JABATAN AIR SABAH<br>
+                    Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825<br>
+                    Kota Kinabalu, Sabah, Malaysia
+                </span>
+            </p>
+            <p class="contact-line">
+                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/phone.png" alt="Ikon telefon">
+                <span>Tel: +60-88-232364 (HQ)</span>
+            </p>
+            <p class="contact-line">
+                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/fax.png" alt="Ikon fax">
+                <span>Fax: +60-88-232396</span>
+            </p>
+            <p class="contact-line">
+                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/email.png" alt="Ikon emel">
+                <span>Email: jans.hq@sabah.gov.my</span>
+            </p>
         </div>
     </div>
 
