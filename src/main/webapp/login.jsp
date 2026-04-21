@@ -14,13 +14,14 @@
             --brand-yellow: #F2F72E;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-yellow) 100%); min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: url('${pageContext.request.contextPath}/assets/images/login-register-bg.jpg') center/cover no-repeat fixed; min-height: 100vh; display: grid; place-items: center; padding: 24px; position: relative; }
+        body::before { content: ''; position: fixed; inset: 0; background: rgba(255,255,255,0.45); z-index: 0; pointer-events: none; }
+        .login-shell { position: relative; z-index: 1; }
         .login-shell { display: grid; grid-template-columns: 1.05fr 0.95fr; width: 100%; max-width: 1080px; border-radius: 24px; overflow: hidden; box-shadow: 0 24px 60px rgba(6, 52, 79, 0.22); }
         .brand-panel { background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%); color: white; padding: 40px; }
         .brand-panel .logo { width: 78px; height: 78px; border-radius: 18px; margin-bottom: 18px; object-fit: contain; padding: 6px; display: block; }
-        .brand-panel h1 { font-size: 34px; margin-bottom: 10px; }
-        .brand-panel p { max-width: 420px; line-height: 1.7; }
-        .login-container { padding: 44px; }
+        .brand-panel h1 { font-size: 34px; margin-bottom: 10px; color: #000000; }
+        .login-container { padding: 44px; background: rgba(255,255,255,0.95); }
         .login-header { margin-bottom: 30px; }
         .login-header h1 { color: #173040; font-size: 28px; margin-bottom: 8px; }
         .login-header p { color: #60798b; font-size: 14px; }
@@ -159,8 +160,7 @@
     <div class="login-shell">
         <div class="brand-panel">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="logo" alt="Logo Jabatan Air Sabah">
-            <h1>SPPA</h1>
-            <p>Portal rasmi Jabatan Air Negeri Sabah untuk pendaftaran produk air, semakan permohonan, dan rujukan produk yang telah berdaftar.</p>
+            <h1>Sistem Pendaftaran Produk Air</h1>
         </div>
         <div class="login-container">
             <div class="login-header">
