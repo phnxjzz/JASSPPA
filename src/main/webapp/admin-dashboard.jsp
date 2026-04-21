@@ -83,12 +83,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Pentadbir - SPPA</title>
     <style>
+        /* ── Design tokens ───────────────────────────── */
         :root {
-            --brand-blue: #2A9D8F;
-            --brand-navy: #0F6BAE;
-            --brand-green: #6DBE45;
-            --brand-lime: #CDE11D;
-            --brand-yellow: #F2F72E;
+            --brand-blue: #0097d9;
+            --brand-navy: #06344f;
+            --brand-yellow: #fff212;
             --surface: #ffffff;
             --surface-soft: #f7fbff;
             --line: #d9e7f1;
@@ -97,12 +96,13 @@
         }
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
-        .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-yellow) 100%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 76%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { width: 54px; height: 54px; border-radius: 16px; object-fit: contain; padding: 4px; }
-        .brand h1 { margin: 0; font-size: 20px; }
-        .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.88; }
-        .navbar a { color: white; text-decoration: none; margin-left: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .brand-logo { width: 52px; height: 52px; border-radius: 14px; object-fit: contain; padding: 4px; }
+        .brand h1 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.2px; }
+        .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.85; }
+        .navbar a { color: white; text-decoration: none; margin-left: 14px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; opacity: 0.92; transition: opacity var(--tr); }
+        .navbar a:hover { opacity: 1; }
         .icon-inline { width: 14px; height: 14px; object-fit: contain; vertical-align: middle; }
         .container { max-width: 1320px; margin: 28px auto; padding: 0 20px 32px; }
         .hero { display: grid; grid-template-columns: 1.8fr 1fr; gap: 20px; margin-bottom: 20px; }
@@ -111,12 +111,9 @@
         .hero p { color: var(--muted); line-height: 1.7; max-width: 760px; }
         .metric-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
         .metric-chip { background: var(--surface-soft); border: 1px solid var(--line); padding: 10px 14px; border-radius: 999px; font-weight: 700; }
-        .jans-contact-section { background: linear-gradient(135deg,rgba(240,248,255,0.5) 0%,rgba(220,240,255,0.35) 100%); border: 1px solid rgba(42,157,143,0.24); border-radius: 16px; padding: 24px 28px; margin-top: 28px; }
-        .jans-contact-section h3 { color: #0F6BAE; font-size: 16px; font-weight: 700; margin: 0 0 14px; letter-spacing: 0.3px; }
-        .contact-line { display: flex; align-items: flex-start; gap: 10px; margin: 8px 0; font-size: 14px; color: #334155; }
-        .contact-icon { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
-        .contact-address-link { color: #0F6BAE; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
-        .contact-address-link:hover { color: #0d4f77; }
+        .contact-image { width: 100%; border-radius: 16px; border: 1px solid var(--line); padding: 14px; background: #f7fbff; }
+        .contact-image strong { display: block; margin-bottom: 8px; color: var(--brand-navy); }
+        .contact-image p { margin: 4px 0; color: var(--muted); font-size: 14px; }
         .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
         .stat-card { background: var(--surface); padding: 18px; border-radius: 18px; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(6, 52, 79, 0.06); }
         .stat-card h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
@@ -132,137 +129,135 @@
         .btn-secondary { background: #dcecf6; color: var(--brand-navy); }
         .btn-accent { background: #fff7b0; color: #6a5a00; }
         .section-stack { display: grid; gap: 18px; }
-        .announcement-panel { border-top: 4px solid var(--brand-blue); }
+        .announcement-panel { border-top: 4px solid #0097d9; }
         .announcement-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
         .announcement-head img { width: 18px; height: 18px; object-fit: contain; }
         .announce-alert { margin-bottom: 12px; border-radius: 10px; padding: 10px 12px; font-size: 13px; }
         .announce-success { background: #e7f9ec; color: #166534; border: 1px solid #b8e7c6; }
         .announce-error { background: #fff1f2; color: #b91c1c; border: 1px solid #fecdd3; }
-        .announce-with-gif { display: flex; align-items: center; gap: 10px; }
-        .success-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            z-index: 1300;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-            min-width: 280px;
-            max-width: min(94vw, 420px);
-            padding: 28px 24px;
-            border-radius: 16px;
-            border: 1px solid #b8e7c6;
-            background: #ffffff;
-            color: #166534;
-            font-size: 16px;
-            line-height: 1.35;
-            box-shadow: 0 16px 32px rgba(10, 64, 38, 0.2);
-            transform: translate(-50%, -58%) scale(0.97);
-            opacity: 0;
-            pointer-events: none;
-            transition: transform 0.22s ease, opacity 0.22s ease;
-        }
-        .success-popup.show {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .success-popup-content { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-        .success-title { font-size: 22px; line-height: 1.1; font-weight: 800; color: #0f5132; letter-spacing: 0.02em; text-transform: none; text-align: center; }
-        .success-text { display: none; }
-        .success-ok { align-self: center; margin-top: 4px; border: 1px solid #0f5132 !important; background: #166534; color: #fff; border-radius: 10px; padding: 10px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
-        .success-gif {
-            width: 84px;
-            height: 84px;
-            padding: 0;
-            object-fit: contain;
-            flex-shrink: 0;
-            background: transparent;
-            border-radius: 0;
-            border: none;
-            mix-blend-mode: normal;
-            filter: drop-shadow(0 3px 8px rgba(22, 101, 52, 0.22)) saturate(1.05);
-            transform-origin: center;
-            animation: successGifPop 420ms ease-out 1, successGifPulse 1.9s ease-in-out infinite 520ms;
-        }
-        @keyframes successGifPop {
-            0% { transform: scale(0.72) translateY(3px); opacity: 0.65; }
-            70% { transform: scale(1.14) translateY(-1px); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes successGifPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.06); }
-        }
         .announcement-form { display: grid; gap: 10px; margin-bottom: 14px; }
         .announcement-form input[type="text"], .announcement-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; }
         .announcement-form input[type="file"] { width: 100%; border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; background: #f9fcff; }
         .announcement-form textarea { min-height: 96px; resize: vertical; }
         .announce-image-preview { margin-top: 8px; }
         .announce-image-preview img { width: 100%; max-width: 220px; height: auto; border: 1px solid var(--line); border-radius: 10px; }
+        .announcement-form { display: grid; gap: 10px; margin-bottom: 14px; }
+        .announcement-form input[type="text"],
+        .announcement-form textarea {
+            width: 100%; border: 1px solid var(--line); border-radius: 10px;
+            padding: 10px 12px; font: inherit; font-size: 13px;
+            background: var(--surface-soft);
+            transition: border-color var(--tr), box-shadow var(--tr);
+        }
+        .announcement-form input[type="text"]:focus,
+        .announcement-form textarea:focus {
+            outline: none;
+            border-color: var(--brand-navy);
+            box-shadow: 0 0 0 3px rgba(15,107,174,0.1);
+        }
+        .announcement-form input[type="file"] {
+            width: 100%; border: 1px dashed var(--line); border-radius: 10px;
+            padding: 10px 12px; font: inherit; background: var(--surface-soft);
+        }
+        .announcement-form textarea { min-height: 96px; resize: vertical; }
         .announcement-actions { display: flex; gap: 8px; flex-wrap: wrap; }
         .announcement-table td { font-size: 13px; }
-        .announce-title { font-weight: 700; color: var(--brand-navy); }
-        .announce-content { color: var(--muted); margin-top: 4px; white-space: pre-wrap; }
-        .announce-status { display: inline-block; border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 700; }
-        .announce-active { background: #dcfce7; color: #166534; }
-        .announce-inactive { background: #e2e8f0; color: #334155; }
-        .icon-btn { width: 14px; height: 14px; object-fit: contain; }
-        .table-card h3 { margin-top: 0; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 13px 12px; border-bottom: 1px solid #e4edf4; text-align: left; vertical-align: top; }
-        th { background: #f8fcff; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
-        tr:hover { background: #f7fcff; }
-        .status-pill { display: inline-block; padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 12px; }
-        .status-pending { background: #fff3cd; color: #9a6700; }
-        .status-approved { background: #dcfce7; color: #166534; }
-        .status-rejected { background: #fee2e2; color: #b91c1c; }
-        .status-suspended { background: #ffe4d6; color: #9a3412; }
-        .status-draft { background: #e2e8f0; color: #334155; }
-        .subtle { color: var(--muted); font-size: 13px; }
-        .empty { text-align: center; color: var(--muted); padding: 26px 0; }
-        .section-title { margin-top: 0; margin-bottom: 14px; }
-        @media (max-width: 1100px) { .hero, .layout, .stats, .toolbar { grid-template-columns: 1fr; } .navbar { flex-direction: column; align-items: flex-start; } .navbar a { margin-left: 0; margin-right: 16px; } }
-                    /* Enforce visible white border on all clickable buttons */
-        button,
-        input[type="submit"],
-        input[type="button"],
-        .btn,
-        .login-btn,
-        .modal-close,
-        .btn-attachment,
-        .attachment-list button,
-        a.btn {
-            border: 1px solid #fff !important;
-            box-shadow: inset 0 0 0 1px #fff, 0 1px 2px rgba(0, 0, 0, 0.18) !important;
-        }
+        .icon-btn { width: 13px; height: 13px; object-fit: contain; }
 
-        button:hover,
-        input[type="submit"]:hover,
-        input[type="button"]:hover,
-        .btn:hover,
-        .login-btn:hover,
-        .modal-close:hover,
-        .btn-attachment:hover,
-        .attachment-list button:hover,
-        a.btn:hover,
-        button:focus,
-        input[type="submit"]:focus,
-        input[type="button"]:focus,
-        .btn:focus,
-        .login-btn:focus,
-        .modal-close:focus,
-        .btn-attachment:focus,
-        .attachment-list button:focus,
-        a.btn:focus {
-            border: 1px solid #fff !important;
-            box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
+        /* ── Misc ────────────────────────────────────── */
+        .announce-with-gif { display: flex; align-items: center; gap: 10px; }
+        .announce-title  { font-weight: 700; color: var(--brand-navy); }
+        .announce-content { color: var(--muted); margin-top: 4px; white-space: pre-wrap; }
+        .announce-status { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+        .announce-active   { background: #d1fae5; color: #065f46; }
+        .announce-inactive { background: #e9edf2; color: #374151; }
+        .analytics-chart {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
         }
-        .icon-link { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.38); transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; }
-        .icon-link img { width: 20px; height: 20px; object-fit: contain; }
-        .icon-link:hover { transform: translateY(-1px) scale(1.03); background: rgba(255,255,255,0.26); }
+        .pie-chart {
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            position: relative;
+            flex: 0 0 auto;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45), 0 6px 16px rgba(0,0,0,0.08);
+        }
+        .pie-chart[data-gradient] {
+            background: var(--pie-gradient, conic-gradient(#1b8f55 0deg, #cf4e4e 120deg, #df8f1f 240deg));
+        }
+        .pie-chart::after {
+            content: '';
+            position: absolute;
+            inset: 26%;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1px solid #e4edf4;
+        }
+        .pie-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            text-align: center;
+        }
+        .pie-center small {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .pie-center strong {
+            display: block;
+            font-size: 16px;
+            color: #0F6BAE;
+            line-height: 1.1;
+            font-weight: 800;
+        }
+        .analytics-legend {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 8px;
+            min-width: 0;
+            flex: 1 1 180px;
+        }
+        .analytics-legend li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: #f7fbff;
+            border: 1px solid #e2edf5;
+            font-size: 13px;
+        }
+        .floating-home-btn {
+            position: static;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            margin-left: 12px;
+            border-radius: 999px;
+            border: 1px solid #fff;
+            background: rgba(255, 255, 255, 0.12);
+            text-decoration: none;
+            vertical-align: middle;
+        }
+        .floating-home-btn img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+        }
         </style>
 </head>
 <body>
@@ -286,7 +281,7 @@
 
     <div class="container">
         <div class="stats">
-            <div class="stat-card">
+            <div class="stat-card main">
                 <h3>Jumlah Permohonan</h3>
                 <div class="number"><%= request.getAttribute("total_applications") != null ? request.getAttribute("total_applications") : "0" %></div>
             </div>
@@ -308,10 +303,40 @@
             </div>
         </div>
 
+        <%
+            int pendingCountAlert = request.getAttribute("pending_count") instanceof Number ? ((Number) request.getAttribute("pending_count")).intValue() : 0;
+            int rejectedCountAlert = request.getAttribute("rejected_count") instanceof Number ? ((Number) request.getAttribute("rejected_count")).intValue() : 0;
+            boolean showStatusAlert = pendingCountAlert > 7 || rejectedCountAlert > 10;
+        %>
+        <% if (showStatusAlert) { %>
+        <div class="status-alert-panel">
+            <h4 class="status-alert-title">Amaran Status Permohonan</h4>
+            <ul class="status-alert-list">
+                <% if (pendingCountAlert > 7) { %>
+                <li>Jumlah permohonan menunggu semakan melebihi 7 rekod. Sila semak keutamaan proses.</li>
+                <% } %>
+                <% if (rejectedCountAlert > 10) { %>
+                <li>Jumlah permohonan ditolak adalah tinggi. Sila semak punca utama penolakan.</li>
+                <% } %>
+            </ul>
+        </div>
+        <% } %>
+
+        <%
+            List<Map<String, Object>> applications = (List<Map<String, Object>>) request.getAttribute("pending_applications");
+            boolean isAdminRole = "ADMIN".equals(String.valueOf(session.getAttribute("role")));
+        %>
+
         <div class="layout">
-            <div class="panel table-card">
-                <h3 class="section-title">Permohonan Terkini</h3>
-                <form method="get" action="${pageContext.request.contextPath}/dashboard" class="toolbar">
+            <div class="left-panel">
+                <div class="panel table-card">
+                    <div class="table-card-header">
+                        <h3 class="section-title">Permohonan Terkini</h3>
+                        <button type="button" class="panel-expand-btn" id="toggleLatestPanelBtn" aria-label="Besarkan panel permohonan" title="Expand / Collapse">
+                            <img src="${pageContext.request.contextPath}/assets/images/expand.png" alt="Expand" onerror="this.style.display='none';">
+                        </button>
+                    </div>
+                    <form method="get" action="${pageContext.request.contextPath}/dashboard" class="toolbar">
                     <div class="field">
                         <label for="q"><img src="${pageContext.request.contextPath}/assets/images/icon-search.png" class="icon-inline" alt="Ikon carian"> Carian</label>
                         <input id="q" name="q" type="text" value="<%= request.getAttribute("search_query") %>" placeholder="Cari syarikat, produk, pemohon atau email">
@@ -326,6 +351,14 @@
                             <option value="SUSPENDED" <%= "SUSPENDED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>SUSPENDED</option>
                             <option value="DRAFT" <%= "DRAFT".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DRAFT</option>
                         </select>
+                    </div>
+                    <div class="field">
+                        <label for="date_from">Tarikh Dari</label>
+                        <input id="date_from" name="date_from" type="date" value="<%= request.getAttribute("date_from") != null ? request.getAttribute("date_from") : "" %>">
+                    </div>
+                    <div class="field">
+                        <label for="date_to">Tarikh Hingga</label>
+                        <input id="date_to" name="date_to" type="date" value="<%= request.getAttribute("date_to") != null ? request.getAttribute("date_to") : "" %>">
                     </div>
                     <button class="btn btn-primary" type="submit">Tapis</button>
                     <div class="field export-control">
@@ -344,11 +377,44 @@
                         </select>
                     </div>
                     <button class="btn btn-secondary" type="button" id="exportDownloadBtn" aria-label="Turun" title="Turun"><img src="${pageContext.request.contextPath}/assets/images/icon-download.png" class="icon-inline" alt="Ikon turun"></button>
-                </form>
+                    </form>
 
-                <table>
+                    <div class="export-summary">
+                        <div class="export-metric">
+                            <small>Diluluskan</small>
+                            <strong><%= request.getAttribute("approved_count") != null ? request.getAttribute("approved_count") : "0" %></strong>
+                        </div>
+                        <div class="export-metric">
+                            <small>Ditolak</small>
+                            <strong><%= request.getAttribute("rejected_count") != null ? request.getAttribute("rejected_count") : "0" %></strong>
+                        </div>
+                        <div class="export-metric">
+                            <small>Menunggu</small>
+                            <strong><%= request.getAttribute("pending_count") != null ? request.getAttribute("pending_count") : "0" %></strong>
+                        </div>
+                    </div>
+
+                    <% if (isAdminRole) { %>
+                    <form id="bulkActionForm" method="get" action="${pageContext.request.contextPath}/admin/application" data-announcement-action="true">
+                        <input type="hidden" id="bulkActionType" name="bulk_action_type" value="">
+                        <input type="hidden" id="bulkSelectedIds" name="selected_ids" value="">
+                        <input type="hidden" id="bulkFirstId" name="id" value="">
+                        <div class="bulk-toolbar">
+                            <button class="btn btn-primary" id="bulkApproveBtn" type="button">Approve Selected</button>
+                            <button class="btn btn-secondary" id="bulkRejectBtn" type="button">Reject Selected</button>
+                            <button class="btn btn-accent" id="bulkExportBtn" type="button">Export Selected</button>
+                            <span class="bulk-count" id="bulkSelectedCount">0 dipilih</span>
+                        </div>
+                    </form>
+                    <% } %>
+
+                    <div class="table-wrapper">
+                    <table>
                     <thead>
                         <tr>
+                            <% if (isAdminRole) { %>
+                            <th style="width:42px;"><input type="checkbox" id="selectAllApps" class="table-check" aria-label="Pilih semua"></th>
+                            <% } %>
                             <th>ID</th>
                             <th>Nama Syarikat</th>
                             <th>Kategori Produk</th>
@@ -358,12 +424,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <%
-                            List<Map<String, Object>> applications = (List<Map<String, Object>>) request.getAttribute("pending_applications");
-                            if (applications == null || applications.isEmpty()) {
-                        %>
+                        <% if (applications == null || applications.isEmpty()) { %>
                         <tr>
-                            <td colspan="6" class="empty">Tiada permohonan ditemui untuk penapis ini.</td>
+                            <td colspan="<%= isAdminRole ? "7" : "6" %>" class="empty">Tiada permohonan ditemui untuk penapis ini.</td>
                         </tr>
                         <% } else {
                             for (Map<String, Object> applicationRow : applications) {
@@ -371,7 +434,10 @@
                                 String status = String.valueOf(applicationRow.get("status")).toLowerCase();
                         %>
                         <tr>
-                            <td><strong><%= String.format("PPP%03d", ((Number)applicationRow.get("id")).intValue()) %></strong></td>
+                            <% if (isAdminRole) { %>
+                            <td><input type="checkbox" class="app-row-check table-check" value="<%= applicationRow.get("id") %>" aria-label="Pilih permohonan"></td>
+                            <% } %>
+                            <td><strong>#<%= applicationRow.get("id") %></strong></td>
                             <td>
                                 <strong><%= applicationRow.get("company_name") %></strong><br>
                                 <span class="subtle">Pemohon: <%= applicationRow.get("full_name") %><br>Email: <%= applicationRow.get("user_email") %></span>
@@ -383,74 +449,211 @@
                             <td><span class="status-pill status-<%= status %>"><%= applicationRow.get("status") %></span></td>
                             <td><%= submittedAt != null ? submittedAt.toString() : "Belum dihantar" %></td>
                             <td>
-                                <a class="btn btn-primary" href="${pageContext.request.contextPath}/admin/application?id=<%= applicationRow.get("id") %>">Semak</a>
+                                <a
+                                    class="btn btn-primary js-open-app-modal"
+                                    href="${pageContext.request.contextPath}/admin/application?id=<%= applicationRow.get("id") %>"
+                                    data-app-id="<%= applicationRow.get("id") %>"
+                                    data-company="<%= escapeHtml(applicationRow.get("company_name") == null ? "" : String.valueOf(applicationRow.get("company_name")) ) %>"
+                                    data-category="<%= escapeHtml(applicationRow.get("product_category") == null ? "" : String.valueOf(applicationRow.get("product_category")) ) %>"
+                                    data-product="<%= escapeHtml(applicationRow.get("product_name") == null ? "" : String.valueOf(applicationRow.get("product_name")) ) %>"
+                                    data-status="<%= escapeHtml(applicationRow.get("status") == null ? "" : String.valueOf(applicationRow.get("status")) ) %>"
+                                    data-submitted="<%= escapeHtml(submittedAt != null ? submittedAt.toString() : "Belum dihantar") %>"
+                                    data-user="<%= escapeHtml(applicationRow.get("full_name") == null ? "" : String.valueOf(applicationRow.get("full_name")) ) %>"
+                                    data-email="<%= escapeHtml(applicationRow.get("user_email") == null ? "" : String.valueOf(applicationRow.get("user_email")) ) %>"
+                                    data-attachment-image="<%= escapeHtml(applicationRow.get("attachment_image_url") == null ? "" : String.valueOf(applicationRow.get("attachment_image_url")) ) %>"
+                                    data-attachment-pdf="<%= escapeHtml(applicationRow.get("attachment_pdf_url") == null ? "" : String.valueOf(applicationRow.get("attachment_pdf_url")) ) %>">
+                                    Semak
+                                </a>
                             </td>
                         </tr>
                         <%      }
                            }
                         %>
                     </tbody>
-                </table>
+                    </table>
+                    </div><!-- /table-wrapper -->
+                </div>
+
+                <div class="panel">
+                    <h3 class="section-title">Analitik Status Permohonan</h3>
+                    <%
+                        int approvedChart = request.getAttribute("approved_count") instanceof Number ? ((Number) request.getAttribute("approved_count")).intValue() : 0;
+                        int rejectedChart = request.getAttribute("rejected_count") instanceof Number ? ((Number) request.getAttribute("rejected_count")).intValue() : 0;
+                        int pendingChart = request.getAttribute("pending_count") instanceof Number ? ((Number) request.getAttribute("pending_count")).intValue() : 0;
+                        int totalChart = Math.max(1, approvedChart + rejectedChart + pendingChart);
+                        int approvedDeg = (int) Math.round((approvedChart * 360.0) / totalChart);
+                        int rejectedDeg = (int) Math.round((rejectedChart * 360.0) / totalChart);
+                        int pendingDeg = 360 - approvedDeg - rejectedDeg;
+                        int approvedEnd = approvedDeg;
+                        int rejectedEnd = approvedDeg + rejectedDeg;
+                        String pieGradient = "conic-gradient(#1b8f55 0deg " + approvedEnd + "deg, #cf4e4e " + approvedEnd + "deg " + rejectedEnd + "deg, #df8f1f " + rejectedEnd + "deg 360deg)";
+                    %>
+                    <div class="analytics-chart" aria-label="Carta status permohonan">
+                        <div class="pie-chart" data-gradient="<%= pieGradient %>">
+                            <div class="pie-center">
+                                <small>Total</small>
+                                <strong><%= approvedChart + rejectedChart + pendingChart %></strong>
+                            </div>
+                        </div>
+                        <ul class="analytics-legend">
+                            <li>
+                                <span class="legend-label"><span class="legend-dot approved"></span>Diluluskan</span>
+                                <span class="legend-value"><%= approvedChart %></span>
+                            </li>
+                            <li>
+                                <span class="legend-label"><span class="legend-dot rejected"></span>Ditolak</span>
+                                <span class="legend-value"><%= rejectedChart %></span>
+                            </li>
+                            <li>
+                                <span class="legend-label"><span class="legend-dot pending"></span>Menunggu</span>
+                                <span class="legend-value"><%= pendingChart %></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
             </div>
 
-            <div>
-                <div class="section-stack">
+            <div class="right-panel">
                 <div class="panel">
-                    <h3 class="section-title">Pratonton Produk MySQL</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Produk</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <%
-                                List<Map<String, Object>> products = (List<Map<String, Object>>) request.getAttribute("product_catalog");
-                                if (products == null || products.isEmpty()) {
-                            %>
-                            <tr>
-                                <td colspan="2" class="empty">Tiada produk ditemui.</td>
-                            </tr>
-                            <% } else {
-                                for (Map<String, Object> product : products) {
-                            %>
-                            <tr>
-                                <td><%= product.get("no") %></td>
-                                <td>
-                                    <strong><%= product.get("product_materials") %></strong><br>
-                                    <span class="subtle"><%= product.get("brand") == null ? "-" : product.get("brand") %> • <%= product.get("classification") %></span>
-                                </td>
-                            </tr>
-                            <%      }
-                                }
-                            %>
-                        </tbody>
-                    </table>
-                    <div style="margin-top:16px;">
-                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/products">Buka Senarai Produk Penuh</a>
+                    <h3 class="section-title">Quick Actions</h3>
+                    <div class="quick-actions">
+                        <a class="btn btn-primary" href="#announcementPanel">Tambah Pengumuman</a>
+                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/users">Urus Pengguna</a>
+                        <button class="btn btn-accent" type="button" id="quickExportBtn">Eksport</button>
                     </div>
+                </div>
+
+                <div class="panel">
+                    <h3 class="section-title">Pemberitahuan</h3>
+                    <ul class="notification-list">
+                        <li class="notification-item notif-warning">
+                            <strong>Permohonan Menunggu</strong>
+                            <span><%= request.getAttribute("pending_count") != null ? request.getAttribute("pending_count") : "0" %> permohonan perlu semakan.</span>
+                        </li>
+                        <li class="notification-item notif-warning">
+                            <strong>Permohonan Ditolak</strong>
+                            <span><%= request.getAttribute("rejected_count") != null ? request.getAttribute("rejected_count") : "0" %> rekod memerlukan tindakan susulan.</span>
+                        </li>
+                        <% if (applications != null && !applications.isEmpty()) {
+                            int noticeShown = 0;
+                            for (Map<String, Object> appNotice : applications) {
+                                if (noticeShown >= 3) { break; }
+                                noticeShown++;
+                        %>
+                        <li class="notification-item notif-recent">
+                            <strong><%= escapeHtml(String.valueOf(appNotice.get("company_name"))) %></strong>
+                            <span>Status: <%= escapeHtml(String.valueOf(appNotice.get("status"))) %></span>
+                        </li>
+                        <%      }
+                           } %>
+                    </ul>
+                </div>
+
+                <div class="panel">
+                    <h3 class="section-title">Aktiviti Terkini</h3>
+                    <ul class="activity-list">
+                        <% if (applications != null && !applications.isEmpty()) {
+                            int activityShown = 0;
+                            for (Map<String, Object> activityRow : applications) {
+                                if (activityShown >= 5) { break; }
+                                activityShown++;
+                                Timestamp activityTime = (Timestamp) activityRow.get("submitted_at");
+                        %>
+                        <li class="activity-item">
+                            <strong><%= escapeHtml(String.valueOf(activityRow.get("full_name"))) %></strong> mengemaskini permohonan
+                            <span class="muted"><%= activityTime != null ? escapeHtml(activityTime.toString()) : "Masa tidak tersedia" %></span>
+                        </li>
+                        <%      }
+                           } else { %>
+                        <li class="activity-item">Tiada aktiviti terkini buat masa ini.</li>
+                        <% } %>
+                    </ul>
                 </div>
 
                 <div class="panel announcement-panel" id="announcementPanel">
                     <div class="announcement-head">
-                        <img src="${pageContext.request.contextPath}/assets/images/icon-announcement.png" alt="Pengumuman">
-                        <h3 class="section-title" style="margin:0;">Pengurusan Pengumuman / Info</h3>
+                        <div class="title-wrap">
+                            <img src="${pageContext.request.contextPath}/assets/images/icon-announcement.png" alt="Pengumuman">
+                            <h3 class="section-title" style="margin:0;">Pengurusan Pengumuman</h3>
+                        </div>
+                        <button type="button" class="panel-expand-btn" id="toggleAnnouncementPanelBtn" aria-label="Besarkan panel pengumuman" title="Expand / Collapse">
+                            <img src="${pageContext.request.contextPath}/assets/images/expand.png" alt="Expand" onerror="this.style.display='none';">
+                        </button>
                     </div>
 
                     <% if (request.getAttribute("announcement_success") != null) { %>
-                        <div id="successPopup" class="success-popup show" role="dialog" aria-live="polite" aria-label="Notifikasi berjaya">
-                            <img class="success-gif" src="${pageContext.request.contextPath}/assets/images/success.png" alt="Berjaya">
-                            <div class="success-popup-content">
-                                <div class="success-title">Berjaya!</div>
-                                <div class="success-text"></div>
-                                <button type="button" class="success-ok" data-close-success-popup>OK</button>
-                            </div>
-                        </div>
+                        <div class="announce-alert announce-success"><%= request.getAttribute("announcement_success") %></div>
                     <% } %>
                     <% if (request.getAttribute("announcement_error") != null) { %>
                         <div class="announce-alert announce-error"><%= request.getAttribute("announcement_error") %></div>
                     <% } %>
+
+                    <%
+                        @SuppressWarnings("unchecked")
+                        List<Map<String, Object>> announcementList = (List<Map<String, Object>>) request.getAttribute("announcements");
+                        if (announcementList == null) announcementList = java.util.Collections.emptyList();
+                    %>
+                    <% if (!announcementList.isEmpty()) { %>
+                    <div style="overflow-x:auto; margin-bottom:18px;">
+                        <table class="app-table announcement-table" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th style="width:36px;">#</th>
+                                    <th>Tajuk</th>
+                                    <th style="width:90px;">Status</th>
+                                    <th style="width:140px;">Tarikh Cipta</th>
+                                    <th style="width:110px;">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <% for (int ai = 0; ai < announcementList.size(); ai++) {
+                                Map<String, Object> ann = announcementList.get(ai);
+                                boolean annActive = Boolean.TRUE.equals(ann.get("is_active"));
+                                String annId = String.valueOf(ann.get("id"));
+                                String annTitle = escapeHtml(String.valueOf(ann.get("title")));
+                                Object annCreated = ann.get("created_at");
+                                String annDate = annCreated == null ? "-" : String.valueOf(annCreated).substring(0, Math.min(10, String.valueOf(annCreated).length()));
+                            %>
+                                <tr>
+                                    <td><%= ai + 1 %></td>
+                                    <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="<%= annTitle %>"><%= annTitle %></td>
+                                    <td>
+                                        <span style="<%= "display:inline-block; padding:2px 10px; border-radius:20px; font-size:12px; font-weight:600; background:" + (annActive ? "#d4edda" : "#f0f0f0") + "; color:" + (annActive ? "#155724" : "#555") + ";" %>">
+                                            <%= annActive ? "Aktif" : "Tidak Aktif" %>
+                                        </span>
+                                    </td>
+                                    <td style="font-size:12px; color:#666;"><%= annDate %></td>
+                                    <td>
+                                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                            <a class="btn btn-secondary" style="padding:4px 10px; font-size:12px;"
+                                               href="${pageContext.request.contextPath}/dashboard?announcement_id=<%= annId %>#announcementPanel">
+                                                <img src="${pageContext.request.contextPath}/assets/images/icon-edit.png" class="icon-btn" alt="Edit" style="width:12px;height:12px;"> Edit
+                                            </a>
+                                            <% if (isAdminRole) { %>
+                                            <form method="post" action="${pageContext.request.contextPath}/dashboard" style="margin:0;" onsubmit="return confirm('Padam pengumuman ini?');">
+                                                <input type="hidden" name="_csrf" value="${csrf_token}">
+                                                <input type="hidden" name="announcement_action" value="delete_announcement">
+                                                <input type="hidden" name="announcement_id" value="<%= annId %>">
+                                                <button type="submit" class="btn btn-danger" style="padding:4px 10px; font-size:12px;">
+                                                    <img src="${pageContext.request.contextPath}/assets/images/icon-delete.png" class="icon-btn" alt="Padam" style="width:12px;height:12px;" onerror="this.style.display='none'"> Padam
+                                                </button>
+                                            </form>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <% } else { %>
+                        <p style="color:#888; font-size:13px; margin-bottom:14px;">Tiada pengumuman lagi. Tambah pengumuman pertama di bawah.</p>
+                    <% } %>
+
+                    <h4 style="margin: 0 0 10px; font-size:14px; color:#0b5e8f;">
+                        <%= (request.getAttribute("announcement_editing") != null && !((Map<?,?>)request.getAttribute("announcement_editing")).isEmpty()) ? "&#9998; Kemaskini Pengumuman" : "&#43; Tambah Pengumuman Baharu" %>
+                    </h4>
 
                     <%
                         Map<String, Object> announcementEditing = (Map<String, Object>) request.getAttribute("announcement_editing");
@@ -515,158 +718,6 @@
                             <% } %>
                         </div>
                     </form>
-
-                    <table class="announcement-table">
-                        <thead>
-                            <tr>
-                                <th>Pengumuman</th>
-                                <th>Status</th>
-                                <th>Tindakan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <%
-                                List<Map<String, Object>> announcements = (List<Map<String, Object>>) request.getAttribute("announcements");
-                                if (announcements == null || announcements.isEmpty()) {
-                            %>
-                            <tr>
-                                <td colspan="3" class="empty">Belum ada pengumuman direkodkan.</td>
-                            </tr>
-                            <% } else {
-                                for (Map<String, Object> ann : announcements) {
-                                    String listAnnouncementImageSrc = buildImageSrc(request.getContextPath(), ann.get("image_url"));
-                            %>
-                            <tr>
-                                <td>
-                                    <div class="announce-title"><%= escapeHtml(String.valueOf(ann.get("title"))) %></div>
-                                    <% if (!listAnnouncementImageSrc.isBlank()) { %>
-                                        <div class="announce-image-preview" style="margin-top:6px;margin-bottom:6px;">
-                                            <img src="<%= escapeHtml(listAnnouncementImageSrc) %>" alt="Gambar pengumuman" onerror="this.style.display='none';">
-                                        </div>
-                                    <% } %>
-                                    <div class="announce-content"><%= escapeHtml(String.valueOf(ann.get("content"))) %></div>
-                                </td>
-                                <td>
-                                    <span class="announce-status <%= Boolean.TRUE.equals(ann.get("is_active")) ? "announce-active" : "announce-inactive" %>">
-                                        <%= Boolean.TRUE.equals(ann.get("is_active")) ? "AKTIF" : "TIDAK AKTIF" %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="announcement-actions">
-                                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/dashboard?announcement_id=<%= ann.get("id") %>#announcementPanel" data-announcement-action="true">
-                                            <img src="${pageContext.request.contextPath}/assets/images/icon-edit.png" class="icon-btn" alt="Edit"> Edit
-                                        </a>
-                                        <form method="post" action="${pageContext.request.contextPath}/dashboard" onsubmit="return confirm('Hapus pengumuman ini?');" style="margin:0;" data-announcement-action="true">
-                                            <input type="hidden" name="_csrf" value="${csrf_token}">
-                                            <input type="hidden" name="announcement_action" value="delete_announcement">
-                                            <input type="hidden" name="announcement_id" value="<%= ann.get("id") %>">
-                                            <button class="btn btn-accent" type="submit">
-                                                <img src="${pageContext.request.contextPath}/assets/images/icon-delete.png" class="icon-btn" alt="Hapus"> Hapus
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            <%      }
-                                }
-                            %>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="panel">
-                    <h3 class="section-title">Senarai Pengguna Berdaftar</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>Status</th>
-                                <th>Tarikh Daftar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <%
-                                List<Map<String, Object>> registeredUsers = (List<Map<String, Object>>) request.getAttribute("registered_users_list");
-                                if (registeredUsers == null || registeredUsers.isEmpty()) {
-                            %>
-                            <tr>
-                                <td colspan="4" class="empty">Tiada pengguna berdaftar.</td>
-                            </tr>
-                            <% } else {
-                                int shown = 0;
-                                for (Map<String, Object> userRow : registeredUsers) {
-                                    if (shown >= 8) {
-                                        break;
-                                    }
-                                    shown++;
-                            %>
-                            <tr>
-                                <td>
-                                    <strong><%= escapeHtml(String.valueOf(userRow.get("full_name"))) %></strong><br>
-                                    <span class="subtle">@<%= escapeHtml(String.valueOf(userRow.get("username"))) %></span>
-                                </td>
-                                <td><%= escapeHtml(String.valueOf(userRow.get("email"))) %></td>
-                                <td><span class="status-pill status-<%= String.valueOf(userRow.get("status")).toLowerCase() %>"><%= escapeHtml(String.valueOf(userRow.get("status"))) %></span></td>
-                                <td><%= userRow.get("created_at") == null ? "-" : escapeHtml(String.valueOf(userRow.get("created_at"))) %></td>
-                            </tr>
-                            <%      }
-                                }
-                            %>
-                        </tbody>
-                    </table>
-                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-                        <a class="btn btn-primary" href="${pageContext.request.contextPath}/admin/users">Urus Pengguna</a>
-                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/export?format=xlsx&scope=users">Eksport Excel</a>
-                        <a class="btn btn-accent" href="${pageContext.request.contextPath}/admin/export?format=pdf&scope=users">Eksport PDF</a>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <h3 class="section-title">Pengguna Baharu (30 Hari)</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>Status</th>
-                                <th>Tarikh Daftar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <%
-                                List<Map<String, Object>> newUsers = (List<Map<String, Object>>) request.getAttribute("new_registered_users_list");
-                                if (newUsers == null || newUsers.isEmpty()) {
-                            %>
-                            <tr>
-                                <td colspan="4" class="empty">Tiada pengguna baharu dalam tempoh 30 hari.</td>
-                            </tr>
-                            <% } else {
-                                int shownRecent = 0;
-                                for (Map<String, Object> userRow : newUsers) {
-                                    if (shownRecent >= 8) {
-                                        break;
-                                    }
-                                    shownRecent++;
-                            %>
-                            <tr>
-                                <td>
-                                    <strong><%= escapeHtml(String.valueOf(userRow.get("full_name"))) %></strong><br>
-                                    <span class="subtle">@<%= escapeHtml(String.valueOf(userRow.get("username"))) %></span>
-                                </td>
-                                <td><%= escapeHtml(String.valueOf(userRow.get("email"))) %></td>
-                                <td><span class="status-pill status-<%= String.valueOf(userRow.get("status")).toLowerCase() %>"><%= escapeHtml(String.valueOf(userRow.get("status"))) %></span></td>
-                                <td><%= userRow.get("created_at") == null ? "-" : escapeHtml(String.valueOf(userRow.get("created_at"))) %></td>
-                            </tr>
-                            <%      }
-                                }
-                            %>
-                        </tbody>
-                    </table>
-                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/export?format=xlsx&scope=users&recent=1">Eksport Excel (30 Hari)</a>
-                        <a class="btn btn-accent" href="${pageContext.request.contextPath}/admin/export?format=pdf&scope=users&recent=1">Eksport PDF (30 Hari)</a>
-                    </div>
                 </div>
                 </div>
             </div>
@@ -696,11 +747,39 @@
     </div>
 <script>
     (function () {
+        var pieChart = document.querySelector('.pie-chart[data-gradient]');
+        if (pieChart && pieChart.dataset.gradient) {
+            pieChart.style.background = pieChart.dataset.gradient;
+        }
+        
         var toolbarForm = document.querySelector('.toolbar');
         var exportButton = document.getElementById('exportDownloadBtn');
+        var quickExportButton = document.getElementById('quickExportBtn');
         var exportOption = document.getElementById('exportOption');
         var searchInput = document.getElementById('q');
         var statusSelect = document.getElementById('status');
+        var dateFromInput = document.getElementById('date_from');
+        var dateToInput = document.getElementById('date_to');
+        var selectAllApps = document.getElementById('selectAllApps');
+        var appRowChecks = Array.prototype.slice.call(document.querySelectorAll('.app-row-check'));
+        var bulkSelectedCount = document.getElementById('bulkSelectedCount');
+        var bulkApproveBtn = document.getElementById('bulkApproveBtn');
+        var bulkRejectBtn = document.getElementById('bulkRejectBtn');
+        var bulkExportBtn = document.getElementById('bulkExportBtn');
+        var bulkSelectedIds = document.getElementById('bulkSelectedIds');
+        var bulkActionType = document.getElementById('bulkActionType');
+        var bulkFirstId = document.getElementById('bulkFirstId');
+        var bulkActionForm = document.getElementById('bulkActionForm');
+        var latestPanel = document.querySelector('.table-card');
+        var toggleLatestPanelBtn = document.getElementById('toggleLatestPanelBtn');
+        var announcementPanelCard = document.getElementById('announcementPanel');
+        var toggleAnnouncementPanelBtn = document.getElementById('toggleAnnouncementPanelBtn');
+
+        var appDetailModal = document.getElementById('appDetailModal');
+        var appModalCloseBtn = document.getElementById('appModalCloseBtn');
+        var modalReviewLink = document.getElementById('modalReviewLink');
+        var modalAttachmentViewer = document.getElementById('modalAttachmentViewer');
+        var isAdminRoleClient = <%=  "ADMIN".equals(String.valueOf(session.getAttribute("role"))) ? "true" : "false" %>;
 
         if (!toolbarForm || !exportButton || !exportOption || !searchInput || !statusSelect) {
             return;
@@ -722,65 +801,47 @@
             return optionValue.indexOf('pdf_') === 0 ? 'pdf' : 'xlsx';
         }
 
-        exportButton.addEventListener('click', function () {
+        function runExport() {
             var optionValue = exportOption.value;
             var format = formatForSelection(optionValue);
             var status = statusForSelection(optionValue);
             var q = searchInput.value || '';
+            var dateFrom = dateFromInput ? (dateFromInput.value || '') : '';
+            var dateTo = dateToInput ? (dateToInput.value || '') : '';
             var url = contextPath + '/admin/export?format=' + encodeURIComponent(format)
                 + '&q=' + encodeURIComponent(q)
-                + '&status=' + encodeURIComponent(status);
+                + '&status=' + encodeURIComponent(status)
+                + '&date_from=' + encodeURIComponent(dateFrom)
+                + '&date_to=' + encodeURIComponent(dateTo);
             window.location.href = url;
+        }
+
+        exportButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            runExport();
         });
+
+        if (quickExportButton) {
+            quickExportButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                runExport();
+            });
+        }
     })();
 </script>
+    <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama"></a>
 <script>
 (function() {
-    var announcementPanel = document.getElementById('announcementPanel');
-    if (announcementPanel) {
-        var scrollStateKey = 'adminDashboardAnnouncementFocus';
+    var homeBtn = document.querySelector('.floating-home-btn');
+    if (!homeBtn) return;
 
-        function markAnnouncementFocus() {
-            try {
-                sessionStorage.setItem(scrollStateKey, '1');
-            } catch (e) {
-                // Ignore storage errors and continue normal flow.
-            }
-        }
+    var navContainer = document.querySelector('.navbar > div:last-child');
+    if (!navContainer) navContainer = document.querySelector('.navbar');
+    if (!navContainer) return;
 
-        if (window.location.hash === '#announcementPanel') {
-            announcementPanel.scrollIntoView({ behavior: 'auto', block: 'start' });
-        }
-
-        try {
-            if (sessionStorage.getItem(scrollStateKey) === '1') {
-                announcementPanel.scrollIntoView({ behavior: 'auto', block: 'start' });
-                sessionStorage.removeItem(scrollStateKey);
-            }
-        } catch (e) {
-            // Ignore storage errors and continue normal flow.
-        }
-
-        var announcementTriggers = announcementPanel.querySelectorAll('[data-announcement-action="true"]');
-        announcementTriggers.forEach(function(trigger) {
-            if (trigger.tagName === 'FORM') {
-                trigger.addEventListener('submit', markAnnouncementFocus);
-            } else {
-                trigger.addEventListener('click', markAnnouncementFocus);
-            }
-        });
+    if (homeBtn.parentElement !== navContainer) {
+        navContainer.appendChild(homeBtn);
     }
-
-    var popup = document.getElementById('successPopup');
-    if (!popup) return;
-    function closePopup() {
-        popup.classList.remove('show');
-        window.setTimeout(function() {
-            if (popup && popup.parentNode) popup.parentNode.removeChild(popup);
-        }, 260);
-    }
-    var closeBtn = popup.querySelector('[data-close-success-popup]');
-    if (closeBtn) closeBtn.addEventListener('click', closePopup);
 })();
 </script>
 
