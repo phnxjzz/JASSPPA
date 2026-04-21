@@ -153,15 +153,12 @@
             width: 100%;
             height: 600px;
             position: relative;
-            perspective: 1200px;
-            overflow: visible;
+            overflow: hidden;
         }
         .carousel-track {
             position: relative;
             width: 100%;
             height: 100%;
-            transform-style: preserve-3d;
-            transition: transform 0.55s cubic-bezier(0.2, 0.75, 0.2, 1);
         }
         .feature-page {
             position: absolute;
@@ -171,7 +168,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transform-style: preserve-3d;
             transition: transform 0.55s cubic-bezier(0.2, 0.75, 0.2, 1), opacity 0.35s ease;
         }
         .feature-card {
@@ -189,7 +185,6 @@
             transition: transform 0.22s ease, box-shadow 0.22s ease;
             overflow: hidden;
             animation: floatShadow 4.8s ease-in-out infinite;
-            transform-style: preserve-3d;
             display: flex;
             flex-direction: column;
         }
@@ -742,12 +737,12 @@
         var notifShortcut = document.getElementById('notifShortcut');
         var notifModal = document.getElementById('notifModal');
         var notifClose = document.getElementById('notifClose');
-        var total = 4;
+        var total = pages.length;
         var index = 0;
 
         function render() {
-            var step = 360 / total;
-            var radius = window.innerWidth < 640 ? 190 : 280;
+            var sideOffset = window.innerWidth < 640 ? 170 : 240;
+            var sideScale = window.innerWidth < 640 ? 0.9 : 0.88;
 
             pages.forEach(function (page, i) {
                 var rel = (i - index + total) % total;
@@ -755,13 +750,19 @@
                     rel -= total;
                 }
 
-                var angle = rel * step;
-                var opacity = Math.abs(rel) > 1 ? 0.35 : (rel === 0 ? 1 : 0.72);
+                var absRel = Math.abs(rel);
+                var isActive = rel === 0;
+                var isSide = absRel === 1;
+                var x = isActive ? 0 : (isSide ? rel * sideOffset : rel * (sideOffset * 1.25));
+                var scale = isActive ? 1 : (isSide ? sideScale : 0.82);
+                var opacity = isActive ? 1 : (isSide ? 0.72 : 0);
+                var zIndex = isActive ? 6 : (isSide ? 4 : 1);
+
                 page.style.opacity = String(opacity);
-                page.style.zIndex = String(rel === 0 ? 5 : 3 - Math.abs(rel));
-                page.style.pointerEvents = rel === 0 ? 'auto' : 'none';
+                page.style.zIndex = String(zIndex);
+                page.style.pointerEvents = isActive ? 'auto' : 'none';
                 page.style.transform =
-                    'translate(-50%, -50%) rotateY(' + angle + 'deg) translateZ(' + radius + 'px)';
+                    'translate(-50%, -50%) translateX(' + x + 'px) scale(' + scale + ')';
             });
 
             dots.forEach(function (dot, i) {
