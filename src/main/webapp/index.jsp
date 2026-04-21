@@ -183,24 +183,56 @@
 
         .hero {
             position: relative;
+            height: auto;
+            min-height: 260px;
             overflow: hidden;
-            background: linear-gradient(128deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%);
-            color: white;
+            display: flex;
+            align-items: center;
             padding: 72px 28px;
+            background: linear-gradient(135deg, #00C9A7, #00B4D8, #D9ED92);
+            color: white;
             border-bottom-left-radius: 28px;
             border-bottom-right-radius: 28px;
             box-shadow: 0 16px 42px rgba(6, 47, 72, 0.22);
         }
+        /* Shared blob base */
+        .hero::before,
         .hero::after {
             content: "";
             position: absolute;
-            right: -70px;
-            top: -80px;
-            width: 300px;
-            height: 300px;
             border-radius: 50%;
-            background: rgba(255, 216, 87, 0.25);
+            filter: blur(120px);
+            opacity: 0.7;
+            z-index: 1;
         }
+        /* Left big soft blob */
+        .hero::before {
+            width: 500px;
+            height: 500px;
+            background: #00FFC6;
+            top: 50px;
+            left: -100px;
+        }
+        /* Right glow */
+        .hero::after {
+            width: 600px;
+            height: 600px;
+            background: #D9ED92;
+            top: 0;
+            right: -150px;
+        }
+        .hero-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 2;
+        }
+        .hero-circle.small  { width: 40px;  height: 40px;  }
+        .hero-circle.medium { width: 80px;  height: 80px;  }
+        .hero-circle1 { top: 80px;    left: 200px;  }
+        .hero-circle2 { top: 150px;   right: 300px; }
+        .hero-circle3 { bottom: 60px; left: 300px;  }
         .hero-watermark {
             position: absolute;
             inset: 0;
@@ -292,6 +324,18 @@
             margin: 0 0 6px;
             font-size: 22px;
             color: #0d4568;
+        }
+        .role-card-head {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .role-card-icon {
+            width: 46px;
+            height: 46px;
+            object-fit: contain;
+            flex: 0 0 46px;
+            margin-top: 2px;
         }
         .role-card p {
             margin: 0;
@@ -480,6 +524,7 @@
             .nav-link { flex: 1; text-align: center; }
             .role-choice-grid { grid-template-columns: 1fr; }
             .role-choice-wrap { margin-top: -18px; }
+            .role-card-icon { width: 42px; height: 42px; flex-basis: 42px; }
         }
         </style>
 </head>
@@ -503,6 +548,9 @@
 
     <div class="hero">
         <img src="${pageContext.request.contextPath}/assets/images/Logo JAS.png" class="hero-watermark" alt="" aria-hidden="true">
+        <div class="hero-circle small  hero-circle1" aria-hidden="true"></div>
+        <div class="hero-circle medium hero-circle2" aria-hidden="true"></div>
+        <div class="hero-circle small  hero-circle3" aria-hidden="true"></div>
         <div class="hero-inner">
             <div>
                 <div class="hero-badges">
@@ -518,16 +566,22 @@
     <section class="role-choice-wrap" aria-label="Pilih peranan log masuk">
         <div class="role-choice-grid">
             <article class="role-card">
-                <div>
-                    <h3>Portal Pentadbir</h3>
-                    <p>Untuk pengurusan aplikasi, semakan pengguna, dan pemantauan sistem SPPA.</p>
+                <div class="role-card-head">
+                    <img class="role-card-icon" src="${pageContext.request.contextPath}/assets/images/admin.png" alt="Ikon portal pentadbir">
+                    <div>
+                        <h3>Portal Pentadbir</h3>
+                        <p>Untuk pengurusan aplikasi, semakan pengguna, dan pemantauan sistem SPPA.</p>
+                    </div>
                 </div>
                 <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=ADMIN">Log Masuk Sebagai Admin</a>
             </article>
             <article class="role-card">
-                <div>
-                    <h3>Portal Pemohon</h3>
-                    <p>Untuk pendaftaran produk air, kemas kini maklumat, dan semakan status permohonan.</p>
+                <div class="role-card-head">
+                    <img class="role-card-icon" src="${pageContext.request.contextPath}/assets/images/users.png" alt="Ikon portal pemohon">
+                    <div>
+                        <h3>Portal Pemohon</h3>
+                        <p>Untuk pendaftaran produk air, kemas kini maklumat, dan semakan status permohonan.</p>
+                    </div>
                 </div>
                 <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=USER">Log Masuk Sebagai Pemohon</a>
             </article>
