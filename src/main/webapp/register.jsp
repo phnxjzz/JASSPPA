@@ -14,17 +14,19 @@
             --brand-yellow: #F2F72E;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-yellow) 100%); min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: url('${pageContext.request.contextPath}/assets/images/login-register-bg.jpg') center/cover no-repeat fixed; min-height: 100vh; display: grid; place-items: center; padding: 24px; position: relative; }
+        body::before { content: ''; position: fixed; inset: 0; background: rgba(255,255,255,0.45); z-index: 0; pointer-events: none; }
+        .shell { position: relative; z-index: 1; }
         .shell { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 1040px; border-radius: 24px; overflow: hidden; box-shadow: 0 22px 58px rgba(6, 52, 79, 0.2); }
         .info { background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%); color: white; padding: 40px; }
         .info .logo { width: 78px; height: 78px; border-radius: 18px; margin-bottom: 18px; display: grid; place-items: center; color: var(--brand-navy); font-size: 22px; font-weight: 800; letter-spacing: 0.08em; }
-        .info h1 { margin-bottom: 10px; font-size: 34px; }
+        .info h1 { margin-bottom: 10px; font-size: 34px; color: #000000; }
         .info p { opacity: 0.94; margin-bottom: 20px; }
         .info .contact { width: 100%; border-radius: 18px; border: 1px solid rgba(255,255,255,0.25); padding: 14px; background: rgba(6, 52, 79, 0.28); }
         .info .contact strong { display: block; margin-bottom: 8px; }
         .info .contact p { margin: 4px 0; font-size: 13px; }
         .info .contact strong img { width: 22px; height: 22px; vertical-align: middle; margin-right: 8px; object-fit: contain; }
-        .card { padding: 36px; }
+        .card { padding: 36px; background: rgba(255,255,255,0.95); }
         h2 { margin-bottom: 8px; color: #173040; }
         p.form-copy { color: #60798b; margin-bottom: 20px; }
         .field { margin-bottom: 16px; }
@@ -95,9 +97,7 @@
 <body>
     <div class="shell">
         <div class="info">
-            <div class="logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
-            <h1>Akaun Pemohon SPPA</h1>
-            <p>Cipta akaun untuk mengisi borang PPP1 secara online, menyemak senarai produk berdaftar, dan memantau keputusan semakan pentadbir.</p>
+            <h1>Daftar Akaun Sistem Pendaftaran Produk Air</h1>
             <div class="contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
                 <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi">Hubungi JANS</strong>
                 <p>Telefon: +60-88-232364 (HQ)</p>
