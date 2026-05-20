@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,6 +28,7 @@ public class RegisterServlet extends HttpServlet {
     private static final Pattern LOWERCASE_PATTERN = Pattern.compile("[a-z]");
     private static final Pattern DIGIT_PATTERN = Pattern.compile("\\d");
     private static final Pattern SPECIAL_PATTERN = Pattern.compile("[^A-Za-z0-9]");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9+()\\-\\s]{8,20}$");
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -41,18 +43,33 @@ public class RegisterServlet extends HttpServlet {
 
         String fullName = trim(request.getParameter("full_name"));
         String username = trim(request.getParameter("username"));
+        String phoneNumber = trim(request.getParameter("phone_number"));
         String email = trim(request.getParameter("email"));
         String password = trim(request.getParameter("password"));
         String confirmPassword = trim(request.getParameter("confirm_password"));
+        String privacyConsent = trim(request.getParameter("privacy_consent"));
 
-        if (fullName.isEmpty() || username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+        if (fullName.isEmpty() || username.isEmpty() || phoneNumber.isEmpty() || email.isEmpty() || password.isEmpty()) {
             request.setAttribute("error", "Sila lengkapkan semua medan wajib.");
+            request.getRequestDispatcher("/register.jsp").forward(request, response);
+            return;
+        }
+
+        if (!PHONE_PATTERN.matcher(phoneNumber).matches()) {
+            request.setAttribute("error", "Nombor telefon tidak sah. Gunakan 8 hingga 20 aksara (nombor/simbol +()- sahaja).");
             request.getRequestDispatcher("/register.jsp").forward(request, response);
             return;
         }
 
         if (!password.equals(confirmPassword)) {
             request.setAttribute("error", "Pengesahan kata laluan tidak sepadan.");
+            request.getRequestDispatcher("/register.jsp").forward(request, response);
+            return;
+        }
+
+        if (!("1".equals(privacyConsent) || "on".equalsIgnoreCase(privacyConsent)
+                || "true".equalsIgnoreCase(privacyConsent))) {
+            request.setAttribute("error", "Sila tandakan persetujuan privasi sebelum daftar akaun.");
             request.getRequestDispatcher("/register.jsp").forward(request, response);
             return;
         }
@@ -65,6 +82,8 @@ public class RegisterServlet extends HttpServlet {
         }
 
         try (Connection conn = DatabaseConfig.getConnection()) {
+            ensureUsersPhoneNumberColumn(conn);
+
             if (userExists(conn, username, email)) {
                 request.setAttribute("error", "Nama pengguna atau email sudah digunakan.");
                 request.getRequestDispatcher("/register.jsp").forward(request, response);
@@ -73,12 +92,13 @@ public class RegisterServlet extends HttpServlet {
 
             String bcryptHash = BCrypt.hashpw(password, BCrypt.gensalt(12));
             int newUserId = -1;
-            String sql = "INSERT INTO users (username, email, password_hash, role, full_name, status) VALUES (?, ?, ?, 'USER', ?, 'INACTIVE')";
+            String sql = "INSERT INTO users (username, email, phone_number, password_hash, role, full_name, status) VALUES (?, ?, ?, ?, 'USER', ?, 'INACTIVE')";
             try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, username);
                 stmt.setString(2, email);
-                stmt.setString(3, bcryptHash);
-                stmt.setString(4, fullName);
+                stmt.setString(3, phoneNumber);
+                stmt.setString(4, bcryptHash);
+                stmt.setString(5, fullName);
                 stmt.executeUpdate();
                 try (ResultSet keys = stmt.getGeneratedKeys()) {
                     if (keys.next()) {
@@ -180,6 +200,18 @@ public class RegisterServlet extends HttpServlet {
 
     private String trim(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private void ensureUsersPhoneNumberColumn(Connection conn) throws SQLException {
+        DatabaseMetaData meta = conn.getMetaData();
+        try (ResultSet rs = meta.getColumns(null, null, "users", "phone_number")) {
+            if (rs.next()) {
+                return;
+            }
+        }
+        try (PreparedStatement stmt = conn.prepareStatement("ALTER TABLE users ADD COLUMN phone_number VARCHAR(30)")) {
+            stmt.executeUpdate();
+        }
     }
 
     private String validatePasswordPolicy(String password) {
