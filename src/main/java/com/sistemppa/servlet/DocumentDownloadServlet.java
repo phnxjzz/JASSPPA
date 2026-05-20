@@ -29,6 +29,8 @@ public class DocumentDownloadServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Dokumen tidak sah");
             return;
         }
+        boolean inlinePreview = "1".equals(request.getParameter("inline"))
+            || "true".equalsIgnoreCase(request.getParameter("inline"));
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             Integer userId = (Integer) session.getAttribute("user_id");
@@ -53,8 +55,20 @@ public class DocumentDownloadServlet extends HttpServlet {
                         return;
                     }
 
-                    response.setContentType(rs.getString("content_type") != null ? rs.getString("content_type") : "application/octet-stream");
-                    response.setHeader("Content-Disposition", "attachment; filename=\"" + rs.getString("original_filename") + "\"");
+                        String contentType = rs.getString("content_type") != null
+                            ? rs.getString("content_type")
+                            : "application/octet-stream";
+                        String originalFilename = rs.getString("original_filename") != null
+                            ? rs.getString("original_filename")
+                            : "dokumen";
+                        String safeFilename = originalFilename
+                            .replace("\"", "")
+                            .replace("\r", "")
+                            .replace("\n", "");
+                        String disposition = inlinePreview ? "inline" : "attachment";
+
+                        response.setContentType(contentType);
+                        response.setHeader("Content-Disposition", disposition + "; filename=\"" + safeFilename + "\"");
                     Files.copy(path, response.getOutputStream());
                 }
             }
