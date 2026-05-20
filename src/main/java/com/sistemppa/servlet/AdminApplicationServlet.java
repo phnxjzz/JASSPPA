@@ -54,16 +54,31 @@ public class AdminApplicationServlet extends HttpServlet {
             return;
         }
 
-        Integer applicationIdValue = parseInteger(request.getParameter("id"));
+        boolean ajaxRequest = isAjaxRequest(request);
+        String action = request.getParameter("action");
+        boolean archiveFlow = "archive".equals(action) || "unarchive".equals(action);
+        boolean shouldReturnJson = ajaxRequest || archiveFlow || "1".equals(request.getParameter("ajax"));
+
+        Integer applicationIdValue = firstValidInteger(
+            request.getParameter("id"),
+            request.getParameter("application_id"),
+            request.getParameter("applicationId"));
         if (applicationIdValue == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID permohonan tidak sah");
+            if (shouldReturnJson) {
+                writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false, "ID permohonan tidak sah", null);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/dashboard?error=invalid_application_id");
+            }
             return;
         }
 
         int applicationId = applicationIdValue;
-        String action = request.getParameter("action");
         String adminNotes = trim(request.getParameter("admin_notes"));
         String validUntilStr = trim(request.getParameter("valid_until"));
+        String presentationDate = trim(request.getParameter("presentation_date"));
+        String presentationTime = trim(request.getParameter("presentation_time"));
+        String presentationVenue = trim(request.getParameter("presentation_venue"));
+        String presentationMessage = trim(request.getParameter("presentation_message"));
         Integer adminUserId = (Integer) request.getSession(false).getAttribute("user_id");
 
         try (Connection conn = DatabaseConfig.getConnection()) {
@@ -71,8 +86,13 @@ public class AdminApplicationServlet extends HttpServlet {
             DashboardDataService.ensureCertificateColumns(conn);
 
             if ("reject".equals(action) && (adminNotes == null || adminNotes.isBlank())) {
-                request.setAttribute("error", "Sebab penolakan wajib diisi sebelum permohonan ditolak.");
-                renderApplicationPage(conn, request, response, applicationId, "");
+                if (ajaxRequest) {
+                    writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false,
+                            "Sebab penolakan wajib diisi sebelum permohonan ditolak.", action);
+                } else {
+                    request.setAttribute("error", "Sebab penolakan wajib diisi sebelum permohonan ditolak.");
+                    renderApplicationPage(conn, request, response, applicationId, "");
+                }
                 return;
             }
 
@@ -86,6 +106,28 @@ public class AdminApplicationServlet extends HttpServlet {
                 insertAdminAuditLog(conn, adminUserId, "REJECT_APPLICATION",
                         "Admin #" + adminUserId + " tolak permohonan PPP" + String.format("%03d", applicationId) + ". Sebab: " + adminNotes, request.getRemoteAddr());
                 sendStatusEmail(request, conn, applicationId, "REJECTED", adminNotes);
+            } else if ("under_review".equals(action)) {
+                updateApplicationStatus(conn, applicationId, "UNDER_REVIEW", adminNotes, adminUserId, null);
+                insertAdminAuditLog(conn, adminUserId, "UNDER_REVIEW_APPLICATION",
+                        "Admin #" + adminUserId + " set permohonan PPP" + String.format("%03d", applicationId) + " ke Under Review", request.getRemoteAddr());
+            } else if ("in_progress".equals(action)) {
+                if (presentationDate == null || presentationDate.isBlank()
+                        || presentationTime == null || presentationTime.isBlank()
+                        || presentationVenue == null || presentationVenue.isBlank()) {
+                    String message = "Sila isi tarikh, masa, dan tempat pembentangan sebelum set status In Progress.";
+                    if (ajaxRequest) {
+                        writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false, message, action);
+                    } else {
+                        request.setAttribute("error", message);
+                        renderApplicationPage(conn, request, response, applicationId, adminNotes);
+                    }
+                    return;
+                }
+                updateApplicationStatus(conn, applicationId, "IN_PROGRESS", adminNotes, adminUserId, null);
+                insertInProgressPresentationNotification(conn, applicationId, adminNotes,
+                        presentationDate, presentationTime, presentationVenue, presentationMessage);
+                insertAdminAuditLog(conn, adminUserId, "IN_PROGRESS_APPLICATION",
+                        "Admin #" + adminUserId + " set permohonan PPP" + String.format("%03d", applicationId) + " ke In Progress", request.getRemoteAddr());
             } else if ("suspend_application".equals(action)) {
                 updateApplicationStatus(conn, applicationId, "SUSPENDED", adminNotes, adminUserId, null);
                 insertAdminAuditLog(conn, adminUserId, "SUSPEND_APPLICATION",
@@ -96,8 +138,13 @@ public class AdminApplicationServlet extends HttpServlet {
                         "Admin #" + adminUserId + " gantung pengguna melalui permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
             } else if ("archive".equals(action)) {
                 if (!canArchiveApplication(conn, applicationId)) {
-                    request.setAttribute("error", "Permohonan hanya boleh diarkib selepas diambil tindakan (APPROVED/REJECTED/SUSPENDED). ");
-                    renderApplicationPage(conn, request, response, applicationId, adminNotes);
+                    if (ajaxRequest) {
+                        writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false,
+                                "Permohonan hanya boleh diarkib selepas diambil tindakan (APPROVED/REJECTED/SUSPENDED).", action);
+                    } else {
+                        request.setAttribute("error", "Permohonan hanya boleh diarkib selepas diambil tindakan (APPROVED/REJECTED/SUSPENDED). ");
+                        renderApplicationPage(conn, request, response, applicationId, adminNotes);
+                    }
                     return;
                 }
                 archiveApplication(conn, applicationId, adminNotes, adminUserId);
@@ -105,23 +152,81 @@ public class AdminApplicationServlet extends HttpServlet {
                         "Admin #" + adminUserId + " arkib permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
             } else if ("unarchive".equals(action)) {
                 if (!isArchived(conn, applicationId)) {
-                    request.setAttribute("error", "Permohonan ini belum diarkib.");
-                    renderApplicationPage(conn, request, response, applicationId, adminNotes);
+                    if (ajaxRequest) {
+                        writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false,
+                                "Permohonan ini belum diarkib.", action);
+                    } else {
+                        request.setAttribute("error", "Permohonan ini belum diarkib.");
+                        renderApplicationPage(conn, request, response, applicationId, adminNotes);
+                    }
                     return;
                 }
                 unarchiveApplication(conn, applicationId);
                 insertAdminAuditLog(conn, adminUserId, "UNARCHIVE_APPLICATION",
                         "Admin #" + adminUserId + " buka arkib permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
             } else {
-                request.setAttribute("error", "Tindakan pentadbir tidak sah.");
-                renderApplicationPage(conn, request, response, applicationId, adminNotes);
+                if (ajaxRequest) {
+                    writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false,
+                            "Tindakan pentadbir tidak sah.", action);
+                } else {
+                    request.setAttribute("error", "Tindakan pentadbir tidak sah.");
+                    renderApplicationPage(conn, request, response, applicationId, adminNotes);
+                }
                 return;
             }
-            response.sendRedirect(request.getContextPath() + "/admin/application?id=" + applicationId + "&updated=1");
+            if (ajaxRequest) {
+                String message = "Kemas kini berjaya.";
+                if ("archive".equals(action)) {
+                    message = "Berjaya arkib.";
+                } else if ("unarchive".equals(action)) {
+                    message = "Berjaya dikeluarkan dari arkib.";
+                }
+                writeJson(response, HttpServletResponse.SC_OK, true, message, action);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin/application?id=" + applicationId + "&updated=1");
+            }
         } catch (SQLException e) {
             LOGGER.severe("Failed to update admin application review: " + e.getMessage());
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Gagal mengemas kini permohonan");
+            if (ajaxRequest) {
+                writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false,
+                        "Gagal mengemas kini permohonan", action);
+            } else {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Gagal mengemas kini permohonan");
+            }
         }
+    }
+
+    private boolean isAjaxRequest(HttpServletRequest request) {
+        String requestedWith = request.getHeader("X-Requested-With");
+        String accept = request.getHeader("Accept");
+        String ajaxParam = request.getParameter("ajax");
+        return "XMLHttpRequest".equalsIgnoreCase(requestedWith)
+                || "1".equals(ajaxParam)
+                || (accept != null && accept.toLowerCase().contains("application/json"));
+    }
+
+    private Integer firstValidInteger(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            Integer parsed = parseInteger(value);
+            if (parsed != null) {
+                return parsed;
+            }
+        }
+        return null;
+    }
+
+    private void writeJson(HttpServletResponse response, int statusCode,
+            boolean ok, String message, String action) throws IOException {
+        response.setStatus(statusCode);
+        response.setContentType("application/json;charset=UTF-8");
+        String safeMessage = message == null ? "" : message.replace("\\", "\\\\").replace("\"", "\\\"");
+        String safeAction = action == null ? "" : action.replace("\\", "\\\\").replace("\"", "\\\"");
+        response.getWriter().write("{\"ok\":" + ok
+                + ",\"message\":\"" + safeMessage + "\""
+                + ",\"action\":\"" + safeAction + "\"}");
     }
 
     private boolean isAdmin(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -327,6 +432,31 @@ public class AdminApplicationServlet extends HttpServlet {
                 return rs.next() ? rs.getInt("user_id") : 0;
             }
         }
+    }
+
+    private void insertInProgressPresentationNotification(Connection conn, int applicationId,
+            String adminNotes, String presentationDate, String presentationTime,
+            String presentationVenue, String presentationMessage) throws SQLException {
+        int userId = getApplicationUserId(conn, applicationId);
+        if (userId <= 0) {
+            return;
+        }
+
+        String generatedMessage = "Pemohon dimaklumkan untuk bersedia dan menghadiri sesi Pembentangan Produk Air yang didaftarkan."
+            + "\nTarikh: " + presentationDate
+            + "\nMasa: " + presentationTime
+            + "\nTempat: " + presentationVenue;
+
+        String finalMessage = (presentationMessage == null || presentationMessage.isBlank())
+                ? generatedMessage
+                : presentationMessage;
+
+        finalMessage = finalMessage
+            .replace("<", "")
+            .replace(">", "")
+            .trim();
+
+        DashboardDataService.insertNotification(conn, userId, finalMessage, "PRESENTATION");
     }
 
     private void suspendUserByApplication(Connection conn, int applicationId, String adminNotes) throws SQLException {
