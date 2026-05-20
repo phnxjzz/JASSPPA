@@ -137,7 +137,49 @@
         .btn-warning { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); color: white; padding: 7px 13px; font-size: 13px; }
         .btn-info { background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 7px 13px; font-size: 13px; }
         .btn-success { background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%); color: white; padding: 7px 13px; font-size: 13px; }
-        .action-group { display: flex; gap: 6px; flex-wrap: wrap; }
+        .table-actions { white-space: nowrap; }
+        .action-menu { position: relative; display: inline-block; }
+        .action-trigger {
+            min-width: 98px;
+            justify-content: space-between;
+            background: #eef4f9;
+            color: #1e3a4f;
+            border: 1px solid #c8d8e5;
+            box-shadow: none;
+        }
+        .action-trigger:hover { background: #e1edf6; }
+        .action-trigger::after { content: "▾"; font-size: 12px; opacity: 0.85; }
+        .action-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 6px);
+            z-index: 25;
+            min-width: 210px;
+            background: #fff;
+            border: 1px solid #d7e3ee;
+            border-radius: 12px;
+            box-shadow: 0 14px 26px rgba(9, 53, 79, 0.16);
+            padding: 6px;
+        }
+        .action-menu.open .action-dropdown { display: block; }
+        .action-item {
+            display: block;
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
+            color: #20435b;
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        .action-item:hover { background: #eff6fb; }
+        .action-item-danger { color: #b91c1c; }
+        .action-item-danger:hover { background: #fff1f2; }
         @media (max-width: 768px) { .navbar { flex-direction: column; align-items: flex-start; } .navbar a { margin-left: 0; margin-right: 10px; } }
         .temp-pw-box { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; font-family: monospace; font-size: 18px; text-align: center; letter-spacing: 2px; color: #0f172a; margin: 12px 0; word-break: break-all; }
     </style>
@@ -173,6 +215,9 @@
         String deleted = request.getParameter("deleted");
         String toggled = request.getParameter("toggled");
         String reset   = request.getParameter("reset");
+        String roleUpdated = request.getParameter("role_updated");
+        String phoneUpdated = request.getParameter("phone_updated");
+        String emailUpdated = request.getParameter("email_updated");
         String tempPw  = request.getParameter("tempPw");
         String error   = request.getParameter("error");
     %>
@@ -194,14 +239,53 @@
                 <button type="button" class="success-ok" data-close-success-popup>OK</button>
             </div>
         </div>
+    <% } else if ("1".equals(roleUpdated)) { %>
+        <div id="successPopup" class="success-popup show" role="dialog" aria-live="polite" aria-label="Notifikasi berjaya">
+            <img class="success-gif" src="${pageContext.request.contextPath}/assets/images/success.png" alt="Berjaya">
+            <div class="success-popup-content">
+                <div class="success-title">BERJAYA!</div>
+                <div class="success-text"></div>
+                <button type="button" class="success-ok" data-close-success-popup>OK</button>
+            </div>
+        </div>
+    <% } else if ("1".equals(phoneUpdated)) { %>
+        <div id="successPopup" class="success-popup show" role="dialog" aria-live="polite" aria-label="Notifikasi berjaya">
+            <img class="success-gif" src="${pageContext.request.contextPath}/assets/images/success.png" alt="Berjaya">
+            <div class="success-popup-content">
+                <div class="success-title">BERJAYA!</div>
+                <div class="success-text"></div>
+                <button type="button" class="success-ok" data-close-success-popup>OK</button>
+            </div>
+        </div>
+    <% } else if ("1".equals(emailUpdated)) { %>
+        <div id="successPopup" class="success-popup show" role="dialog" aria-live="polite" aria-label="Notifikasi berjaya">
+            <img class="success-gif" src="${pageContext.request.contextPath}/assets/images/success.png" alt="Berjaya">
+            <div class="success-popup-content">
+                <div class="success-title">BERJAYA!</div>
+                <div class="success-text"></div>
+                <button type="button" class="success-ok" data-close-success-popup>OK</button>
+            </div>
+        </div>
     <% } else if ("cannot_delete_self".equals(error)) { %>
         <div class="alert alert-error">&#10007; Anda tidak boleh memadam akaun anda sendiri.</div>
     <% } else if ("cannot_suspend_self".equals(error)) { %>
         <div class="alert alert-error">&#10007; Anda tidak boleh menggantung akaun anda sendiri.</div>
+    <% } else if ("cannot_change_own_role".equals(error)) { %>
+        <div class="alert alert-error">&#10007; Anda tidak boleh menukar peranan akaun anda sendiri.</div>
     <% } else if ("last_admin".equals(error)) { %>
         <div class="alert alert-error">&#10007; Tidak boleh memadam pentadbir terakhir dalam sistem.</div>
     <% } else if ("last_active_admin".equals(error)) { %>
         <div class="alert alert-error">&#10007; Tidak boleh menggantung pentadbir aktif terakhir dalam sistem.</div>
+    <% } else if ("invalid_role".equals(error)) { %>
+        <div class="alert alert-error">&#10007; Peranan pengguna tidak sah.</div>
+    <% } else if ("user_not_found".equals(error)) { %>
+        <div class="alert alert-error">&#10007; Pengguna tidak ditemui.</div>
+    <% } else if ("invalid_phone_number".equals(error)) { %>
+        <div class="alert alert-error">&#10007; Nombor telefon tidak sah. Gunakan 8 hingga 20 aksara (nombor/simbol +()- sahaja).</div>
+    <% } else if ("invalid_email".equals(error)) { %>
+        <div class="alert alert-error">&#10007; Format e-mel tidak sah.</div>
+    <% } else if ("email_exists".equals(error)) { %>
+        <div class="alert alert-error">&#10007; E-mel sudah digunakan oleh pengguna lain.</div>
     <% } else if ("db_error".equals(error)) { %>
         <div class="alert alert-error">&#10007; Ralat semasa memproses permintaan. Sila cuba lagi.</div>
     <% } %>
@@ -215,7 +299,7 @@
                 <p>Kata laluan pengguna telah berjaya ditetapkan semula. Sila sampaikan kata laluan sementara ini kepada pengguna berkenaan.</p>
                 <div class="temp-pw-box"><%= esc(tempPw) %></div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-primary" onclick="document.getElementById('resetSuccessModal').classList.remove('active')">OK, Faham</button>
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('resetSuccessModal').classList.remove('active')">OK</button>
                 </div>
             </div>
         </div>
@@ -236,6 +320,7 @@
                     <th>Nama Penuh</th>
                     <th>Nama Pengguna</th>
                     <th>E-mel</th>
+                    <th>Nombor Telefon</th>
                     <th>Peranan</th>
                     <th>Status</th>
                     <th>Tarikh Daftar</th>
@@ -244,7 +329,7 @@
             </thead>
             <tbody>
             <% if (users == null || users.isEmpty()) { %>
-                <tr><td colspan="8" class="empty">Tiada pengguna dijumpai.</td></tr>
+                <tr><td colspan="9" class="empty">Tiada pengguna dijumpai.</td></tr>
             <% } else {
                 int idx = 1;
                 for (Map<String, Object> u : users) {
@@ -252,6 +337,7 @@
                     String fullName  = esc(String.valueOf(u.get("full_name")));
                     String username  = esc(String.valueOf(u.get("username")));
                     String email     = esc(String.valueOf(u.get("email")));
+                    String phoneNumber = esc(String.valueOf(u.get("phone_number") == null ? "" : u.get("phone_number")));
                     String role      = String.valueOf(u.get("role"));
                     String status    = String.valueOf(u.get("status"));
                     Timestamp createdAt = (Timestamp) u.get("created_at");
@@ -267,25 +353,41 @@
                     <td><strong><%= fullName %></strong></td>
                     <td><%= username %></td>
                     <td><%= email %></td>
+                    <td><%= phoneNumber.isEmpty() ? "-" : phoneNumber %></td>
                     <td><span class="role-pill <%= roleClass %>"><%= role %></span></td>
                     <td><span class="status-pill <%= statClass %>"><%= status %></span></td>
                     <td class="subtle"><%= dateStr %></td>
-                    <td>
-                        <div class="action-group">
-                            <form method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
-                                <input type="hidden" name="_csrf" value="${csrf_token}">
-                                <input type="hidden" name="action" value="toggle_status">
-                                <input type="hidden" name="userId" value="<%= userId %>">
-                                <button type="submit" class="<%= toggleBtnClass %>"><%= toggleLabel %></button>
-                            </form>
-                            <button type="button" class="btn btn-info"
-                                    onclick="confirmReset('<%= userId %>', '<%= username %>')">
-                                Reset Kata Laluan
-                            </button>
-                            <button type="button" class="btn btn-danger"
-                                    onclick="confirmDelete('<%= userId %>', '<%= username %>')">
-                                Padam
-                            </button>
+                    <td class="table-actions">
+                        <div class="action-menu">
+                            <button type="button" class="btn action-trigger" onclick="toggleActionMenu(event, this)">Tindakan</button>
+                            <div class="action-dropdown">
+                                <button type="button" class="action-item"
+                                        onclick="confirmRole('<%= userId %>', '<%= username %>', '<%= role %>')">
+                                    Edit Peranan
+                                </button>
+                                <button type="button" class="action-item"
+                                        onclick="confirmReset('<%= userId %>', '<%= username %>')">
+                                    Reset Kata Laluan
+                                </button>
+                                <button type="button" class="action-item"
+                                        onclick="confirmPhone('<%= userId %>', '<%= username %>', '<%= phoneNumber %>')">
+                                    Edit Nombor Telefon
+                                </button>
+                                <button type="button" class="action-item"
+                                        onclick="confirmEmail('<%= userId %>', '<%= username %>', '<%= email %>')">
+                                    Edit E-mel
+                                </button>
+                                <form method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
+                                    <input type="hidden" name="_csrf" value="${csrf_token}">
+                                    <input type="hidden" name="action" value="toggle_status">
+                                    <input type="hidden" name="userId" value="<%= userId %>">
+                                    <button type="submit" class="action-item"><%= toggleLabel %></button>
+                                </form>
+                                <button type="button" class="action-item action-item-danger"
+                                        onclick="confirmDelete('<%= userId %>', '<%= username %>')">
+                                    Padam Pengguna
+                                </button>
+                            </div>
                         </div>
                     </td>
                 </tr>
@@ -329,26 +431,143 @@
     </div>
 </div>
 
+<!-- Edit Role Modal -->
+<div class="modal-overlay" id="roleModal">
+    <div class="modal">
+        <h3>&#9881; Edit Peranan Pengguna</h3>
+        <p id="roleModalMsg">Pilih peranan baharu untuk pengguna.</p>
+        <form id="roleForm" method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
+            <input type="hidden" name="_csrf" value="${csrf_token}">
+            <input type="hidden" name="action" value="update_role">
+            <input type="hidden" name="userId" id="roleUserId" value="">
+            <div class="field" style="margin-bottom:14px;">
+                <label for="roleSelect" style="display:block;font-weight:700;margin-bottom:8px;color:#334155;">Peranan</label>
+                <select id="roleSelect" name="role" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;">
+                    <option value="USER">USER (Pengguna)</option>
+                    <option value="ADMIN">ADMIN (Pentadbir)</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('roleModal')">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Peranan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Phone Number Modal -->
+<div class="modal-overlay" id="phoneModal">
+    <div class="modal">
+        <h3>&#9742; Edit Nombor Telefon</h3>
+        <p id="phoneModalMsg">Kemaskini nombor telefon pengguna.</p>
+        <form id="phoneForm" method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
+            <input type="hidden" name="_csrf" value="${csrf_token}">
+            <input type="hidden" name="action" value="update_phone_number">
+            <input type="hidden" name="userId" id="phoneUserId" value="">
+            <div class="field" style="margin-bottom:14px;">
+                <label for="phoneInput" style="display:block;font-weight:700;margin-bottom:8px;color:#334155;">Nombor Telefon</label>
+                <input id="phoneInput" name="phone_number" type="tel" pattern="[0-9+()\-\s]{8,20}" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('phoneModal')">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Nombor</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Email Modal -->
+<div class="modal-overlay" id="emailModal">
+    <div class="modal">
+        <h3>&#9993; Edit E-mel Pengguna</h3>
+        <p id="emailModalMsg">Kemaskini e-mel pengguna.</p>
+        <form id="emailForm" method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
+            <input type="hidden" name="_csrf" value="${csrf_token}">
+            <input type="hidden" name="action" value="update_email">
+            <input type="hidden" name="userId" id="emailUserId" value="">
+            <div class="field" style="margin-bottom:14px;">
+                <label for="emailInput" style="display:block;font-weight:700;margin-bottom:8px;color:#334155;">E-mel</label>
+                <input id="emailInput" name="email" type="email" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('emailModal')">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan E-mel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    function closeAllActionMenus(exceptMenu) {
+        document.querySelectorAll('.action-menu.open').forEach(function(menu) {
+            if (!exceptMenu || menu !== exceptMenu) {
+                menu.classList.remove('open');
+            }
+        });
+    }
+    function toggleActionMenu(event, triggerBtn) {
+        event.stopPropagation();
+        var menu = triggerBtn.closest('.action-menu');
+        if (!menu) return;
+        var shouldOpen = !menu.classList.contains('open');
+        closeAllActionMenus();
+        if (shouldOpen) {
+            menu.classList.add('open');
+        }
+    }
     function confirmDelete(userId, username) {
+        closeAllActionMenus();
         document.getElementById('deleteUserId').value = userId;
         document.getElementById('modalMsg').textContent =
             'Adakah anda pasti mahu memadam akaun "' + username + '"? Tindakan ini tidak boleh dibatalkan.';
         document.getElementById('deleteModal').classList.add('active');
     }
     function confirmReset(userId, username) {
+        closeAllActionMenus();
         document.getElementById('resetUserId').value = userId;
         document.getElementById('resetModalMsg').textContent =
             'Kata laluan sedia ada "' + username + '" akan digantikan dengan kata laluan sementara yang dijana secara rawak.';
         document.getElementById('resetModal').classList.add('active');
     }
+    function confirmRole(userId, username, currentRole) {
+        closeAllActionMenus();
+        document.getElementById('roleUserId').value = userId;
+        document.getElementById('roleModalMsg').textContent =
+            'Pilih peranan baharu untuk pengguna "' + username + '".';
+        document.getElementById('roleSelect').value = currentRole === 'ADMIN' ? 'ADMIN' : 'USER';
+        document.getElementById('roleModal').classList.add('active');
+    }
+    function confirmPhone(userId, username, currentPhone) {
+        closeAllActionMenus();
+        document.getElementById('phoneUserId').value = userId;
+        document.getElementById('phoneModalMsg').textContent =
+            'Kemaskini nombor telefon untuk pengguna "' + username + '".';
+        document.getElementById('phoneInput').value = currentPhone || '';
+        document.getElementById('phoneModal').classList.add('active');
+    }
+    function confirmEmail(userId, username, currentEmail) {
+        closeAllActionMenus();
+        document.getElementById('emailUserId').value = userId;
+        document.getElementById('emailModalMsg').textContent =
+            'Kemaskini e-mel untuk pengguna "' + username + '".';
+        document.getElementById('emailInput').value = currentEmail || '';
+        document.getElementById('emailModal').classList.add('active');
+    }
     function closeModal(id) {
         document.getElementById(id).classList.remove('active');
     }
-    ['deleteModal', 'resetModal'].forEach(function(id) {
+    ['deleteModal', 'resetModal', 'roleModal', 'phoneModal', 'emailModal'].forEach(function(id) {
         document.getElementById(id).addEventListener('click', function(e) {
             if (e.target === this) closeModal(id);
         });
+    });
+    document.addEventListener('click', function() {
+        closeAllActionMenus();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAllActionMenus();
+        }
     });
 </script>
 <script>
@@ -368,3 +587,4 @@
 
 </body>
 </html>
+
