@@ -35,6 +35,10 @@
         .password-help { margin-top: 6px; font-size: 12px; color: #60798b; line-height: 1.5; }
         .error { margin-bottom: 14px; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 10px; }
         .btn { width: 100%; border: 1px solid #fff; border-radius: 12px; padding: 13px; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 100%); color: white; font-weight: 700; cursor: pointer; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .privacy-consent-box { margin: 14px 0 16px; padding: 12px 14px; background: #f5f8fb; border: 1px solid #d7e7ef; border-radius: 12px; }
+        .privacy-consent-label { display: flex; align-items: flex-start; gap: 10px; margin: 0; font-weight: 600; color: #173040; line-height: 1.5; font-size: 14px; }
+        .privacy-consent-label input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: 0 0 18px; }
         .footer { margin-top: 18px; text-align: center; color: #64748b; }
         .footer a { color: var(--brand-blue); text-decoration: none; font-weight: 700; }
         @media (max-width: 920px) { .shell { grid-template-columns: 1fr; } .info { display: none; } }
@@ -92,17 +96,25 @@
             height: 16px;
             object-fit: contain;
         }
+        .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
+        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; }
+        .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; font-size: 13px; color: #4e6a7c; line-height: 1.45; }
+        .jans-contact-section .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .jans-contact-section .contact-line span { line-height: 1.45; }
         </style>
 </head>
 <body>
     <div class="shell">
         <div class="info">
             <h1>Daftar Akaun Sistem Pendaftaran Produk Air</h1>
-            <div class="contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
-                <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi">Hubungi JANS</strong>
-                <p>Telefon: +60-88-232364 (HQ)</p>
-                <p>Fax: +60-88-232396</p>
-                <p>Email: jans.hq@sabah.gov.my</p>
+            <div class="container" style="padding-top:0;">
+                <div class="jans-contact-section">
+                    <h3>Hubungi JANS</h3>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
             </div>
         </div>
         <div class="card">
@@ -124,6 +136,10 @@
                 <input id="username" name="username" type="text" required>
             </div>
             <div class="field">
+                <label for="phone_number">Nombor Telefon</label>
+                <input id="phone_number" name="phone_number" type="tel" pattern="[0-9+()\-\s]{8,20}" inputmode="tel" required>
+            </div>
+            <div class="field">
                 <label for="email">Email</label>
                 <input id="email" name="email" type="email" required>
             </div>
@@ -136,7 +152,13 @@
                 <label for="confirm_password">Sahkan Kata Laluan</label>
                 <input id="confirm_password" name="confirm_password" type="password" minlength="10" autocomplete="new-password" required>
             </div>
-            <button class="btn" type="submit">Daftar Akaun</button>
+            <div class="privacy-consent-box">
+                <label for="privacy_consent" class="privacy-consent-label">
+                    <input id="privacy_consent" name="privacy_consent" type="checkbox" value="1" required>
+                    <span>Dengan mendaftar anda bersetuju bahawa maklumat anda hanya akan digunakan untuk tujuan pendaftaran akaun sahaja. Kami menjamin maklumat peribadi anda tidak akan didedahkan atau dikongsi kepada mana-mana pihak ketiga.</span>
+                </label>
+            </div>
+            <button id="registerSubmitBtn" class="btn" type="submit" disabled>Daftar Akaun</button>
         </form>
 
             <div class="footer">
@@ -150,8 +172,20 @@
     var form = document.querySelector('form[action$="/register"]');
     var passwordInput = document.getElementById('password');
     var confirmInput = document.getElementById('confirm_password');
+    var consentCheckbox = document.getElementById('privacy_consent');
+    var submitBtn = document.getElementById('registerSubmitBtn');
+
+    function syncSubmitState() {
+        if (!consentCheckbox || !submitBtn) return;
+        submitBtn.disabled = !consentCheckbox.checked;
+    }
 
     if (form && passwordInput && confirmInput) {
+        syncSubmitState();
+        if (consentCheckbox) {
+            consentCheckbox.addEventListener('change', syncSubmitState);
+        }
+
         form.addEventListener('submit', function (event) {
             var passwordValue = passwordInput.value || '';
             var rule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
@@ -165,6 +199,13 @@
                 event.preventDefault();
                 alert('Pengesahan kata laluan tidak sepadan.');
                 confirmInput.focus();
+                return;
+            }
+
+            if (consentCheckbox && !consentCheckbox.checked) {
+                event.preventDefault();
+                alert('Sila tandakan persetujuan privasi sebelum daftar akaun.');
+                consentCheckbox.focus();
             }
         });
 
@@ -173,3 +214,4 @@
 </script>
 </body>
 </html>
+
