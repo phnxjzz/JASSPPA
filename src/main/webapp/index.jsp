@@ -122,12 +122,9 @@
         @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
 
         :root {
-            --brand-blue: #2A9D8F;
+            --brand-blue: #1e88e5;
             --brand-navy: #0F6BAE;
-            --brand-green: #6DBE45;
-            --brand-lime: #CDE11D;
             --brand-sky: #edf4fb;
-            --brand-gold: #F2F72E;
             --surface: #ffffff;
             --surface-soft: #f3f8fc;
             --text: #1a3040;
@@ -141,7 +138,7 @@
             font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif;
             line-height: 1.6;
             color: var(--text);
-            background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%);
+            background: #eef5fb;
             min-height: 100vh;
         }
 
@@ -149,13 +146,13 @@
             position: sticky;
             top: 0;
             z-index: 30;
-            background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%);
+            background: #0f6bae;
             color: white;
             padding: 14px 26px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 3px solid var(--brand-gold);
+            border-bottom: 3px solid #65aeea;
             box-shadow: 0 12px 28px rgba(8, 51, 77, 0.2);
         }
         .brand { display: flex; align-items: center; gap: 14px; }
@@ -176,7 +173,7 @@
         }
         .nav-link:hover, .nav-link:focus { background: rgba(255, 255, 255, 0.12); }
         .nav-link.primary {
-            background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 45%, var(--brand-green) 100%);
+            background: #1e88e5;
             border-color: rgba(255,255,255,0.35);
             color: #ffffff;
         }
@@ -188,8 +185,8 @@
             overflow: hidden;
             display: flex;
             align-items: center;
-            padding: 72px 28px;
-            background: linear-gradient(135deg, #00C9A7, #00B4D8, #D9ED92);
+            padding: 72px 28px 72px 12px;
+            background: #1579cc;
             color: white;
             border-bottom-left-radius: 28px;
             border-bottom-right-radius: 28px;
@@ -209,7 +206,7 @@
         .hero::before {
             width: 500px;
             height: 500px;
-            background: #00FFC6;
+            background: #4ca6f2;
             top: 50px;
             left: -100px;
         }
@@ -217,7 +214,7 @@
         .hero::after {
             width: 600px;
             height: 600px;
-            background: #D9ED92;
+            background: #1e88e5;
             top: 0;
             right: -150px;
         }
@@ -240,18 +237,23 @@
             height: 100%;
             object-fit: contain;
             object-position: center;
-            opacity: 0.09;
+            opacity: 0.16;
             pointer-events: none;
             z-index: 0;
             padding: 44px;
+            filter: brightness(1.12);
         }
         .hero-inner {
             max-width: 1020px;
-            margin: 0 auto;
+            margin: 0;
             position: relative;
-            z-index: 1;
+            z-index: 10;
+            width: 100%;
+            text-align: left;
         }
         .hero h1 {
+            position: relative;
+            z-index: 11;
             font-size: clamp(30px, 4vw, 52px);
             line-height: 1.14;
             margin-bottom: 14px;
@@ -260,7 +262,7 @@
             animation: riseIn .55s ease-out;
         }
         .hero p { font-size: 17px; margin-bottom: 20px; max-width: 720px; color: rgba(255,255,255,0.95); animation: riseIn .72s ease-out; }
-        .hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+        .hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; justify-content: flex-start; }
         .hero-badge {
             display: inline-flex;
             align-items: center;
@@ -353,7 +355,7 @@
             font-weight: 800;
             color: #ffffff;
             border: 1px solid rgba(255, 255, 255, 0.85);
-            background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 45%, var(--brand-green) 100%);
+            background: #1e88e5;
             transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
             box-shadow: 0 10px 20px rgba(6, 47, 72, 0.18);
         }
@@ -414,7 +416,7 @@
             align-items: center;
             gap: 10px;
             padding: 16px 18px;
-            background: linear-gradient(135deg, #f5fbff 0%, #e8f4fb 100%);
+            background: #eaf4ff;
             border-bottom: 1px solid #d9e7f1;
         }
         .icon-badge {
@@ -447,25 +449,30 @@
 
         .hero-contact {
             width: 100%;
-            border-radius: 18px;
-            border: 1px solid #d7e8f3;
-            background: var(--surface);
-            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid #d6e5ef;
+            background: #f8fcff;
+            padding: 12px;
             box-shadow: 0 8px 24px rgba(6, 47, 72, 0.07);
+            margin-top: 10px;
         }
-        .hero-contact h3 { margin: 0 0 10px; font-size: 16px; color: var(--brand-navy); }
-        .hero-contact p { margin: 6px 0; font-size: 14px; color: #27485a; }
+        .hero-contact h3 { margin: 0 0 10px; font-size: 16px; color: #0f6bae; font-weight: 700; letter-spacing: 0; }
+        .hero-contact p { margin: 7px 0; font-size: 13px; color: #4e6a7c; line-height: 1.45; }
         .contact-line {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 8px;
         }
         .contact-line .contact-icon {
-            width: 16px;
-            height: 16px;
-            object-fit: contain;
-            flex: 0 0 16px;
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #0f6bae;
+            border-radius: 2px;
+            flex-shrink: 0;
+            margin-top: 2px;
         }
+        .hero-contact .contact-line span { line-height: 1.45; }
 
         footer {
             background: #072d43;
@@ -553,11 +560,6 @@
         <div class="hero-circle small  hero-circle3" aria-hidden="true"></div>
         <div class="hero-inner">
             <div>
-                <div class="hero-badges">
-                    <span class="hero-badge">Portal Rasmi SPPA</span>
-                    <span class="hero-badge">Mesra Pengguna</span>
-                    <span class="hero-badge">Akses Dalam Talian 24/7</span>
-                </div>
                 <h1>Selamat Datang ke Sistem Pendaftaran Produk Air Negeri Sabah</h1>
             </div>
         </div>
@@ -617,33 +619,14 @@
             </div>
         </div>
 
-        <div class="hero-contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
-            <h3>
-                <span class="icon-badge" aria-hidden="true" style="vertical-align:middle; margin-right:6px;">
-                    <img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Ikon hubungi">
-                </span>
-                Hubungi JANS
-            </h3>
-            <p class="contact-line">
-                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/address.png" alt="Ikon alamat">
-                <span>
-                    SABAH WATER DEPARTMENT / JABATAN AIR SABAH<br>
-                    Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825<br>
-                    Kota Kinabalu, Sabah, Malaysia
-                </span>
-            </p>
-            <p class="contact-line">
-                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/phone.png" alt="Ikon telefon">
-                <span>Tel: +60-88-232364 (HQ)</span>
-            </p>
-            <p class="contact-line">
-                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/fax.png" alt="Ikon fax">
-                <span>Fax: +60-88-232396</span>
-            </p>
-            <p class="contact-line">
-                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/email.png" alt="Ikon emel">
-                <span>Email: jans.hq@sabah.gov.my</span>
-            </p>
+        <div class="container" style="padding-top:0;">
+            <div class="jans-contact-section">
+                <h3>Hubungi JANS</h3>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
         </div>
     </div>
 
@@ -662,10 +645,10 @@
 <script>
 (function() {
     var homeBtn = document.querySelector('.floating-home-btn');
-    if (!homeBtn) return;
+    if (homeBtn) return;
 
-    var navContainer = document.querySelector('.navbar > div:last-child');
-    if (!navContainer) navContainer = document.querySelector('.navbar');
+    var navContainer =document.querySelector('.nav-action > div:last-child');
+    if (!navContainer) navContainer = document.querySelector('.nav-actions');
     if (!navContainer) return;
 
     if (homeBtn.parentElement !== navContainer) {
