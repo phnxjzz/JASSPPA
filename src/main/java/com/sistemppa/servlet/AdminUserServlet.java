@@ -9,18 +9,23 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import org.mindrot.jbcrypt.BCrypt;
+import com.sistemppa.util.ValidationUtil;
 
 public class AdminUserServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(AdminUserServlet.class.getName());
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9+()\\-\\s]{8,20}$");
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -33,7 +38,9 @@ public class AdminUserServlet extends HttpServlet {
         List<Map<String, Object>> users = new ArrayList<>();
 
         try (Connection conn = DatabaseConfig.getConnection()) {
-            String sql = "SELECT id, username, email, full_name, role, status, created_at " +
+            ensureUsersPhoneNumberColumn(conn);
+
+            String sql = "SELECT id, username, email, phone_number, full_name, role, status, created_at " +
                          "FROM users " +
                          (search != null && !search.isEmpty()
                              ? "WHERE username LIKE ? OR email LIKE ? OR full_name LIKE ? "
@@ -53,6 +60,7 @@ public class AdminUserServlet extends HttpServlet {
                         row.put("id", rs.getInt("id"));
                         row.put("username", rs.getString("username"));
                         row.put("email", rs.getString("email"));
+                        row.put("phone_number", rs.getString("phone_number"));
                         row.put("full_name", rs.getString("full_name"));
                         row.put("role", rs.getString("role"));
                         row.put("status", rs.getString("status"));
@@ -108,9 +116,184 @@ public class AdminUserServlet extends HttpServlet {
             case "reset_password":
                 handleResetPassword(request, response, targetUserId, currentAdminId);
                 break;
+            case "update_role":
+                handleUpdateRole(request, response, targetUserId, currentAdminId);
+                break;
+            case "update_phone_number":
+                handleUpdatePhoneNumber(request, response, targetUserId, currentAdminId);
+                break;
+            case "update_email":
+                handleUpdateEmail(request, response, targetUserId, currentAdminId);
+                break;
             default:
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tindakan tidak dikenali");
         }
+    }
+
+    private void handleUpdateEmail(HttpServletRequest request, HttpServletResponse response,
+            int targetUserId, int currentAdminId) throws IOException {
+        String email = request.getParameter("email");
+        String normalized = email == null ? "" : email.trim();
+
+        if (normalized.isBlank() || !ValidationUtil.isValidEmail(normalized)) {
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_email");
+            return;
+        }
+
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            try (PreparedStatement check = conn.prepareStatement("SELECT id FROM users WHERE id = ?")) {
+                check.setInt(1, targetUserId);
+                try (ResultSet rs = check.executeQuery()) {
+                    if (!rs.next()) {
+                        response.sendRedirect(request.getContextPath() + "/admin/users?error=user_not_found");
+                        return;
+                    }
+                }
+            }
+
+            try (PreparedStatement dup = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM users WHERE email = ? AND id <> ?")) {
+                dup.setString(1, normalized);
+                dup.setInt(2, targetUserId);
+                try (ResultSet rs = dup.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        response.sendRedirect(request.getContextPath() + "/admin/users?error=email_exists");
+                        return;
+                    }
+                }
+            }
+
+            try (PreparedStatement update = conn.prepareStatement(
+                    "UPDATE users SET email = ? WHERE id = ?")) {
+                update.setString(1, normalized);
+                update.setInt(2, targetUserId);
+                update.executeUpdate();
+            }
+
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_EMAIL",
+                    "Admin #" + currentAdminId + " kemaskini e-mel pengguna #" + targetUserId,
+                    request.getRemoteAddr());
+        } catch (SQLException e) {
+            LOGGER.severe("Failed to update user email: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=db_error");
+            return;
+        }
+
+        response.sendRedirect(request.getContextPath() + "/admin/users?email_updated=1");
+    }
+
+    private void handleUpdatePhoneNumber(HttpServletRequest request, HttpServletResponse response,
+            int targetUserId, int currentAdminId) throws IOException {
+        String phoneNumber = request.getParameter("phone_number");
+        String normalized = phoneNumber == null ? "" : phoneNumber.trim();
+
+        if (normalized.isBlank() || !PHONE_PATTERN.matcher(normalized).matches()) {
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_phone_number");
+            return;
+        }
+
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            ensureUsersPhoneNumberColumn(conn);
+
+            try (PreparedStatement check = conn.prepareStatement("SELECT id FROM users WHERE id = ?")) {
+                check.setInt(1, targetUserId);
+                try (ResultSet rs = check.executeQuery()) {
+                    if (!rs.next()) {
+                        response.sendRedirect(request.getContextPath() + "/admin/users?error=user_not_found");
+                        return;
+                    }
+                }
+            }
+
+            try (PreparedStatement update = conn.prepareStatement(
+                    "UPDATE users SET phone_number = ? WHERE id = ?")) {
+                update.setString(1, normalized);
+                update.setInt(2, targetUserId);
+                update.executeUpdate();
+            }
+
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_PHONE",
+                    "Admin #" + currentAdminId + " kemaskini nombor telefon pengguna #" + targetUserId,
+                    request.getRemoteAddr());
+        } catch (SQLException e) {
+            LOGGER.severe("Failed to update user phone number: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=db_error");
+            return;
+        }
+
+        response.sendRedirect(request.getContextPath() + "/admin/users?phone_updated=1");
+    }
+
+    private void handleUpdateRole(HttpServletRequest request, HttpServletResponse response,
+            int targetUserId, int currentAdminId) throws IOException {
+        String roleParam = request.getParameter("role");
+        if (roleParam == null || roleParam.isBlank()) {
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_role");
+            return;
+        }
+
+        String newRole = roleParam.trim().toUpperCase(Locale.ROOT);
+        if (!"ADMIN".equals(newRole) && !"USER".equals(newRole)) {
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_role");
+            return;
+        }
+
+        if (targetUserId == currentAdminId) {
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=cannot_change_own_role");
+            return;
+        }
+
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            String existingRole = null;
+            try (PreparedStatement getRole = conn.prepareStatement("SELECT role FROM users WHERE id = ?")) {
+                getRole.setInt(1, targetUserId);
+                try (ResultSet rs = getRole.executeQuery()) {
+                    if (rs.next()) {
+                        existingRole = rs.getString("role");
+                    }
+                }
+            }
+
+            if (existingRole == null) {
+                response.sendRedirect(request.getContextPath() + "/admin/users?error=user_not_found");
+                return;
+            }
+
+            if (newRole.equals(existingRole)) {
+                response.sendRedirect(request.getContextPath() + "/admin/users?role_updated=1");
+                return;
+            }
+
+            if ("ADMIN".equals(existingRole) && "USER".equals(newRole)) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT COUNT(*) FROM users WHERE role = 'ADMIN'")) {
+                    try (ResultSet rs = ps.executeQuery()) {
+                        rs.next();
+                        if (rs.getInt(1) <= 1) {
+                            response.sendRedirect(request.getContextPath() + "/admin/users?error=last_admin");
+                            return;
+                        }
+                    }
+                }
+            }
+
+            try (PreparedStatement update = conn.prepareStatement("UPDATE users SET role = ? WHERE id = ?")) {
+                update.setString(1, newRole);
+                update.setInt(2, targetUserId);
+                update.executeUpdate();
+            }
+
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_ROLE",
+                    "Admin #" + currentAdminId + " tukar peranan pengguna #" + targetUserId
+                            + " daripada " + existingRole + " kepada " + newRole,
+                    request.getRemoteAddr());
+        } catch (SQLException e) {
+            LOGGER.severe("Failed to update user role: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=db_error");
+            return;
+        }
+
+        response.sendRedirect(request.getContextPath() + "/admin/users?role_updated=1");
     }
 
     private void handleDelete(HttpServletRequest request, HttpServletResponse response,
@@ -266,6 +449,18 @@ public class AdminUserServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             LOGGER.warning("Failed to write audit log: " + e.getMessage());
+        }
+    }
+
+    private void ensureUsersPhoneNumberColumn(Connection conn) throws SQLException {
+        DatabaseMetaData meta = conn.getMetaData();
+        try (ResultSet rs = meta.getColumns(null, null, "users", "phone_number")) {
+            if (rs.next()) {
+                return;
+            }
+        }
+        try (PreparedStatement stmt = conn.prepareStatement("ALTER TABLE users ADD COLUMN phone_number VARCHAR(30)")) {
+            stmt.executeUpdate();
         }
     }
 }
