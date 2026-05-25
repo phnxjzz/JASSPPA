@@ -1,2 +1,2 @@
-# JASSPPA
-Sistem Pendaftaran Produk Air
+# JASSPPPA
+Sistem Permohonan Pendaftaran Produk Air Jabatan Air Sabah
