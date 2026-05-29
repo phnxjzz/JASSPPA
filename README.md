@@ -333,12 +333,6 @@ Data produk air dari Sabah Water Department telah dikumpul dan disimpan dalam:
 - `SistemPPA.py` - Skrip ambil atau kemas kini data produk air
 
 ### Dokumen Penting
-- **[PANDUAN_PENGGUNA.md](PANDUAN_PENGGUNA.md)** - Panduan untuk pengguna akhir (log masuk, fungsi, semak masalah)
-- **[LANCARKAN_SISTEM.md](LANCARKAN_SISTEM.md)** - Panduan untuk pentadbir (startup, shutdown, akses rangkaian)
-- **[DEPLOYMENT_RAILWAY.md](DEPLOYMENT_RAILWAY.md)** - Deploy ke Railway.app
-- **[DEPLOYMENT_GCP.md](DEPLOYMENT_GCP.md)** - Deploy ke Google Cloud Platform
-- **[DEPLOYMENT_CLOUD.md](DEPLOYMENT_CLOUD.md)** - Perbandingan Railway, AWS, GCP, dan Heroku
-- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Senarai semak sebelum dan selepas deployment
 - `README.md` - Panduan setup, deployment, dan struktur sistem
 - `database/schema.sql` - Skema pangkalan data utama
 - `docs/ERD-SPPPA.md` - Dokumen ERD sistem
