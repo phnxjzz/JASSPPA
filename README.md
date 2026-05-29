@@ -1,8 +1,7 @@
-# Sistem Pendaftaran Produk Air (SPPA)
-## Water Product Registration System for Sabah
+# Sistem Permohonan Pendaftaran Produk Air Jabatan Air Sabah_
 
 ### Penerangan Sistem
-SPPA ialah platform web untuk urus pendaftaran dan pengesahan produk air di Sabah. Sistem ini membolehkan pentadbir semak permohonan dan pengguna awam hantar permohonan pendaftaran produk.
+SPPPA ialah platform web untuk urus pendaftaran dan pengesahan produk air di Sabah. Sistem ini membolehkan pentadbir semak permohonan dan pengguna awam hantar permohonan pendaftaran produk.
 
 ## Developer Onboarding (Quick Link)
 
@@ -11,7 +10,8 @@ SPPA ialah platform web untuk urus pendaftaran dan pengesahan produk air di Saba
 
 ---
 
-##  Struktur 
+##  Struktur
+
 ```text
 ProjectLI/
 +-- pom.xml # Maven configuration
@@ -47,19 +47,19 @@ ProjectLI/
 ##  Ciri-ciri Sistem
 
 ### Pentadbir
--   Melihat dan menyemak permohonan
--   Meluluskan atau menolak permohonan
--   Menggantung akaun pengguna
--   Mewujudkan akaun pentadbir baharu
--   Melihat statistik sistem
--   Audit log aktiviti
+- Melihat dan menyemak permohonan
+- Meluluskan atau menolak permohonan
+- Menggantung akaun pengguna
+- Mewujudkan akaun pentadbir baharu
+- Melihat statistik sistem
+- Audit log aktiviti
 
 ### Pemohon / Pengguna
--   Membuat permohonan pendaftaran baharu
--   Melihat profil dan status permohonan
--   Mengemas kini maklumat akaun
--   Tukar kata laluan
--   Akses senarai produk berdaftar
+- Membuat permohonan pendaftaran baharu
+- Melihat profil dan status permohonan
+- Mengemas kini maklumat akaun
+- Tukar kata laluan
+- Akses senarai produk berdaftar
 
 ---
 
@@ -69,7 +69,8 @@ ProjectLI/
 
 #### `users`
 Menyimpan maklumat pengguna dan pentadbir.
-sql
+
+```sql
 - id (Primary Key)
 - username (UNIQUE)
 - email (UNIQUE)
@@ -78,11 +79,12 @@ sql
 - full_name
 - avatar_url
 - status (ACTIVE / SUSPENDED / INACTIVE)
-
+```
 
 #### `applications`
 Menyimpan tebusan permohonan pendaftaran produk.
-sql
+
+```sql
 - id (Primary Key)
 - user_id (Foreign Key)
 - product_name
@@ -91,11 +93,12 @@ sql
 - status (DRAFT / PENDING / APPROVED / REJECTED / SUSPENDED)
 - reviewed_by (Foreign Key)
 - admin_notes
-
+```
 
 #### `products`
 Menyimpan senarai produk air berdaftar (dari data Sabah Water Department).
-sql
+
+```sql
 - id (Primary Key)
 - no (UNIQUE)
 - supplier_agent
@@ -105,17 +108,18 @@ sql
 - classification
 - brand
 - attachment_urls
-
+```
 
 #### `audit_log`
 Menyimpan log aktiviti sistem untuk keselamatan.
-sql
+
+```sql
 - id (Primary Key)
 - user_id (Foreign Key)
 - action
 - details
 - ip_address
-
+```
 
 ---
 
@@ -129,41 +133,44 @@ sql
 
 ### Langkah 1: Sediakan Pangkalan Data
 
-bash
+```bash
 mysql -u root -p < database/schema.sql
-
+```
 
 ### Langkah 2: Konfigurasi Sambungan Database
 Edit `src/main/java/com/sistemppa/config/DatabaseConfig.java`:
-java
+
+```java
 config.setJdbcUrl("jdbc:mysql://localhost:3306/sistemppa");
 config.setUsername("root");
 config.setPassword("your_password");
-
+```
 
 ### Langkah 3: Bina & Deploy dengan Maven
 
-bash
+```bash
 mvn clean package
 # Kemudian salin sistemppa.war ke tomcat/webapps/
-
+```
 
 Akses di: `http://localhost:8080/sistemppa`
 
 ### Langkah 4: Import Data Produk Air (Pilihan)
-bash
-python SistemPPA.py
 
+```bash
+python SistemPPA.py
+```
 
 ---
 
 ## Lancarkan Sistem (Quick Start)
 
 ### Cara Terpantas
-powershell
+
+```powershell
 # Dari mana-mana direktori (tidak perlu Administrator)
 powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\startup-system.ps1" -NoBrowser
-
+```
 
 **Apa yang dilakukan automatik:**
 - Pastikan MySQL 8.0 berjalan
@@ -181,15 +188,15 @@ powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\startup-syste
 
 ### Arahan Pantas
 
- Tujuan | Perintah |
+| Tujuan | Perintah |
 |--------|----------|
 | Mulakan sistem | `powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\startup-system.ps1" -NoBrowser` |
 | Mulakan watchdog | `powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\always-run-system.ps1"` |
 | Auto update bila kod berubah | `powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\dev-auto-update.ps1" -RunOnStart` |
 | Daftar autostart (Windows boot) | `powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\register-autostart.ps1"` |
-| Semak status watchdog | `Get-ScheduledTask -TaskName SPPA-AlwaysRun \| Select-Object TaskName,State` |
+| Semak status watchdog | `Get-ScheduledTask -TaskName SPPPA-AlwaysRun | Select-Object TaskName,State` |
 | Semak log watchdog | `Get-Content "p:\ProjectLI\runtime\watchdog.log" -Tail 30` |
-| Henti watchdog manual | `Stop-ScheduledTask -TaskName SPPA-AlwaysRun` |
+| Henti watchdog manual | `Stop-ScheduledTask -TaskName SPPPA-AlwaysRun` |
 | Buang autostart | `powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\register-autostart.ps1" -Unregister` |
 | Tutup sistem | `powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\shutdown-system.ps1"` |
 
@@ -197,16 +204,16 @@ powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\startup-syste
 
 Jalankan **sekali** sebagai Administrator untuk daftarkan Windows Task Scheduler:
 
-powershell
+```powershell
 # Buka PowerShell sebagai Administrator kemudian:
 powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\register-autostart.ps1"
+```
 
-
-Selepas ini, SPPA akan dimulakan secara automatik setiap kali Windows dihidupkan tanpa perlu tindakan manual.
+Selepas ini, SPPPA akan dimulakan secara automatik setiap kali Windows dihidupkan tanpa perlu tindakan manual.
 
 ### Cara Watchdog Berfungsi
 
-
+```text
 Windows Boot
      |
      v
@@ -222,15 +229,15 @@ Task Scheduler -> ops-scripts\_task-launcher.ps1
              Log & tunggu    startup-system.ps1
                                   |
                              Tomcat dimulakan semula
-
+```
 
 ### Auto Build + Deploy Untuk Kerja Coding
 
 Kalau ada ubah kod Java atau JSP dan mahu sistem deploy semula secara automatik, jalankan watcher ini dalam terminal berasingan:
 
-powershell
+```powershell
 powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\dev-auto-update.ps1" -RunOnStart
-
+```
 
 Watcher ini akan pantau:
 - `src/main/java`
@@ -241,16 +248,16 @@ Setiap kali perubahan dikesan, skrip akan jalankan build dan deploy WAR secara a
 
 ### Semak Status Sistem
 
-powershell
+```powershell
 # Semak sama ada endpoint boleh diakses
 Invoke-WebRequest http://localhost:8081/sistemppa/ -UseBasicParsing | Select-Object StatusCode
 
 # Semak status task scheduler
-Get-ScheduledTask -TaskName SPPA-AlwaysRun | Select-Object TaskName, State, LastRunTime, LastTaskResult
+Get-ScheduledTask -TaskName SPPPA-AlwaysRun | Select-Object TaskName, State, LastRunTime, LastTaskResult
 
 # Lihat log terbaharu
 Get-Content "p:\ProjectLI\runtime\watchdog.log" -Tail 30
-
+```
 
 ---
 
@@ -297,12 +304,12 @@ Get-Content "p:\ProjectLI\runtime\watchdog.log" -Tail 30
 
 ##  Keselamatan
 
--   Pengesahan kata laluan dengan SHA-256 hashing
--   Sesi dengan timeout (30 minit)
--   HTTP-only cookies untuk sesi
--   Audit log untuk semua aktiviti penting
--   Pengesahan input (SQL injection protection)
--   Status pengguna (suspend/inactive)
+- Pengesahan kata laluan dengan SHA-256 hashing
+- Sesi dengan timeout (30 minit)
+- HTTP-only cookies untuk sesi
+- Audit log untuk semua aktiviti penting
+- Pengesahan input (SQL injection protection)
+- Status pengguna (suspend/inactive)
 
 ---
 
@@ -334,35 +341,35 @@ Data produk air dari Sabah Water Department telah dikumpul dan disimpan dalam:
 - **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Senarai semak sebelum dan selepas deployment
 - `README.md` - Panduan setup, deployment, dan struktur sistem
 - `database/schema.sql` - Skema pangkalan data utama
-- `docs/ERD-SPPA.md` - Dokumen ERD sistem
+- `docs/ERD-SPPPA.md` - Dokumen ERD sistem
 - `src/main/webapp/assets/forms/*.pdf` - Borang PPP1/PPP2 dan garis panduan rasmi
 
 ---
 
 ##  Teknologi Digunakan (Detail)
 
-Bahagian ini menerangkan komponen sebenar yang digunakan untuk membina, menjalankan, dan mengoperasikan SPPA berdasarkan kod projek semasa.
+Bahagian ini menerangkan komponen sebenar yang digunakan untuk membina, menjalankan, dan mengoperasikan SPPPA berdasarkan kod projek semasa.
 
 ### A. Aplikasi Web Utama (Java)
 
 - **Bahasa & Runtime**: Java 21
-     - Ditetapkan dalam `pom.xml` melalui `maven.compiler.source=21` dan `maven.compiler.target=21`.
+  - Ditetapkan dalam `pom.xml` melalui `maven.compiler.source=21` dan `maven.compiler.target=21`.
 - **Seni bina backend**: Jakarta Servlet + JSP (tanpa framework MVC berat)
-     - Sesuai untuk aplikasi pentadbiran dalaman dan aliran borang/permohonan.
+  - Sesuai untuk aplikasi pentadbiran dalaman dan aliran borang/permohonan.
 - **Servlet API**: `jakarta.servlet:jakarta.servlet-api:6.1.0` (`scope: provided`)
 - **Build tool**: Apache Maven
-     - Packaging aplikasi: `war`
-     - Plugin utama:
-          - `maven-war-plugin:3.3.2` (menghasilkan `sistemppa.war`)
-          - `maven-compiler-plugin:3.14.0`
-          - `maven-surefire-plugin:3.5.4`
+  - Packaging aplikasi: `war`
+  - Plugin utama:
+  - `maven-war-plugin:3.3.2` (menghasilkan `sistemppa.war`)
+  - `maven-compiler-plugin:3.14.0`
+  - `maven-surefire-plugin:3.5.4`
 
 ### B. Pelayan Aplikasi
 
 - **Application server**: Apache Tomcat
-     - Runtime semasa projek: `runtime/apache-tomcat-11.0.18`
-     - Port operasi aktif semasa: `8081`
-     - Aplikasi dideploy sebagai: `sistemppa.war`
+  - Runtime semasa projek: `runtime/apache-tomcat-11.0.18`
+  - Port operasi aktif semasa: `8081`
+  - Aplikasi dideploy sebagai: `sistemppa.war`
 
 ### C. Pangkalan Data
 
@@ -392,52 +399,50 @@ Bahagian ini menerangkan komponen sebenar yang digunakan untuk membina, menjalan
 
 - **Skrip operasi**: PowerShell (`ops-scripts/*.ps1`)
 - Fungsi utama operasi:
-     - startup/shutdown sistem
-     - build + deploy WAR automatik
-     - watchdog kesihatan endpoint
-     - autostart melalui Task Scheduler
+  - startup/shutdown sistem
+  - build + deploy WAR automatik
+  - watchdog kesihatan endpoint
+  - autostart melalui Task Scheduler
 
 ### H. Skrip Data Import (Python)
 
 - **Fail**: `SistemPPA.py`
 - **Kegunaan**: scrape data produk air rasmi dan simpan ke JSON/CSV serta upsert ke MySQL
 - **Pakej Python digunakan**:
-     - `requests`
-     - `beautifulsoup4`
-     - `mysql-connector-python`
+  - `requests`
+  - `beautifulsoup4`
+  - `mysql-connector-python`
 
 ### I. Output Build & Data
 
 - **Artefak deploy Java**: `target/sistemppa.war`
 - **Data produk air (hasil skrip Python)**:
-     - `data/water_products.json`
-     - `data/water_products.csv`
+  - `data/water_products.json`
+  - `data/water_products.csv`
 
 ### J. Ringkasan Stack (Satu Baris)
 
-SPPA dibina menggunakan **Java 21 + Jakarta Servlet/JSP + Maven (WAR) + Tomcat + MySQL + HikariCP + SLF4J**, serta **Python scraper** untuk pengumpulan dan penyegaran data produk air.
+SPPPA dibina menggunakan **Java 21 + Jakarta Servlet/JSP + Maven (WAR) + Tomcat + MySQL + HikariCP + SLF4J**, serta **Python scraper** untuk pengumpulan dan penyegaran data produk air.
 
 ---
 
 ##  API Endpoints Tambahan
 
 Berikut ialah contoh REST API yang boleh ditambah:
-POST   /api/auth/login          - Log masuk
-POST   /api/auth/logout         - Log keluar
-POST   /api/auth/register       - Pendaftaran pengguna baharu
 
-GET    /api/applications         - Senarai permohonan (admin)
-POST   /api/applications         - Hantar permohonan baharu (user)
-GET    /api/applications/{id}    - Butir permohonan
-PUT    /api/applications/{id}    - Kemas kini permohonan
-PUT    /api/applications/{id}/approve - Luluskan permohonan (admin)
-PUT    /api/applications/{id}/reject  - Tolak permohonan (admin)
-
-GET    /api/products            - Senarai produk air
-GET    /api/users               - Senarai pengguna (admin)
-POST   /api/users               - Cipta pengguna pentadbir (admin)
-PUT    /api/users/{id}          - Kemaskini profil pengguna
-
+- POST   /api/auth/login                - Log masuk
+- POST   /api/auth/logout               - Log keluar
+- POST   /api/auth/register             - Pendaftaran pengguna baharu
+- GET    /api/applications              - Senarai permohonan (admin)
+- POST   /api/applications              - Hantar permohonan baharu (user)
+- GET    /api/applications/{id}         - Butir permohonan
+- PUT    /api/applications/{id}         - Kemas kini permohonan
+- PUT    /api/applications/{id}/approve - Luluskan permohonan (admin)
+- PUT    /api/applications/{id}/reject  - Tolak permohonan (admin)
+- GET    /api/products                  - Senarai produk air
+- GET    /api/users                     - Senarai pengguna (admin)
+- POST   /api/users                     - Cipta pengguna pentadbir (admin)
+- PUT    /api/users/{id}                - Kemaskini profil pengguna
 
 ---
 
@@ -448,16 +453,13 @@ PUT    /api/users/{id}          - Kemaskini profil pengguna
 Error: Access denied for user 'root'@'localhost'
 Penyelesaian: Semak nama pengguna, kata laluan, dan port MySQL
 
-
 ### Halaman Blank Selepas Build
 
 Penyelesaian: Pastikan web.xml berada di src/main/webapp/WEB-INF/
 
-
 ### Port 8080 Sudah Digunakan
 
 Penyelesaian: Tukar port di server.xml Tomcat atau hentikan aplikasi lain
-
 
 ---
 
@@ -476,6 +478,6 @@ Semua hak terpelihara (c) 2026.
 
 ---
 
-**Versi**: 1.0.0  
-**Tarikh**: 17 Mei 2026  
+**Versi**: 1.0.0
+**Tarikh**: 17 Mei 2026
 **Status**: Beta (Dalam pembangunan)
