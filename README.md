@@ -473,5 +473,5 @@ Semua hak terpelihara (c) 2026.
 ---
 
 **Versi**: 1.0.0
-**Tarikh**: 17 Mei 2026
+**Tarikh**: 29 Jun 2026
 **Status**: Beta (Dalam pembangunan)
