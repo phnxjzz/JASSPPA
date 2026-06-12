@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>Sistem Pendaftaran Produk Air</display-name>
+
+    <listener>
+        <listener-class>com.sistemppa.config.AppLifecycleListener</listener-class>
+    </listener>
+
+    <!-- ======================================================== -->
+    <!-- Security Filters                                           -->
+    <!-- ======================================================== -->
+
+    <!-- CSRF protection: validates synchronizer token on all POST requests -->
+    <filter>
+        <filter-name>CsrfFilter</filter-name>
+        <filter-class>com.sistemppa.filter.CsrfFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- Rate limiting: brute-force protection for login and password-reset -->
+    <filter>
+        <filter-name>RateLimitFilter</filter-name>
+        <filter-class>com.sistemppa.filter.RateLimitFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>RateLimitFilter</filter-name>
+        <url-pattern>/login</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>RateLimitFilter</filter-name>
+        <url-pattern>/forgot-password</url-pattern>
+    </filter-mapping>
+
+    <context-param>
+        <param-name>db.url</param-name>
+        <param-value>jdbc:mysql://localhost:3306/sistemppa</param-value>
+    </context-param>
+    <context-param>
+        <param-name>db.user</param-name>
+        <param-value>root</param-value>
+    </context-param>
+    <context-param>
+        <param-name>db.password</param-name>
+        <param-value></param-value>
+    </context-param>
+
+    <!-- SMTP settings for email verification (leave smtp.host blank to disable email) -->
+    <context-param>
+        <param-name>smtp.host</param-name>
+        <param-value></param-value>
+    </context-param>
+    <context-param>
+        <param-name>smtp.port</param-name>
+        <param-value>587</param-value>
+    </context-param>
+    <context-param>
+        <param-name>smtp.auth</param-name>
+        <param-value>true</param-value>
+    </context-param>
+    <context-param>
+        <param-name>smtp.tls</param-name>
+        <param-value>true</param-value>
+    </context-param>
+    <context-param>
+        <param-name>smtp.username</param-name>
+        <param-value></param-value>
+    </context-param>
+    <context-param>
+        <param-name>smtp.password</param-name>
+        <param-value></param-value>
+    </context-param>
+    <context-param>
+        <param-name>smtp.from</param-name>
+        <param-value></param-value>
+    </context-param>
+    <context-param>
+        <param-name>app.base.url</param-name>
+        <param-value>http://localhost:8081/sistemppa</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>LoginServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.LoginServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LoginServlet</servlet-name>
+        <url-pattern>/login</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DashboardServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.DashboardServlet</servlet-class>
+        <multipart-config>
+            <max-file-size>10485760</max-file-size>
+            <max-request-size>12582912</max-request-size>
+            <file-size-threshold>0</file-size-threshold>
+        </multipart-config>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DashboardServlet</servlet-name>
+        <url-pattern>/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>LogoutServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.LogoutServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LogoutServlet</servlet-name>
+        <url-pattern>/logout</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ApplicationServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.ApplicationServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ApplicationServlet</servlet-name>
+        <url-pattern>/applications/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>RegisterServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.RegisterServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RegisterServlet</servlet-name>
+        <url-pattern>/register</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ForgotPasswordServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.ForgotPasswordServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ForgotPasswordServlet</servlet-name>
+        <url-pattern>/forgot-password</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminApplicationServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.AdminApplicationServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminApplicationServlet</servlet-name>
+        <url-pattern>/admin/application</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DocumentDownloadServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.DocumentDownloadServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DocumentDownloadServlet</servlet-name>
+        <url-pattern>/documents/download</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ProductServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.ProductServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProductServlet</servlet-name>
+        <url-pattern>/products</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ProductAttachmentProxyServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.ProductAttachmentProxyServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProductAttachmentProxyServlet</servlet-name>
+        <url-pattern>/product-attachments/view</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ProfileServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.ProfileServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProfileServlet</servlet-name>
+        <url-pattern>/profile</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminExportServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.AdminExportServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminExportServlet</servlet-name>
+        <url-pattern>/admin/export</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>UserAvatarServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.UserAvatarServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UserAvatarServlet</servlet-name>
+        <url-pattern>/avatars/view</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AnnouncementImageServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.AnnouncementImageServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AnnouncementImageServlet</servlet-name>
+        <url-pattern>/announcement-images/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>EmailVerificationServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.EmailVerificationServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>EmailVerificationServlet</servlet-name>
+        <url-pattern>/verify-email</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminUserServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.AdminUserServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminUserServlet</servlet-name>
+        <url-pattern>/admin/users</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>CertificateServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.CertificateServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CertificateServlet</servlet-name>
+        <url-pattern>/certificate</url-pattern>
+    </servlet-mapping>
+
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <session-config>
+        <cookie-http-only>true</cookie-http-only>
+        <tracking-mode>COOKIE</tracking-mode>
+        <timeout>10</timeout>
+    </session-config>
+
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error-404.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error-500.jsp</location>
+    </error-page>
+
+</web-app>

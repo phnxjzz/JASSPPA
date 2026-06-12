@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
+    phone_number VARCHAR(30),
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('ADMIN', 'USER') NOT NULL DEFAULT 'USER',
     full_name VARCHAR(255) NOT NULL,
@@ -32,7 +33,7 @@ CREATE TABLE IF NOT EXISTS applications (
     company_address TEXT NOT NULL,
     contact_number VARCHAR(20),
     email VARCHAR(100),
-    status ENUM('DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED') NOT NULL DEFAULT 'PENDING',
+    status ENUM('DRAFT', 'NEW', 'UNDER_REVIEW', 'IN_PROGRESS', 'APPROVED', 'REJECTED', 'SUSPENDED') NOT NULL DEFAULT 'NEW',
     admin_notes TEXT,
     submitted_at TIMESTAMP,
     reviewed_at TIMESTAMP,
@@ -89,6 +90,16 @@ CREATE TABLE IF NOT EXISTS application_documents (
     FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
     INDEX idx_application_id (application_id),
     INDEX idx_document_type (document_type)
+);
+
+CREATE TABLE IF NOT EXISTS application_archives (
+    application_id INT NOT NULL PRIMARY KEY,
+    archived_by INT,
+    archive_notes VARCHAR(500),
+    archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
+    FOREIGN KEY (archived_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_archived_at (archived_at)
 );
 
 -- Products Table (Produk Air Terdaftar)

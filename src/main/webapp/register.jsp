@@ -1,10 +1,10 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Pemohon - SPPA</title>
+    <title>Daftar Pemohon - SPPPA</title>
     <style>
         :root {
             --brand-blue: #2A9D8F;
@@ -14,17 +14,19 @@
             --brand-yellow: #F2F72E;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-yellow) 100%); min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: url('${pageContext.request.contextPath}/assets/images/login-register-bg.jpg') center/cover no-repeat fixed; min-height: 100vh; display: grid; place-items: center; padding: 24px; position: relative; }
+        body::before { content: ''; position: fixed; inset: 0; background: rgba(255,255,255,0.45); z-index: 0; pointer-events: none; }
+        .shell { position: relative; z-index: 1; }
         .shell { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 1040px; border-radius: 24px; overflow: hidden; box-shadow: 0 22px 58px rgba(6, 52, 79, 0.2); }
         .info { background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%); color: white; padding: 40px; }
         .info .logo { width: 78px; height: 78px; border-radius: 18px; margin-bottom: 18px; display: grid; place-items: center; color: var(--brand-navy); font-size: 22px; font-weight: 800; letter-spacing: 0.08em; }
-        .info h1 { margin-bottom: 10px; font-size: 34px; }
+        .info h1 { margin-bottom: 10px; font-size: 34px; color: #000000; }
         .info p { opacity: 0.94; margin-bottom: 20px; }
         .info .contact { width: 100%; border-radius: 18px; border: 1px solid rgba(255,255,255,0.25); padding: 14px; background: rgba(6, 52, 79, 0.28); }
         .info .contact strong { display: block; margin-bottom: 8px; }
         .info .contact p { margin: 4px 0; font-size: 13px; }
         .info .contact strong img { width: 22px; height: 22px; vertical-align: middle; margin-right: 8px; object-fit: contain; }
-        .card { padding: 36px; }
+        .card { padding: 36px; background: rgba(255,255,255,0.95); }
         h2 { margin-bottom: 8px; color: #173040; }
         p.form-copy { color: #60798b; margin-bottom: 20px; }
         .field { margin-bottom: 16px; }
@@ -33,9 +35,15 @@
         .password-help { margin-top: 6px; font-size: 12px; color: #60798b; line-height: 1.5; }
         .error { margin-bottom: 14px; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 10px; }
         .btn { width: 100%; border: 1px solid #fff; border-radius: 12px; padding: 13px; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 100%); color: white; font-weight: 700; cursor: pointer; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .privacy-consent-box { margin: 14px 0 16px; padding: 12px 14px; background: #f5f8fb; border: 1px solid #d7e7ef; border-radius: 12px; }
+        .privacy-consent-label { display: flex; align-items: flex-start; gap: 10px; margin: 0; font-weight: 600; color: #173040; line-height: 1.5; font-size: 14px; }
+        .privacy-consent-label input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: 0 0 18px; }
+        .privacy-consent-label span { display: block; text-align: justify; text-justify: inter-word; line-height: 1.65; letter-spacing: 0.01em; }
         .footer { margin-top: 18px; text-align: center; color: #64748b; }
         .footer a { color: var(--brand-blue); text-decoration: none; font-weight: 700; }
         @media (max-width: 920px) { .shell { grid-template-columns: 1fr; } .info { display: none; } }
+        @media (max-width: 576px) { .privacy-consent-label { gap: 8px; font-size: 13px; } .privacy-consent-label span { text-align: left; line-height: 1.55; letter-spacing: 0; } }
                     
         button,
         input[type="submit"],
@@ -90,19 +98,25 @@
             height: 16px;
             object-fit: contain;
         }
+        .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
+        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; }
+        .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; font-size: 13px; color: #4e6a7c; line-height: 1.45; }
+        .jans-contact-section .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .jans-contact-section .contact-line span { line-height: 1.45; }
         </style>
 </head>
 <body>
     <div class="shell">
         <div class="info">
-            <div class="logo" aria-label="Logo Jabatan Air Sabah">JANS</div>
-            <h1>Akaun Pemohon SPPA</h1>
-            <p>Cipta akaun untuk mengisi borang PPP1 secara online, menyemak senarai produk berdaftar, dan memantau keputusan semakan pentadbir.</p>
-            <div class="contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
-                <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi">Hubungi JANS</strong>
-                <p>Telefon: +60-88-232364 (HQ)</p>
-                <p>Fax: +60-88-232396</p>
-                <p>Email: jans.hq@sabah.gov.my</p>
+            <h1>Daftar Akaun Sistem Pendaftaran Pembekal dan Produk Air</h1>
+            <div class="container" style="padding-top:0;">
+                <div class="jans-contact-section">
+                    <h3>Hubungi JANS</h3>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
             </div>
         </div>
         <div class="card">
@@ -124,6 +138,10 @@
                 <input id="username" name="username" type="text" required>
             </div>
             <div class="field">
+                <label for="phone_number">Nombor Telefon</label>
+                <input id="phone_number" name="phone_number" type="tel" pattern="[0-9+()\-\s]{8,20}" inputmode="tel" required>
+            </div>
+            <div class="field">
                 <label for="email">Email</label>
                 <input id="email" name="email" type="email" required>
             </div>
@@ -136,7 +154,13 @@
                 <label for="confirm_password">Sahkan Kata Laluan</label>
                 <input id="confirm_password" name="confirm_password" type="password" minlength="10" autocomplete="new-password" required>
             </div>
-            <button class="btn" type="submit">Daftar Akaun</button>
+            <div class="privacy-consent-box">
+                <label for="privacy_consent" class="privacy-consent-label">
+                    <input id="privacy_consent" name="privacy_consent" type="checkbox" value="1" required>
+                    <span>Segala maklumat yang dikemukakan semasa pendaftaran akan digunakan hanya bagi tujuan pendaftaran akaun. Maklumat peribadi akan dirahsiakan dan tidak akan didedahkan atau dikongsi dengan mana-mana pihak ketiga.</span>
+                </label>
+            </div>
+            <button id="registerSubmitBtn" class="btn" type="submit" disabled>Daftar Akaun</button>
         </form>
 
             <div class="footer">
@@ -150,8 +174,20 @@
     var form = document.querySelector('form[action$="/register"]');
     var passwordInput = document.getElementById('password');
     var confirmInput = document.getElementById('confirm_password');
+    var consentCheckbox = document.getElementById('privacy_consent');
+    var submitBtn = document.getElementById('registerSubmitBtn');
+
+    function syncSubmitState() {
+        if (!consentCheckbox || !submitBtn) return;
+        submitBtn.disabled = !consentCheckbox.checked;
+    }
 
     if (form && passwordInput && confirmInput) {
+        syncSubmitState();
+        if (consentCheckbox) {
+            consentCheckbox.addEventListener('change', syncSubmitState);
+        }
+
         form.addEventListener('submit', function (event) {
             var passwordValue = passwordInput.value || '';
             var rule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
@@ -165,6 +201,13 @@
                 event.preventDefault();
                 alert('Pengesahan kata laluan tidak sepadan.');
                 confirmInput.focus();
+                return;
+            }
+
+            if (consentCheckbox && !consentCheckbox.checked) {
+                event.preventDefault();
+                alert('Sila tandakan persetujuan privasi sebelum daftar akaun.');
+                consentCheckbox.focus();
             }
         });
 
@@ -173,3 +216,5 @@
 </script>
 </body>
 </html>
+
+

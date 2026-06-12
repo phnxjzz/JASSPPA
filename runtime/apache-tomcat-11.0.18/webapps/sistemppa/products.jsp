@@ -60,6 +60,49 @@
         return raw;
     }
 
+    private String firstAttachmentUrl(Object attachmentValue) {
+        if (attachmentValue == null) {
+            return "";
+        }
+        String raw = String.valueOf(attachmentValue).trim();
+        if (raw.isEmpty() || "null".equalsIgnoreCase(raw)) {
+            return "";
+        }
+        String[] chunks = raw.split("\\|");
+        for (String chunk : chunks) {
+            String candidate = chunk == null ? "" : chunk.trim();
+            if (!candidate.isEmpty() && candidate.startsWith("http")) {
+                return candidate;
+            }
+        }
+        return raw;
+    }
+
+    private String extractLegacyId(Object attachmentValue) {
+        String url = firstAttachmentUrl(attachmentValue);
+        if (url.isEmpty()) {
+            return "-";
+        }
+        Matcher matcher = Pattern.compile("/products/(\\d+)/", Pattern.CASE_INSENSITIVE).matcher(url);
+        return matcher.find() ? matcher.group(1) : "-";
+    }
+
+    private String extractLegacyCertificateNo(Object attachmentValue) {
+        String url = firstAttachmentUrl(attachmentValue);
+        if (url.isEmpty()) {
+            return "-";
+        }
+        Matcher matcher = Pattern.compile("jans([a-z0-9]+)", Pattern.CASE_INSENSITIVE).matcher(url);
+        if (matcher.find()) {
+            String token = matcher.group(1).toUpperCase();
+            if (token.matches("\\d+") && token.length() < 6) {
+                token = String.format("%06d", Integer.parseInt(token));
+            }
+            return "JANS" + token;
+        }
+        return "-";
+    }
+
     private String[] splitSupplierInfo(String supplierAgent) {
         if (supplierAgent == null || supplierAgent.isBlank()) {
             return new String[]{"-", "-"};
@@ -80,10 +123,12 @@
     <title>Senarai Produk Berdaftar - SPPA</title>
     <style>
         :root {
-            --brand-blue: #0097d9;
-            --brand-navy: #06344f;
+            --brand-blue: #2A9D8F;
+            --brand-navy: #0F6BAE;
+            --brand-green: #6DBE45;
+            --brand-lime: #CDE11D;
             --brand-sky: #e8f7ff;
-            --brand-yellow: #fff212;
+            --brand-yellow: #F2F72E;
             --text: #183244;
             --muted: #5f7686;
             --panel: #ffffff;
@@ -91,7 +136,7 @@
         }
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #eff9ff 0%, #f8fbfd 100%); color: var(--text); }
-        .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 72%, var(--brand-yellow) 180%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-yellow) 100%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 52px; height: 52px; border-radius: 14px; object-fit: contain; padding: 4px; }
         .brand h1 { margin: 0; font-size: 20px; }
@@ -173,20 +218,30 @@
         a.btn:focus {
             border: 1px solid #fff !important;
             box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
-        }</style>
-</head>
+        }
+        .icon-inline { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; }
+        .icon-link { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.38); transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; }
+        .icon-link img { width: 20px; height: 20px; object-fit: contain; }
+        .icon-link:hover { transform: translateY(-1px) scale(1.03); background: rgba(255,255,255,0.26); }
+        .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
+        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; }
+        .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; min-width: 0; }
+        .jans-contact-section .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .jans-contact-section .contact-line span { line-height: 1.45; }
+    </style>
 <body>
     <div class="navbar">
         <div class="brand">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <h1>Senarai Produk Berdaftar</h1>
-                <p>Sistem Pendaftaran Produk Air â€¢ Jabatan Air Negeri Sabah</p>
+                <p>Sistem Pendaftaran Pembekal dan Produk Air â€¢ Jabatan Air Negeri Sabah</p>
             </div>
         </div>
         <div class="nav-links">
-            <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a>
-            <a href="${pageContext.request.contextPath}/logout">Log Keluar</a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/dashboard" title="Dashboard" aria-label="Dashboard"><img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard"></a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
         </div>
     </div>
 
@@ -196,12 +251,14 @@
                 <div class="metric"><span><%= request.getAttribute("product_total") %></span> produk ditemui</div>
                 <h2>Rujukan produk air yang telah berdaftar</h2>
             </div>
-            <div class="panel">
-                <div class="contact-image" aria-label="Maklumat hubungan Jabatan Air Sabah">
-                    <strong>Hubungi JANS</strong>
-                    <p>Telefon: 088-326888</p>
-                    <p>Email: info@jwater.gov.my</p>
-                    <p>Kota Kinabalu, Sabah</p>
+            <div class="container" style="padding-top:0;">
+                <div class="jans-contact-section">
+                    <h3>Hubungi JANS</h3>
+                    <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                    <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                    <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                    <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+                    <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p>
                 </div>
             </div>
         </div>
@@ -210,7 +267,7 @@
             <form method="get" action="${pageContext.request.contextPath}/products" class="filters">
                 <div class="field">
                     <label for="q">Carian</label>
-                    <input id="q" name="q" type="text" value="<%= request.getAttribute("search_query") %>" placeholder="Cari supplier/ejen, jenama, produk/material, atau tarikh sah (contoh 21-01-2028)">
+                    <input id="q" name="q" type="text" value="<%= request.getAttribute("search_query") %>" placeholder="Cari supplier/ejen, jenama, produk/material, ID lama, no sijil lama, atau tarikh sah (contoh 21-01-2028)">
                 </div>
                 <div class="field">
                     <label for="type">Jenis / Kumpulan</label>
@@ -238,11 +295,13 @@
                 <thead>
                     <tr>
                         <th style="width:70px;">No.</th>
+                        <th style="width:110px;">ID Lama</th>
                         <th style="width:250px;">Supplier Name &amp; Address</th>
                         <th style="width:220px;">Product / Materials</th>
                         <th style="width:160px;">Category</th>
                         <th style="width:150px;">Type</th>
                         <th style="width:120px;">Brand</th>
+                        <th style="width:150px;">No Sijil Lama</th>
                         <th style="width:120px;">Valid Date</th>
                         <th style="width:150px;">Attachment</th>
                     </tr>
@@ -253,7 +312,7 @@
                         if (products == null || products.isEmpty()) {
                     %>
                     <tr>
-                        <td colspan="8" style="text-align:center;color:#5f7686;padding:32px;">Tiada produk ditemui untuk carian ini.</td>
+                        <td colspan="10" style="text-align:center;color:#5f7686;padding:32px;">Tiada produk ditemui untuk carian ini.</td>
                     </tr>
                     <% } else {
                         for (Map<String, Object> product : products) {
@@ -263,11 +322,14 @@
                             String itemType = safeText(product.get("classification"));
                             String brand = safeText(product.get("brand"));
                             String validDate = formatValidDate(product.get("supplier_valid_until"));
+                            String legacyId = extractLegacyId(product.get("attachment_urls"));
+                            String legacyCertNo = extractLegacyCertificateNo(product.get("attachment_urls"));
                             List<String> attachments = extractUrls(String.valueOf(product.get("attachment_urls")));
                             String attachmentPayload = escapeHtml(String.join("||", attachments));
                     %>
                     <tr>
                         <td><strong><%= product.get("no") %></strong></td>
+                        <td class="cell-tight"><%= escapeHtml(legacyId) %></td>
                         <td class="cell-tight">
                             <span class="supplier-name"><%= escapeHtml(supplierInfo[0]) %></span>
                             <span class="supplier-address"><%= escapeHtml(supplierInfo[1]) %></span>
@@ -276,6 +338,7 @@
                         <td><span class="tag"><%= escapeHtml(category) %></span></td>
                         <td class="cell-tight"><%= escapeHtml(itemType) %></td>
                         <td class="cell-tight"><%= escapeHtml(brand) %></td>
+                        <td class="cell-tight"><%= escapeHtml(legacyCertNo) %></td>
                         <td><%= escapeHtml(validDate) %></td>
                         <td>
                             <% if (attachments.isEmpty()) { %>
@@ -294,6 +357,26 @@
         </div>
     </div>
 
+    <div class="container" style="padding-top:0;">
+        <div class="jans-contact-section">
+            <h3>Hubungi JANS</h3>
+            <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+            <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+            <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+            <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+            <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p>
+        </div>
+    </div>
+    <div class="container" style="padding-top:0;">
+        <div class="jans-contact-section">
+            <h3>Hubungi JANS</h3>
+            <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+            <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+            <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+            <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+            <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p>
+        </div>
+    </div>
     <div id="attachmentModal" class="modal-overlay" aria-hidden="true">
         <div class="modal-card" role="dialog" aria-modal="true" aria-label="Lampiran Produk">
             <div class="modal-header">
@@ -398,7 +481,4 @@
     </script>
 </body>
 </html>
-
-
-
 

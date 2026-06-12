@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cara Guna Sistem Portal - SPPPA</title>
+    <style>
+        :root {
+            --blue-1: #0f6bae;
+            --blue-2: #0b4f7d;
+            --mint: #2a9d8f;
+            --sun: #f2c94c;
+            --bg: #f4f9fc;
+            --surface: #ffffff;
+            --line: #d5e6f1;
+            --text: #193447;
+            --muted: #5f7b8d;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at 10% 0%, #e7f5ff 0%, #f4f9fc 35%, #f7fcff 100%);
+        }
+        .hero {
+            background: linear-gradient(130deg, var(--blue-2) 0%, var(--blue-1) 55%, var(--mint) 100%);
+            color: #ffffff;
+            padding: 26px 18px;
+            border-bottom: 4px solid rgba(242, 201, 76, 0.8);
+        }
+        .hero-inner {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(24px, 3.8vw, 34px);
+            letter-spacing: 0.02em;
+        }
+        .hero p {
+            margin: 8px 0 0;
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.92);
+        }
+        .container {
+            max-width: 980px;
+            margin: 18px auto 28px;
+            padding: 0 14px;
+            display: grid;
+            gap: 14px;
+        }
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 15px;
+            box-shadow: 0 12px 26px rgba(6, 52, 79, 0.08);
+        }
+        .panel h2 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            color: var(--blue-2);
+        }
+        .steps {
+            margin: 0;
+            padding-left: 0;
+            list-style: none;
+            display: grid;
+            gap: 10px;
+        }
+        .step {
+            display: grid;
+            grid-template-columns: 32px 1fr;
+            gap: 10px;
+            align-items: start;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #e2edf5;
+            background: #fbfeff;
+        }
+        .step-no {
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            background: #e9f4fb;
+            color: var(--blue-1);
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+        .step b {
+            color: #154566;
+            font-size: 14px;
+        }
+        .step p {
+            margin: 3px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .tips {
+            margin: 0;
+            padding-left: 18px;
+            display: grid;
+            gap: 7px;
+            color: #3f5e72;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .status-grid {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        }
+        .status-item {
+            border: 1px solid #dbe9f3;
+            border-radius: 10px;
+            padding: 10px;
+            background: #f8fcff;
+            font-size: 13px;
+            color: #3f5e72;
+        }
+        .status-item b {
+            display: block;
+            color: #0f4f79;
+            margin-bottom: 3px;
+        }
+        .cta-row {
+            margin-top: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .btn {
+            text-decoration: none;
+            border-radius: 10px;
+            padding: 9px 12px;
+            font-weight: 700;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid transparent;
+        }
+        .btn-primary {
+            background: var(--blue-1);
+            color: #ffffff;
+            border-color: #0c5f98;
+        }
+        .btn-soft {
+            background: #eef6fc;
+            color: #0e4f7b;
+            border-color: #d5e6f1;
+        }
+        .footnote {
+            margin-top: 2px;
+            color: #607b8d;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <div class="hero-inner">
+            <h1>Cara Guna Sistem Portal SPPPA</h1>
+            <p>Ikuti langkah mudah ini untuk guna sistem, semak status permohonan, dan urus profil dengan lebih teratur.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="panel">
+            <h2>Langkah Cepat Guna Sistem</h2>
+            <ol class="steps">
+                <li class="step">
+                    <span class="step-no">1</span>
+                    <div>
+                        <b>Masuk ke akaun pemohon</b>
+                        <p>Log masuk menggunakan emel dan kata laluan yang sah. Semak nama pengguna di dashboard untuk pastikan akaun betul.</p>
+                    </div>
+                </li>
+                <li class="step">
+                    <span class="step-no">2</span>
+                    <div>
+                        <b>Hantar Permohonan Baharu</b>
+                        <p>Buka menu Permohonan Baru, isi semua maklumat produk/syarikat, dan muat naik dokumen lengkap sebelum hantar.</p>
+                    </div>
+                </li>
+                <li class="step">
+                    <span class="step-no">3</span>
+                    <div>
+                        <b>Semak Status dan Notifikasi</b>
+                        <p>Lihat perubahan status di dashboard serta notifikasi terkini daripada pentadbir untuk tindakan susulan.</p>
+                    </div>
+                </li>
+                <li class="step">
+                    <span class="step-no">4</span>
+                    <div>
+                        <b>Kemaskini Profil Bila Perlu</b>
+                        <p>Pastikan maklumat akaun, nombor telefon, dan emel sentiasa terkini supaya komunikasi tidak terlepas.</p>
+                    </div>
+                </li>
+            </ol>
+        </section>
+
+        <section class="panel">
+            <h2>Maksud Status Permohonan</h2>
+            <div class="status-grid">
+                <div class="status-item"><b>NEW / DALAM SEMAKAN</b>Permohonan diterima dan sedang disemak.</div>
+                <div class="status-item"><b>DALAM PROSES</b>Tindakan tambahan diperlukan daripada pemohon.</div>
+                <div class="status-item"><b>DILULUSKAN</b>Permohonan diluluskan. Sijil boleh disemak.</div>
+                <div class="status-item"><b>DITOLAK</b>Permohonan tidak diluluskan. Semak sebab dan baiki dokumen.</div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Tip Supaya Permohonan Cepat Diproses</h2>
+            <ul class="tips">
+                <li>Gunakan nama syarikat dan produk yang konsisten dengan dokumen sokongan.</li>
+                <li>Pastikan fail yang dimuat naik jelas, tidak kabur, dan boleh dibuka.</li>
+                <li>Semak notifikasi setiap hari supaya tindakan susulan tidak tertangguh.</li>
+                <li>Jika status lama tidak berubah, rujuk pentadbir melalui saluran rasmi JANS.</li>
+            </ul>
+            <div class="cta-row">
+                <a class="btn btn-primary" href="./dashboard">Kembali ke Dashboard</a>
+                <a class="btn btn-soft" href="./profile">Kemaskini Profil</a>
+            </div>
+            <p class="footnote">Nota: Jika anda belum log masuk, sistem akan minta pengesahan akaun terlebih dahulu.</p>
+        </section>
+    </main>
+</body>
+</html>

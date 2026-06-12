@@ -18,10 +18,23 @@ try {
     }
 
     $deployPath = Join-Path -Path $TomcatWebapps -ChildPath $WarName
-    Write-Host "[2/3] Copy WAR to Tomcat webapps..."
+    $appDirName = [System.IO.Path]::GetFileNameWithoutExtension($WarName)
+    $explodedPath = Join-Path -Path $TomcatWebapps -ChildPath $appDirName
+
+    if (Test-Path $explodedPath) {
+        Write-Host "[2/4] Remove stale exploded app folder..."
+        Remove-Item $explodedPath -Recurse -Force
+    }
+
+    if (Test-Path $deployPath) {
+        Write-Host "[3/4] Remove old WAR..."
+        Remove-Item $deployPath -Force
+    }
+
+    Write-Host "[4/4] Copy WAR to Tomcat webapps..."
     Copy-Item $warPath $deployPath -Force
 
-    Write-Host "[3/3] Done. Deployed to $deployPath"
+    Write-Host "Done. Deployed to $deployPath"
 }
 finally {
     Pop-Location

@@ -1,11 +1,11 @@
-# ☁️ Panduan Deployment SPPA ke Cloud (Online)
+#  Panduan Deployment SPPA ke Cloud (Online)
 
 **Status**: Sistem sudah siap untuk production deployment  
 **Domain Target**: sppa.gov  
 **Budget**: < $5/bulan  
 **Database Backup**:  sistemppa_backup_20260318_132007.sql
 
----
+
 
 ##  Perbandingan Pilihan Cloud Hosting
 
@@ -19,7 +19,6 @@
 | **Custom Domain** |  Route 53 |  Cloud DNS |  |  |
 | **Recommended For** | Production, Long-term | Enterprise |  **RECOMMENDED** | Small scale |
 
----
 
 ##  PILIHAN 1: Railway.app (Recommended - Paling Mudah)
 
@@ -295,6 +294,5 @@ public class DatabaseConfig {
 - Document setiap deployment
 - Keep change log updated
 
----
 
-**Rekomendasi Final:**  **Mulai dengan Railway.app** — easiest, fastest, gratis tier cukup untuk testing. Lepas stable, baru migrate ke AWS untuk production.
+**Final Recomendation:**  **Mula dengan Railway.app** — easiest, fastest, gratis tier cukup untuk testing. Lepas stable, baru migrate ke AWS untuk production.

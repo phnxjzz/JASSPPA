@@ -1,5 +1,7 @@
 package com.sistemppa.service;
 
+import com.sistemppa.util.UserDisplayIdUtil;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -11,8 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class DashboardDataService {
+    private static final Pattern LEGACY_ADMIN_ID_PATTERN = Pattern.compile("Admin\\s*#(\\d+)");
+
     private DashboardDataService() {
     }
 
@@ -23,7 +29,7 @@ public final class DashboardDataService {
 
         String sql = "SELECT "
                 + "COUNT(CASE WHEN aa.application_id IS NULL THEN 1 END) AS total_applications, "
-                + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'PENDING' THEN 1 ELSE 0 END) AS pending_count, "
+                + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'NEW' THEN 1 ELSE 0 END) AS pending_count, "
                 + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count, "
                 + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected_count, "
                 + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'SUSPENDED' THEN 1 ELSE 0 END) AS suspended_count, "
@@ -137,7 +143,7 @@ public final class DashboardDataService {
 
     public static int countPendingUserApplications(Connection conn, int userId) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(
-                "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status = 'PENDING'")) {
+                "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status = 'NEW'")) {
             stmt.setInt(1, userId);
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
@@ -172,15 +178,15 @@ public final class DashboardDataService {
         ensureApplicationArchiveTable(conn);
 
         QueryParts queryParts = buildApplicationFilter(search, status, dateFrom, dateTo);
-        String sql = "SELECT a.id, a.company_name, a.product_category, a.product_name, "
+        String sql = "SELECT a.id, a.company_name, a.product_category, a.product_name, a.product_description, "
             + "CASE WHEN aa.application_id IS NOT NULL THEN 'ARCHIVED' ELSE a.status END AS display_status, "
-            + "a.submitted_at, "
+            + "a.submitted_at, aa.archived_at, aa.archive_notes, aa.archived_by, "
                 + "u.full_name, u.email AS user_email "
                 + "FROM applications a "
                 + "JOIN users u ON u.id = a.user_id "
             + "LEFT JOIN application_archives aa ON aa.application_id = a.id "
                 + queryParts.clause
-                + " ORDER BY a.created_at DESC";
+                + " ORDER BY COALESCE(aa.archived_at, a.created_at) DESC";
         if (limit > 0) {
             sql += " LIMIT ?";
         }
@@ -198,8 +204,12 @@ public final class DashboardDataService {
                     row.put("company_name", rs.getString("company_name"));
                     row.put("product_category", rs.getString("product_category"));
                     row.put("product_name", rs.getString("product_name"));
+                    row.put("product_description", rs.getString("product_description"));
                     row.put("status", rs.getString("display_status"));
                     row.put("submitted_at", rs.getTimestamp("submitted_at"));
+                    row.put("archived_at", rs.getTimestamp("archived_at"));
+                    row.put("archive_notes", rs.getString("archive_notes"));
+                    row.put("archived_by", rs.getObject("archived_by"));
                     row.put("full_name", rs.getString("full_name"));
                     row.put("user_email", rs.getString("user_email"));
                     applications.add(row);
@@ -383,6 +393,87 @@ public final class DashboardDataService {
         return announcements;
     }
 
+    public static List<Map<String, Object>> loadRecentAdminAuditLogs(Connection conn, int limit) throws SQLException {
+        String sql = "SELECT al.id, al.user_id, al.action, al.details, al.ip_address, al.created_at, "
+                + "u.username, u.full_name, u.role "
+                + "FROM audit_log al "
+                + "JOIN users u ON u.id = al.user_id "
+                + "WHERE u.role = 'ADMIN' "
+                + "ORDER BY al.created_at DESC, al.id DESC";
+        if (limit > 0) {
+            sql += " LIMIT ?";
+        }
+
+        List<Map<String, Object>> logs = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (limit > 0) {
+                stmt.setInt(1, limit);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("user_id", rs.getObject("user_id"));
+                    row.put("action", rs.getString("action"));
+                    row.put("details", normalizeLegacyAuditDetails(rs.getString("details")));
+                    row.put("ip_address", rs.getString("ip_address"));
+                    row.put("created_at", rs.getTimestamp("created_at"));
+                    row.put("username", rs.getString("username"));
+                    row.put("full_name", rs.getString("full_name"));
+                    row.put("role", rs.getString("role"));
+                    row.put("display_user_id", UserDisplayIdUtil.format(rs.getInt("user_id"), rs.getString("role")));
+                    logs.add(row);
+                }
+            }
+        }
+        return logs;
+    }
+
+    public static List<Map<String, Object>> loadRecentAdminAuditLogsByKeyword(
+            Connection conn, String keyword, int limit) throws SQLException {
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        if (normalizedKeyword.isBlank()) {
+            return loadRecentAdminAuditLogs(conn, limit);
+        }
+
+        String sql = "SELECT al.id, al.user_id, al.action, al.details, al.ip_address, al.created_at, "
+            + "u.username, u.full_name, u.role "
+                + "FROM audit_log al "
+                + "JOIN users u ON u.id = al.user_id "
+                + "WHERE u.role = 'ADMIN' AND (al.action LIKE ? OR al.details LIKE ?) "
+                + "ORDER BY al.created_at DESC, al.id DESC";
+        if (limit > 0) {
+            sql += " LIMIT ?";
+        }
+
+        List<Map<String, Object>> logs = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String like = "%" + normalizedKeyword + "%";
+            stmt.setString(1, like);
+            stmt.setString(2, like);
+            if (limit > 0) {
+                stmt.setInt(3, limit);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("user_id", rs.getObject("user_id"));
+                    row.put("action", rs.getString("action"));
+                    row.put("details", normalizeLegacyAuditDetails(rs.getString("details")));
+                    row.put("ip_address", rs.getString("ip_address"));
+                    row.put("created_at", rs.getTimestamp("created_at"));
+                    row.put("username", rs.getString("username"));
+                    row.put("full_name", rs.getString("full_name"));
+                    row.put("role", rs.getString("role"));
+                    row.put("display_user_id", UserDisplayIdUtil.format(rs.getInt("user_id"), rs.getString("role")));
+                    logs.add(row);
+                }
+            }
+        }
+        return logs;
+    }
+
     public static List<Map<String, Object>> loadActiveAnnouncements(Connection conn, int limit) throws SQLException {
         ensureAnnouncementsTable(conn);
         String sql = "SELECT id, title, content, image_url, is_active, created_at, updated_at "
@@ -404,6 +495,283 @@ public final class DashboardDataService {
             }
         }
         return announcements;
+    }
+
+    private static String normalizeLegacyAuditDetails(String details) {
+        if (details == null || details.isBlank()) {
+            return details;
+        }
+        Matcher matcher = LEGACY_ADMIN_ID_PATTERN.matcher(details);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            int adminId = Integer.parseInt(matcher.group(1));
+            String replacement = "Admin " + UserDisplayIdUtil.format(adminId, "ADMIN");
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
+    public static List<Map<String, Object>> loadKppGuestSubmissions(
+            Connection conn,
+            int limit,
+            String search,
+            boolean includeArchived
+    ) throws SQLException {
+        ensureKppGuestSubmissionTable(conn);
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT id, recipient_email, action_type, submitter_email, form_payload, submitted_at, archived, archived_at "
+                        + "FROM kpp_guest_form_submissions WHERE 1=1"
+        );
+        List<Object> params = new ArrayList<>();
+
+        if (!includeArchived) {
+            sql.append(" AND archived = 0");
+        }
+
+        if (search != null && !search.isBlank()) {
+            sql.append(" AND (recipient_email LIKE ? OR action_type LIKE ? OR submitter_email LIKE ? OR form_payload LIKE ?)");
+            String keyword = "%" + search.trim() + "%";
+            params.add(keyword);
+            params.add(keyword);
+            params.add(keyword);
+            params.add(keyword);
+        }
+
+        sql.append(" ORDER BY submitted_at DESC, id DESC");
+        if (limit > 0) {
+            sql.append(" LIMIT ?");
+        }
+
+        List<Map<String, Object>> submissions = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            int index = applyParameters(stmt, params);
+            if (limit > 0) {
+                stmt.setInt(index, limit);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String payload = rs.getString("form_payload");
+                    String branch = firstNonBlank(
+                            extractJsonStringValue(payload, "f_respondent_branch"),
+                            extractJsonStringValue(payload, "f_branch")
+                    );
+                    String position = firstNonBlank(
+                            extractJsonStringValue(payload, "f_respondent_title"),
+                            extractJsonStringValue(payload, "f_respondent_position_grade"),
+                            extractJsonStringValue(payload, "f_position_grade")
+                    );
+
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("recipient_email", rs.getString("recipient_email"));
+                    row.put("action_type", rs.getString("action_type"));
+                    row.put("submitter_email", rs.getString("submitter_email"));
+                    row.put("form_payload", payload == null ? "" : payload);
+                    row.put("submitted_at", rs.getTimestamp("submitted_at"));
+                    row.put("archived", rs.getBoolean("archived"));
+                    row.put("archived_at", rs.getTimestamp("archived_at"));
+                    row.put("kpp_display", buildKppDisplay(position, branch, rs.getString("recipient_email")));
+                    row.put("form_display", toKppFormLabel(rs.getString("action_type")));
+                    submissions.add(row);
+                }
+            }
+        }
+
+        return submissions;
+    }
+
+    public static List<Map<String, Object>> loadKppContacts(Connection conn) throws SQLException {
+        ensureKppContactsTable(conn);
+        List<Map<String, Object>> contacts = new ArrayList<>();
+        String sql = "SELECT id, name, branch, email, is_active, created_at "
+                + "FROM kpp_contacts WHERE is_active = 1 ORDER BY name ASC, id ASC";
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("id", rs.getLong("id"));
+                row.put("name", rs.getString("name"));
+                row.put("branch", rs.getString("branch"));
+                row.put("email", rs.getString("email"));
+                row.put("is_active", rs.getBoolean("is_active"));
+                row.put("created_at", rs.getTimestamp("created_at"));
+                contacts.add(row);
+            }
+        }
+        return contacts;
+    }
+
+    public static void addKppContact(Connection conn, String name, String branch, String email) throws SQLException {
+        ensureKppContactsTable(conn);
+        String sql = "INSERT INTO kpp_contacts (name, branch, email, is_active, created_at) VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, name);
+            stmt.setString(2, branch);
+            stmt.setString(3, email);
+            stmt.executeUpdate();
+        }
+    }
+
+    public static int deleteKppContact(Connection conn, long contactId) throws SQLException {
+        ensureKppContactsTable(conn);
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM kpp_contacts WHERE id = ?")) {
+            stmt.setLong(1, contactId);
+            return stmt.executeUpdate();
+        }
+    }
+
+    public static Map<String, Object> loadKppGuestSubmissionById(Connection conn, long id) throws SQLException {
+        ensureKppGuestSubmissionTable(conn);
+        String sql = "SELECT id, recipient_email, action_type, submitter_email, form_payload, submitted_at, archived, archived_at "
+                + "FROM kpp_guest_form_submissions WHERE id = ? LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return new HashMap<>();
+                }
+                Map<String, Object> row = new HashMap<>();
+                row.put("id", rs.getLong("id"));
+                row.put("recipient_email", rs.getString("recipient_email"));
+                row.put("action_type", rs.getString("action_type"));
+                row.put("submitter_email", rs.getString("submitter_email"));
+                row.put("form_payload", rs.getString("form_payload"));
+                row.put("submitted_at", rs.getTimestamp("submitted_at"));
+                row.put("archived", rs.getBoolean("archived"));
+                row.put("archived_at", rs.getTimestamp("archived_at"));
+                return row;
+            }
+        }
+    }
+
+    public static int archiveKppGuestSubmission(Connection conn, long id) throws SQLException {
+        ensureKppGuestSubmissionTable(conn);
+        String sql = "UPDATE kpp_guest_form_submissions SET archived = 1, archived_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            return stmt.executeUpdate();
+        }
+    }
+
+    public static int unarchiveKppGuestSubmission(Connection conn, long id) throws SQLException {
+        ensureKppGuestSubmissionTable(conn);
+        String sql = "UPDATE kpp_guest_form_submissions SET archived = 0, archived_at = NULL WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            return stmt.executeUpdate();
+        }
+    }
+
+    public static int deleteKppGuestSubmission(Connection conn, long id) throws SQLException {
+        ensureKppGuestSubmissionTable(conn);
+        String sql = "DELETE FROM kpp_guest_form_submissions WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            return stmt.executeUpdate();
+        }
+    }
+
+    private static String buildKppDisplay(String position, String branch, String fallbackEmail) {
+        String safePosition = firstNonBlank(position);
+        String safeBranch = firstNonBlank(branch);
+
+        if (safePosition != null && safeBranch != null) {
+            return "Ketua Penolong Pengarah (" + safePosition + ") - " + safeBranch;
+        }
+        if (safePosition != null) {
+            return "Ketua Penolong Pengarah (" + safePosition + ")";
+        }
+        if (safeBranch != null) {
+            return "Ketua Penolong Pengarah (" + safeBranch + ")";
+        }
+        String fallback = firstNonBlank(fallbackEmail, "KPP Tidak Diketahui");
+        return "Ketua Penolong Pengarah (" + fallback + ")";
+    }
+
+    private static String toKppFormLabel(String actionType) {
+        String normalized = actionType == null ? "" : actionType.trim().toUpperCase(Locale.ROOT);
+        if ("KSPP_UJPPP".equals(normalized)) {
+            return "Borang KSPP/UJPPP";
+        }
+        if ("UJPPP".equals(normalized)) {
+            return "Borang UJPPP";
+        }
+        return "Borang KSPP";
+    }
+
+    private static String extractJsonStringValue(String json, String key) {
+        if (json == null || json.isBlank() || key == null || key.isBlank()) {
+            return "";
+        }
+
+        String pattern = "\"" + key + "\":\"";
+        int start = json.indexOf(pattern);
+        if (start < 0) {
+            return "";
+        }
+
+        int cursor = start + pattern.length();
+        StringBuilder value = new StringBuilder();
+        boolean escaping = false;
+
+        while (cursor < json.length()) {
+            char ch = json.charAt(cursor++);
+            if (escaping) {
+                switch (ch) {
+                    case 'n':
+                        value.append('\n');
+                        break;
+                    case 'r':
+                        value.append('\r');
+                        break;
+                    case 't':
+                        value.append('\t');
+                        break;
+                    case '\\':
+                        value.append('\\');
+                        break;
+                    case '"':
+                        value.append('"');
+                        break;
+                    default:
+                        value.append(ch);
+                        break;
+                }
+                escaping = false;
+                continue;
+            }
+
+            if (ch == '\\') {
+                escaping = true;
+                continue;
+            }
+
+            if (ch == '"') {
+                break;
+            }
+
+            value.append(ch);
+        }
+
+        return value.toString().trim();
+    }
+
+    private static String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            if (value != null) {
+                String trimmed = value.trim();
+                if (!trimmed.isBlank()) {
+                    return trimmed;
+                }
+            }
+        }
+        return null;
     }
 
     private static QueryParts buildApplicationFilter(String search, String status, String dateFrom, String dateTo) {
@@ -442,18 +810,60 @@ public final class DashboardDataService {
         return new QueryParts(clause.toString(), parameters);
     }
 
+    private static void ensureKppContactsTable(Connection conn) throws SQLException {
+        DatabaseMetaData meta = conn.getMetaData();
+        try (ResultSet rs = meta.getTables(null, null, "kpp_contacts", null)) {
+            if (rs.next()) {
+                return;
+            }
+        }
+
+        String ddl = "CREATE TABLE kpp_contacts ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT, "
+                + "name VARCHAR(150) NOT NULL, "
+                + "branch VARCHAR(180) NOT NULL, "
+                + "email VARCHAR(200) NOT NULL, "
+                + "is_active TINYINT(1) NOT NULL DEFAULT 1, "
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "PRIMARY KEY (id), "
+                + "UNIQUE KEY uk_kpp_contacts_email (email)"
+                + ")";
+
+        try (PreparedStatement stmt = conn.prepareStatement(ddl)) {
+            stmt.executeUpdate();
+        }
+    }
+
     private static String normalizeApplicationStatusFilter(String status) {
         if (status == null || status.isBlank()) {
             return null;
         }
 
         String normalized = status.trim().toUpperCase(Locale.ROOT);
+        if ("DALAM_SEMAKAN".equals(normalized) || "DALAM SEMAKAN".equals(normalized)) {
+            normalized = "UNDER_REVIEW";
+        } else if ("DALAM_PROSES".equals(normalized) || "DALAM PROSES".equals(normalized)) {
+            normalized = "IN_PROGRESS";
+        } else if ("DILULUSKAN".equals(normalized)) {
+            normalized = "APPROVED";
+        } else if ("DITOLAK".equals(normalized)) {
+            normalized = "REJECTED";
+        } else if ("DIGANTUNG".equals(normalized)) {
+            normalized = "SUSPENDED";
+        } else if ("DRAF".equals(normalized)) {
+            normalized = "DRAFT";
+        } else if ("DIARKIB".equals(normalized)) {
+            normalized = "ARCHIVED";
+        }
+
         if ("ARCHIVED".equals(normalized)
-                || "PENDING".equals(normalized)
-                || "APPROVED".equals(normalized)
-                || "REJECTED".equals(normalized)
-                || "SUSPENDED".equals(normalized)
-                || "DRAFT".equals(normalized)) {
+            || "NEW".equals(normalized)
+            || "UNDER_REVIEW".equals(normalized)
+            || "IN_PROGRESS".equals(normalized)
+            || "APPROVED".equals(normalized)
+            || "REJECTED".equals(normalized)
+            || "SUSPENDED".equals(normalized)
+            || "DRAFT".equals(normalized)) {
             return normalized;
         }
         return null;
@@ -465,8 +875,11 @@ public final class DashboardDataService {
 
         if (search != null && !search.isBlank()) {
             clause.append(" AND (product_materials LIKE ? OR supplier_agent LIKE ? OR brand LIKE ? OR classification LIKE ? "
+                    + "OR attachment_urls LIKE ? OR source_url LIKE ? "
                     + "OR DATE_FORMAT(supplier_valid_until, '%d-%m-%Y') LIKE ? OR DATE_FORMAT(supplier_valid_until, '%Y-%m-%d') LIKE ?)");
             String keyword = "%" + search.trim() + "%";
+            parameters.add(keyword);
+            parameters.add(keyword);
             parameters.add(keyword);
             parameters.add(keyword);
             parameters.add(keyword);
@@ -556,6 +969,38 @@ public final class DashboardDataService {
 
     private static void ensureAnnouncementColumn(Connection conn, String columnName, String alterSql) throws SQLException {
         if (columnExists(conn, "announcements", columnName)) {
+            return;
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(alterSql)) {
+            stmt.execute();
+        }
+    }
+
+    private static void ensureKppGuestSubmissionTable(Connection conn) throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS kpp_guest_form_submissions ("
+                + "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
+                + "recipient_email VARCHAR(255) NOT NULL,"
+                + "action_type VARCHAR(30) NOT NULL,"
+                + "token_hash VARCHAR(128) NOT NULL,"
+                + "submitter_email VARCHAR(255) NOT NULL,"
+                + "form_payload LONGTEXT NOT NULL,"
+                + "source_ip VARCHAR(64),"
+                + "archived TINYINT(1) NOT NULL DEFAULT 0,"
+                + "archived_at TIMESTAMP NULL,"
+                + "submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                + ")";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.execute();
+        }
+
+        ensureSubmissionColumn(conn, "archived",
+                "ALTER TABLE kpp_guest_form_submissions ADD COLUMN archived TINYINT(1) NOT NULL DEFAULT 0");
+        ensureSubmissionColumn(conn, "archived_at",
+                "ALTER TABLE kpp_guest_form_submissions ADD COLUMN archived_at TIMESTAMP NULL");
+    }
+
+    private static void ensureSubmissionColumn(Connection conn, String columnName, String alterSql) throws SQLException {
+        if (columnExists(conn, "kpp_guest_form_submissions", columnName)) {
             return;
         }
         try (PreparedStatement stmt = conn.prepareStatement(alterSql)) {
@@ -710,9 +1155,11 @@ public final class DashboardDataService {
         ensureCertificateColumns(conn);
         List<Map<String, Object>> applications = new ArrayList<>();
         int offset = (page - 1) * pageSize;
-        String sql = "SELECT id, product_name, company_name, status, submitted_at, admin_notes, "
-                + "certificate_number, issued_at, valid_until "
-                + "FROM applications WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        String sql = "SELECT a.id, a.product_name, a.company_name, a.status, a.submitted_at, a.admin_notes, "
+            + "a.certificate_number, a.issued_at, a.valid_until, ad.application_type "
+            + "FROM applications a "
+            + "LEFT JOIN application_details ad ON ad.application_id = a.id "
+            + "WHERE a.user_id = ? ORDER BY a.created_at DESC LIMIT ? OFFSET ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setInt(2, pageSize);
@@ -729,6 +1176,7 @@ public final class DashboardDataService {
                     row.put("certificate_number", rs.getString("certificate_number"));
                     row.put("issued_at", rs.getDate("issued_at"));
                     row.put("valid_until", rs.getDate("valid_until"));
+                    row.put("application_type", rs.getString("application_type"));
                     applications.add(row);
                 }
             }
@@ -769,6 +1217,27 @@ public final class DashboardDataService {
             }
         }
         return list;
+    }
+
+    public static Map<String, Object> loadLatestUnreadNotificationByType(Connection conn, int userId, String type) throws SQLException {
+        ensureNotificationsTable(conn);
+        String sql = "SELECT id, message, type, created_at FROM notifications "
+                + "WHERE user_id = ? AND is_read = 0 AND type = ? ORDER BY created_at DESC LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setString(2, type);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("message", rs.getString("message"));
+                    row.put("type", rs.getString("type"));
+                    row.put("created_at", rs.getTimestamp("created_at"));
+                    return row;
+                }
+            }
+        }
+        return null;
     }
 
     public static int countUnreadNotifications(Connection conn, int userId) throws SQLException {

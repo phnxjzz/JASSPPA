@@ -20,7 +20,10 @@ Get-Service MySQL80 | Start-Service
 Start-Sleep -Seconds 3
 
 # 4. Jalankan Tomcat
-p:\ProjectLI\runtime\apache-tomcat-11.0.18\bin\startup.bat
+ $env:JAVA_HOME = "C:\Program Files\Java\jdk-21.0.10"
+>> $env:CATALINA_HOME = "p:\ProjectLI\runtime\apache-tomcat-11.0.18"
+>> $env:CATALINA_BASE = "p:\ProjectLI\runtime\apache-tomcat-11.0.18"
+>> & "p:\ProjectLI\runtime\apache-tomcat-11.0.18\bin\startup.bat"
 
 # 5. Tunggu 10 saat untuk Tomcat startup
 Start-Sleep -Seconds 10

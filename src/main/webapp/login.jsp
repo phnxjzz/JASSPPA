@@ -1,10 +1,10 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log Masuk - Sistem Pendaftaran Produk Air</title>
+    <title>Log Masuk - Sistem Pendaftaran Pembekal dan Produk Air</title>
     <style>
         :root {
             --brand-blue: #2A9D8F;
@@ -14,13 +14,14 @@
             --brand-yellow: #F2F72E;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-yellow) 100%); min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: url('${pageContext.request.contextPath}/assets/images/login-register-bg.jpg') center/cover no-repeat fixed; min-height: 100vh; display: grid; place-items: center; padding: 24px; position: relative; }
+        body::before { content: ''; position: fixed; inset: 0; background: rgba(255,255,255,0.45); z-index: 0; pointer-events: none; }
+        .login-shell { position: relative; z-index: 1; }
         .login-shell { display: grid; grid-template-columns: 1.05fr 0.95fr; width: 100%; max-width: 1080px; border-radius: 24px; overflow: hidden; box-shadow: 0 24px 60px rgba(6, 52, 79, 0.22); }
         .brand-panel { background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%); color: white; padding: 40px; }
         .brand-panel .logo { width: 78px; height: 78px; border-radius: 18px; margin-bottom: 18px; object-fit: contain; padding: 6px; display: block; }
-        .brand-panel h1 { font-size: 34px; margin-bottom: 10px; }
-        .brand-panel p { max-width: 420px; line-height: 1.7; }
-        .login-container { padding: 44px; }
+        .brand-panel h1 { font-size: 34px; margin-bottom: 10px; color: #000000; }
+        .login-container { padding: 44px; background: rgba(255,255,255,0.95); }
         .login-header { margin-bottom: 30px; }
         .login-header h1 { color: #173040; font-size: 28px; margin-bottom: 8px; }
         .login-header p { color: #60798b; font-size: 14px; }
@@ -32,6 +33,15 @@
         .form-group select:focus { outline: none; border-color: var(--brand-blue); }
         .login-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 100%); color: white; border: 1px solid #fff; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; }
         .error-message { color: #d32f2f; padding: 12px; margin-bottom: 15px; background: #ffebee; border-radius: 10px; font-size: 14px; }
+        .maintenance-notice {
+            color: #7a4e1f;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #fff4e6;
+            border: 1px solid #f2c18b;
+            border-radius: 10px;
+            font-size: 14px;
+        }
         .success-message { color: #166534; padding: 12px; margin-bottom: 15px; background: #dcfce7; border-radius: 10px; font-size: 14px; display: flex; align-items: center; gap: 10px; }
         .success-popup {
             position: fixed;
@@ -110,9 +120,11 @@
         .register-link a { color: var(--brand-blue); text-decoration: none; font-weight: 700; }
         .forgot-link { text-align: right; margin-top: -10px; margin-bottom: 14px; }
         .forgot-link a { color: #146594; text-decoration: none; font-size: 13px; font-weight: 700; }
-        .contact-box { margin-top: 16px; border: 1px solid #d7e7ef; border-radius: 12px; padding: 12px; background: #f8fcff; }
-        .contact-box strong { display: block; margin-bottom: 6px; color: #173040; }
-        .contact-box p { margin: 3px 0; color: #60798b; font-size: 13px; }
+        .contact-box { margin-top: 16px; border: 1px solid #d7e7ef; border-radius: 12px; padding: 14px; background: #f8fcff; }
+        .contact-box > strong { display: block; margin-bottom: 10px; color: #173040; font-size: 14px; }
+        .contact-item { margin: 8px 0; color: #60798b; font-size: 13px; line-height: 1.45; }
+        .contact-item .contact-label { display: block; font-weight: 700; color: #173040; margin-bottom: 2px; }
+        .contact-item .contact-value { display: block; }
         .floating-home-btn { position: fixed; right: 16px; top: 16px; z-index: 20; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 999px; border: 1px solid #fff; background: rgba(255, 255, 255, 0.18); }
         .floating-home-btn img { width: 18px; height: 18px; object-fit: contain; }
         @media (max-width: 920px) { .login-shell { grid-template-columns: 1fr; } .brand-panel { display:none; } }
@@ -150,27 +162,37 @@
         a.btn:focus {
             border: 1px solid #fff !important;
             box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
-        }</style>
+        }
+        .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
+        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; }
+        .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; min-width: 0; }
+        .jans-contact-section .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .jans-contact-section .contact-line span { line-height: 1.45; }
+    </style>
 </head>
 <body>
     <% String selectedRole = (String) request.getAttribute("selected_role"); %>
     <% if (selectedRole == null) { selectedRole = ""; } %>
+    <% boolean maintenanceMode = Boolean.TRUE.equals(request.getAttribute("maintenance_mode")); %>
+    <% boolean userPortalLocked = maintenanceMode && "USER".equals(selectedRole); %>
     <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama"></a>
     <div class="login-shell">
         <div class="brand-panel">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="logo" alt="Logo Jabatan Air Sabah">
-            <h1>SPPA</h1>
-            <p>Portal rasmi Jabatan Air Negeri Sabah untuk pendaftaran produk air, semakan permohonan, dan rujukan produk yang telah berdaftar.</p>
+            <h1>Sistem Pendaftaran Pembekal dan Produk Air</h1>
         </div>
         <div class="login-container">
             <div class="login-header">
                 <h1>Log Masuk Sistem</h1>
-                <p>Sistem Pendaftaran Produk Air</p>
+                <p>Sistem Pendaftaran Pembekal dan Produk Air</p>
             </div>
         
         <% String error = (String) request.getAttribute("error"); %>
         <% if (error != null) { %>
             <div class="error-message"><%= error %></div>
+        <% } %>
+        <% if (userPortalLocked) { %>
+            <div class="maintenance-notice">Portal Pemohon sedang dalam mod penyelenggaraan. Log masuk pemohon dinyahaktifkan sementara.</div>
         <% } %>
         <% String success = (String) request.getAttribute("success"); %>
         <% if (success != null) { %>
@@ -220,11 +242,14 @@
             <div class="register-link">
                 Belum mempunyai akaun? <a href="${pageContext.request.contextPath}/register">Daftar di sini</a>
             </div>
-            <div class="contact-box">
-                <strong><img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Hubungi" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Hubungi JANS</strong>
-                <p>+60-88-232364 (HQ)</p>
-                <p>+60-88-232396</p>
-                <p>jans.hq@sabah.gov.my</p>
+            <div class="container" style="padding-top:0;">
+                <div class="jans-contact-section">
+                    <h3>Hubungi JANS</h3>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
             </div>
         </div>
     </div>
@@ -253,3 +278,5 @@
 </script>
 </body>
 </html>
+
+

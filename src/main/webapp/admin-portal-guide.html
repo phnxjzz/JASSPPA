@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Admin Portal - SPPA</title>
+    <style>
+        :root {
+            --brand-blue: #0097d9;
+            --brand-navy: #06344f;
+            --surface: #ffffff;
+            --line: #d9e7f1;
+            --text: #183244;
+            --muted: #607989;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%);
+        }
+        .wrap {
+            max-width: 900px;
+            margin: 28px auto;
+            padding: 0 16px 28px;
+        }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 12px 28px rgba(6, 52, 79, 0.08);
+            margin-bottom: 14px;
+        }
+        h1 {
+            margin: 0 0 8px;
+            color: var(--brand-navy);
+            font-size: 28px;
+        }
+        h2 {
+            margin: 0 0 8px;
+            color: var(--brand-navy);
+            font-size: 18px;
+        }
+        p { margin: 0 0 10px; line-height: 1.6; }
+        ol, ul { margin: 0; padding-left: 20px; line-height: 1.7; }
+        .muted { color: var(--muted); }
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-weight: 700;
+            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid #b8d6e8;
+            background: #e9f5fc;
+            color: #0f4f79;
+        }
+        .btn.primary {
+            background: var(--brand-blue);
+            color: #ffffff;
+            border-color: var(--brand-blue);
+        }
+        code {
+            background: #eef6fb;
+            border: 1px solid #d7e8f3;
+            border-radius: 6px;
+            padding: 1px 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <h1>Panduan Admin Portal SPPA</h1>
+            <p class="muted">Panduan ringkas untuk pentadbir mengurus permohonan, pengumuman, pengguna, dan semakan status.</p>
+            <div class="actions">
+                <a class="btn primary" href="./dashboard">Buka Dashboard Admin</a>
+                <a class="btn" href="./">Laman Utama</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>1. Login Admin</h2>
+            <ol>
+                <li>Buka halaman login dan masuk menggunakan akaun admin.</li>
+                <li>Selepas berjaya login, sistem bawa anda ke Dashboard Pentadbir.</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2>2. Semak Permohonan</h2>
+            <ol>
+                <li>Guna carian, status, dan tarikh untuk tapis rekod.</li>
+                <li>Tekan butang <code>Semak</code> untuk lihat butiran permohonan.</li>
+                <li>Lakukan tindakan kelulusan/penolakan/arkib ikut keperluan.</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2>3. Pengurusan Pengumuman</h2>
+            <ol>
+                <li>Pergi ke panel <code>Pengurusan Pengumuman</code>.</li>
+                <li>Tambah atau kemas kini tajuk, kandungan, dan gambar (jika perlu).</li>
+                <li>Aktifkan pengumuman untuk paparan di halaman utama.</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2>4. Pengurusan Pengguna Dan Produk</h2>
+            <ul>
+                <li>Gunakan butang sidebar <code>Urus Pengguna</code> untuk pengurusan akaun.</li>
+                <li>Gunakan butang sidebar <code>Senarai Produk</code> untuk semakan produk berdaftar.</li>
+                <li>Gunakan <code>Kemaskini Profil</code> untuk kemas kini maklumat admin.</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>5. Amalan Penting Admin</h2>
+            <ul>
+                <li>Semak rekod notifikasi setiap hari.</li>
+                <li>Pastikan tindakan audit direkod dengan betul.</li>
+                <li>Simpan bukti semakan untuk rekod dalaman bila perlu.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

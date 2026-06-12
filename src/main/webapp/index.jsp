@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Collections" %>
@@ -105,6 +105,7 @@
 %>
 <%
     List<Map<String, Object>> homepageAnnouncements = Collections.emptyList();
+    boolean maintenanceMode = Boolean.TRUE.equals(application.getAttribute("maintenanceMode"));
     try (Connection conn = DatabaseConfig.getConnection()) {
         homepageAnnouncements = DashboardDataService.loadActiveAnnouncements(conn, 5);
     } catch (Exception ignored) {
@@ -116,18 +117,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Pendaftaran Produk Air (SPPA)</title>
-    <meta name="description" content="Portal rasmi SPPA Jabatan Air Negeri Sabah untuk pendaftaran produk air, pengumuman, dan semakan status permohonan.">
+    <title>Sistem Pendaftaran Pembekal dan Produk Air (SPPPA)</title>
+    <meta name="description" content="Portal rasmi Sistem Pendaftaran Pembekal dan Produk Air Jabatan Air Negeri Sabah untuk pendaftaran produk air, pengumuman, dan semakan status permohonan.">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
 
         :root {
-            --brand-blue: #2A9D8F;
+            --brand-blue: #1e88e5;
             --brand-navy: #0F6BAE;
-            --brand-green: #6DBE45;
-            --brand-lime: #CDE11D;
             --brand-sky: #edf4fb;
-            --brand-gold: #F2F72E;
             --surface: #ffffff;
             --surface-soft: #f3f8fc;
             --text: #1a3040;
@@ -141,7 +139,7 @@
             font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif;
             line-height: 1.6;
             color: var(--text);
-            background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%);
+            background: #eef5fb;
             min-height: 100vh;
         }
 
@@ -149,13 +147,13 @@
             position: sticky;
             top: 0;
             z-index: 30;
-            background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%);
+            background: #0f6bae;
             color: white;
             padding: 14px 26px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 3px solid var(--brand-gold);
+            border-bottom: 3px solid #65aeea;
             box-shadow: 0 12px 28px rgba(8, 51, 77, 0.2);
         }
         .brand { display: flex; align-items: center; gap: 14px; }
@@ -176,31 +174,63 @@
         }
         .nav-link:hover, .nav-link:focus { background: rgba(255, 255, 255, 0.12); }
         .nav-link.primary {
-            background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 45%, var(--brand-green) 100%);
+            background: #1e88e5;
             border-color: rgba(255,255,255,0.35);
             color: #ffffff;
         }
 
         .hero {
             position: relative;
+            height: auto;
+            min-height: 260px;
             overflow: hidden;
-            background: linear-gradient(128deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%);
+            display: flex;
+            align-items: center;
+            padding: 72px 28px 72px 12px;
+            background: #1579cc;
             color: white;
-            padding: 72px 28px;
             border-bottom-left-radius: 28px;
             border-bottom-right-radius: 28px;
             box-shadow: 0 16px 42px rgba(6, 47, 72, 0.22);
         }
+        /* Shared blob base */
+        .hero::before,
         .hero::after {
             content: "";
             position: absolute;
-            right: -70px;
-            top: -80px;
-            width: 300px;
-            height: 300px;
             border-radius: 50%;
-            background: rgba(255, 216, 87, 0.25);
+            filter: blur(120px);
+            opacity: 0.7;
+            z-index: 1;
         }
+        /* Left big soft blob */
+        .hero::before {
+            width: 500px;
+            height: 500px;
+            background: #4ca6f2;
+            top: 50px;
+            left: -100px;
+        }
+        /* Right glow */
+        .hero::after {
+            width: 600px;
+            height: 600px;
+            background: #1e88e5;
+            top: 0;
+            right: -150px;
+        }
+        .hero-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 2;
+        }
+        .hero-circle.small  { width: 40px;  height: 40px;  }
+        .hero-circle.medium { width: 80px;  height: 80px;  }
+        .hero-circle1 { top: 80px;    left: 200px;  }
+        .hero-circle2 { top: 150px;   right: 300px; }
+        .hero-circle3 { bottom: 60px; left: 300px;  }
         .hero-watermark {
             position: absolute;
             inset: 0;
@@ -208,18 +238,23 @@
             height: 100%;
             object-fit: contain;
             object-position: center;
-            opacity: 0.09;
+            opacity: 0.16;
             pointer-events: none;
             z-index: 0;
             padding: 44px;
+            filter: brightness(1.12);
         }
         .hero-inner {
             max-width: 1020px;
-            margin: 0 auto;
+            margin: 0;
             position: relative;
-            z-index: 1;
+            z-index: 10;
+            width: 100%;
+            text-align: left;
         }
         .hero h1 {
+            position: relative;
+            z-index: 11;
             font-size: clamp(30px, 4vw, 52px);
             line-height: 1.14;
             margin-bottom: 14px;
@@ -228,7 +263,7 @@
             animation: riseIn .55s ease-out;
         }
         .hero p { font-size: 17px; margin-bottom: 20px; max-width: 720px; color: rgba(255,255,255,0.95); animation: riseIn .72s ease-out; }
-        .hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+        .hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; justify-content: flex-start; }
         .hero-badge {
             display: inline-flex;
             align-items: center;
@@ -293,6 +328,18 @@
             font-size: 22px;
             color: #0d4568;
         }
+        .role-card-head {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .role-card-icon {
+            width: 46px;
+            height: 46px;
+            object-fit: contain;
+            flex: 0 0 46px;
+            margin-top: 2px;
+        }
         .role-card p {
             margin: 0;
             color: #2d556d;
@@ -309,7 +356,7 @@
             font-weight: 800;
             color: #ffffff;
             border: 1px solid rgba(255, 255, 255, 0.85);
-            background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 45%, var(--brand-green) 100%);
+            background: #1e88e5;
             transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
             box-shadow: 0 10px 20px rgba(6, 47, 72, 0.18);
         }
@@ -365,12 +412,59 @@
             box-shadow: 0 14px 30px rgba(6, 47, 72, 0.08);
             overflow: hidden;
         }
+        .maintenance-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(5, 29, 45, 0.35);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 14px 12px;
+            z-index: 1300;
+            pointer-events: none;
+        }
+        .maintenance-banner {
+            width: min(980px, calc(100vw - 24px));
+            margin: 0;
+            padding: 12px 16px;
+            border: 1px solid #f2c18b;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 10px 24px rgba(93, 60, 7, 0.14);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: auto;
+        }
+        .admin-access-card { position: relative; z-index: 1310; }
+        .admin-access-card .role-login-btn { position: relative; z-index: 1311; }
+        .maintenance-banner img {
+            width: 88px;
+            height: 60px;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+        .maintenance-banner strong {
+            display: block;
+            margin-bottom: 3px;
+            color: #7b3f00;
+            font-size: 18px;
+        }
+        .maintenance-banner p {
+            margin: 0;
+            color: #7a4e1f;
+            font-size: 14px;
+            line-height: 1.45;
+        }
         .announcement-header {
             display: flex;
             align-items: center;
             gap: 10px;
             padding: 16px 18px;
-            background: linear-gradient(135deg, #f5fbff 0%, #e8f4fb 100%);
+            background: #eaf4ff;
             border-bottom: 1px solid #d9e7f1;
         }
         .icon-badge {
@@ -403,25 +497,30 @@
 
         .hero-contact {
             width: 100%;
-            border-radius: 18px;
-            border: 1px solid #d7e8f3;
-            background: var(--surface);
-            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid #d6e5ef;
+            background: #f8fcff;
+            padding: 12px;
             box-shadow: 0 8px 24px rgba(6, 47, 72, 0.07);
+            margin-top: 10px;
         }
-        .hero-contact h3 { margin: 0 0 10px; font-size: 16px; color: var(--brand-navy); }
-        .hero-contact p { margin: 6px 0; font-size: 14px; color: #27485a; }
+        .hero-contact h3 { margin: 0 0 10px; font-size: 16px; color: #0f6bae; font-weight: 700; letter-spacing: 0; }
+        .hero-contact p { margin: 7px 0; font-size: 13px; color: #4e6a7c; line-height: 1.45; }
         .contact-line {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 8px;
         }
         .contact-line .contact-icon {
-            width: 16px;
-            height: 16px;
-            object-fit: contain;
-            flex: 0 0 16px;
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #0f6bae;
+            border-radius: 2px;
+            flex-shrink: 0;
+            margin-top: 2px;
         }
+        .hero-contact .contact-line span { line-height: 1.45; }
 
         footer {
             background: #072d43;
@@ -480,10 +579,22 @@
             .nav-link { flex: 1; text-align: center; }
             .role-choice-grid { grid-template-columns: 1fr; }
             .role-choice-wrap { margin-top: -18px; }
+            .role-card-icon { width: 42px; height: 42px; flex-basis: 42px; }
         }
         </style>
 </head>
 <body>
+    <% if (maintenanceMode) { %>
+    <div class="maintenance-overlay" aria-hidden="true">
+        <div class="maintenance-banner" role="status" aria-live="polite" aria-atomic="true">
+            <img src="${pageContext.request.contextPath}/icon/under-maintenance.gif" alt="Sistem dalam penyelenggaraan">
+            <div>
+                <strong>Sistem Sedang Dalam Penyelenggaraan</strong>
+                <p>Sila cuba semula selepas penyelenggaraan selesai.</p>
+            </div>
+        </div>
+    </div>
+    <% } %>
     <div class="navbar">
         <div class="brand">
             <div class="brand-logos">
@@ -491,7 +602,7 @@
                 <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             </div>
             <div class="brand-text">
-                <strong>SPPA</strong>
+                <strong>Sistem Pendaftaran Pembekal dan Produk Air</strong>
                 <span>Jabatan Air Negeri Sabah</span>
             </div>
         </div>
@@ -500,34 +611,37 @@
             <a class="nav-link primary" href="${pageContext.request.contextPath}/register">Daftar Pemohon</a>
         </div>
     </div>
-
     <div class="hero">
         <img src="${pageContext.request.contextPath}/assets/images/Logo JAS.png" class="hero-watermark" alt="" aria-hidden="true">
+        <div class="hero-circle small  hero-circle1" aria-hidden="true"></div>
+        <div class="hero-circle medium hero-circle2" aria-hidden="true"></div>
+        <div class="hero-circle small  hero-circle3" aria-hidden="true"></div>
         <div class="hero-inner">
             <div>
-                <div class="hero-badges">
-                    <span class="hero-badge">Portal Rasmi SPPA</span>
-                    <span class="hero-badge">Mesra Pengguna</span>
-                    <span class="hero-badge">Akses Dalam Talian 24/7</span>
-                </div>
-                <h1>Selamat Datang ke Sistem Pendaftaran Produk Air Negeri Sabah</h1>
+                <h1>Selamat Datang ke Sistem Pendaftaran Pembekal dan Produk Air</h1>
             </div>
         </div>
     </div>
 
     <section class="role-choice-wrap" aria-label="Pilih peranan log masuk">
         <div class="role-choice-grid">
-            <article class="role-card">
-                <div>
-                    <h3>Portal Pentadbir</h3>
-                    <p>Untuk pengurusan aplikasi, semakan pengguna, dan pemantauan sistem SPPA.</p>
+            <article class="role-card admin-access-card">
+                <div class="role-card-head">
+                    <img class="role-card-icon" src="${pageContext.request.contextPath}/assets/images/admin.png" alt="Ikon portal pentadbir">
+                    <div>
+                        <h3>Portal Pentadbir</h3>
+                        <p>Untuk pengurusan aplikasi, semakan pengguna, dan pemantauan Sistem Pendaftaran Pembekal dan Produk Air.</p>
+                    </div>
                 </div>
                 <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=ADMIN">Log Masuk Sebagai Admin</a>
             </article>
             <article class="role-card">
-                <div>
-                    <h3>Portal Pemohon</h3>
-                    <p>Untuk pendaftaran produk air, kemas kini maklumat, dan semakan status permohonan.</p>
+                <div class="role-card-head">
+                    <img class="role-card-icon" src="${pageContext.request.contextPath}/assets/images/users.png" alt="Ikon portal pemohon">
+                    <div>
+                        <h3>Portal Pemohon</h3>
+                        <p>Untuk pendaftaran produk air, kemas kini maklumat, dan semakan status permohonan.</p>
+                    </div>
                 </div>
                 <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=USER">Log Masuk Sebagai Pemohon</a>
             </article>
@@ -563,38 +677,19 @@
             </div>
         </div>
 
-        <div class="hero-contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
-            <h3>
-                <span class="icon-badge" aria-hidden="true" style="vertical-align:middle; margin-right:6px;">
-                    <img src="${pageContext.request.contextPath}/assets/images/icon-hubungi.png" alt="Ikon hubungi">
-                </span>
-                Hubungi JANS
-            </h3>
-            <p class="contact-line">
-                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/address.png" alt="Ikon alamat">
-                <span>
-                    SABAH WATER DEPARTMENT / JABATAN AIR SABAH<br>
-                    Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825<br>
-                    Kota Kinabalu, Sabah, Malaysia
-                </span>
-            </p>
-            <p class="contact-line">
-                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/phone.png" alt="Ikon telefon">
-                <span>Tel: +60-88-232364 (HQ)</span>
-            </p>
-            <p class="contact-line">
-                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/fax.png" alt="Ikon fax">
-                <span>Fax: +60-88-232396</span>
-            </p>
-            <p class="contact-line">
-                <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/email.png" alt="Ikon emel">
-                <span>Email: jans.hq@sabah.gov.my</span>
-            </p>
+        <div class="container" style="padding-top:0;">
+            <div class="jans-contact-section">
+                <h3>Hubungi JANS</h3>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2026 Sistem Pendaftaran Produk Air (SPPA). Semua hak terpelihara.</p>
+        <p>&copy; 2026 Sistem Pendaftaran Pembekal dan Produk Air (SPPPA). Semua hak terpelihara.</p>
         <p>Jabatan Air Negeri Sabah</p>
         <p class="footer-links">
             <a href="${pageContext.request.contextPath}/privacy-policy">Dasar Privasi</a>
@@ -608,10 +703,10 @@
 <script>
 (function() {
     var homeBtn = document.querySelector('.floating-home-btn');
-    if (!homeBtn) return;
+    if (homeBtn) return;
 
-    var navContainer = document.querySelector('.navbar > div:last-child');
-    if (!navContainer) navContainer = document.querySelector('.navbar');
+    var navContainer =document.querySelector('.nav-action > div:last-child');
+    if (!navContainer) navContainer = document.querySelector('.nav-actions');
     if (!navContainer) return;
 
     if (homeBtn.parentElement !== navContainer) {
@@ -621,3 +716,4 @@
 </script>
 </body>
 </html>
+

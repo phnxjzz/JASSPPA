@@ -29,7 +29,11 @@ public class LoginServlet extends HttpServlet {
         if (session.getAttribute("user_id") != null) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
         } else {
-            request.setAttribute("selected_role", normalizeRole(request.getParameter("role")));
+            String selectedRole = normalizeRole(request.getParameter("role"));
+            boolean maintenanceMode = Boolean.TRUE.equals(getServletContext().getAttribute("maintenanceMode"));
+            request.setAttribute("selected_role", selectedRole);
+            request.setAttribute("maintenance_mode", maintenanceMode);
+
             if (request.getParameter("registered") != null) {
                 request.setAttribute("success", "Akaun berjaya didaftarkan. Sila log masuk.");
             } else if (request.getParameter("verify_pending") != null) {
@@ -49,6 +53,9 @@ public class LoginServlet extends HttpServlet {
         String username = trim(request.getParameter("username"));
         String password = trim(request.getParameter("password"));
         String selectedRole = normalizeRole(request.getParameter("portal_role"));
+        boolean maintenanceMode = Boolean.TRUE.equals(getServletContext().getAttribute("maintenanceMode"));
+
+        request.setAttribute("maintenance_mode", maintenanceMode);
 
         if (username.isEmpty() || password.isEmpty()) {
             request.setAttribute("error", "Username dan kata laluan diperlukan.");
@@ -86,16 +93,32 @@ public class LoginServlet extends HttpServlet {
                         }
 
                         String userRole = rs.getString("role");
-                        if (selectedRole != null && !selectedRole.equals(userRole)) {
-                            RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
-                            if ("ADMIN".equals(selectedRole) && "USER".equals(userRole)) {
-                                request.setAttribute("portal_error", "Sila Pergi ke Portal Pemohon!");
-                            } else {
-                                request.setAttribute("error", "Akaun ini tidak sepadan dengan portal yang dipilih.");
-                            }
-                            request.setAttribute("selected_role", selectedRole);
+                        if (maintenanceMode && "USER".equals(userRole)) {
+                            request.setAttribute("error", "Portal Pemohon sedang dalam penyelenggaraan. Sila cuba lagi sebentar.");
+                            request.setAttribute("selected_role", selectedRole != null ? selectedRole : "USER");
                             request.getRequestDispatcher("/login.jsp").forward(request, response);
                             return;
+                        }
+
+                        if (selectedRole != null && !selectedRole.equals(userRole)) {
+                            boolean userTryingAdminPortal = "ADMIN".equals(selectedRole) && "USER".equals(userRole);
+                            boolean adminUsingApplicantPortal = "USER".equals(selectedRole) && "ADMIN".equals(userRole);
+
+                            if (userTryingAdminPortal) {
+                                RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
+                                request.setAttribute("portal_error", "Sila Pergi ke Portal Pemohon!");
+                                request.setAttribute("selected_role", selectedRole);
+                                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                                return;
+                            }
+
+                            if (!adminUsingApplicantPortal) {
+                                RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
+                                request.setAttribute("error", "Akaun ini tidak sepadan dengan portal yang dipilih.");
+                                request.setAttribute("selected_role", selectedRole);
+                                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                                return;
+                            }
                         }
 
                         // Migrate plain-text or SHA-256 hashes to BCrypt on successful login

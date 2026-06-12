@@ -1,0 +1,16 @@
+{
+  "azure-database-mysql-01000": "mi-mysql",
+  "openliberty-filesystem-00001": "bare/openliberty-migration/openliberty-filesystem",
+  "azure-aws-config-credential-01000": "bare/aws-credentials-to-azure",
+  "azure-system-config-01000": "bare/configuration-management/environment-variables",
+  "localhost-jdbc-00002": "bare/local-resource-access",
+  "localhost-00004": "bare/local-resource-access",
+  "localhost-http-00001": "bare/local-resource-access",
+  "hardcoded-urls-00001": "bare/remote-communication/hardcoded-urls",
+  "local-storage-00001": "local-files-to-mounted-azure-storage",
+  "local-storage-00005": "local-files-to-mounted-azure-storage",
+  "local-storage-00004": "local-files-to-mounted-azure-storage",
+  "session-00001": "cache-solution-to-azure-managed-cache",
+  "unsecure-network-protocol-00000": "bare/remote-communication/secure-protocols",
+  "ant-build-tool-00001": "ant-project-to-maven-project"
+}

@@ -247,25 +247,29 @@ def write_records_to_mysql(records: List[ProductRecord], connection) -> int:
 	return count
 
 
-def main() -> None:
-	print("Scraping Sabah water product pages...")
-	records = scrape_all_pages(BASE_URL)
-	files = save_outputs(records, OUTPUT_DIR)
-	print(f"Saved {len(records)} records to {files['json']} and {files['csv']}")
-
-	try:
-		connection = get_mysql_connection()
-		if connection is None:
-			print("Skipped MySQL write: set at least MYSQL_USER")
-			return
-		inserted = write_records_to_mysql(records, connection)
-		print(f"Upserted {inserted} records into MySQL table water_products")
-	except Error as exc:
-		print(f"MySQL write failed: {exc}")
-	finally:
-		if "connection" in locals() and connection and connection.is_connected():
-			connection.close()
-
-
-if __name__ == "__main__":
-	main()
+def main():
+    records = scrape_all_pages()
+    print(f"Scraped {len(records)} records from the website.")
+    output = save_outputs(records)
+    print(f"Saved JSON to: {output['json']}")
+    print(f"Saved CSV to: {output['csv']}")
+    try:
+        connection = get_mysql_connection()
+        if connection:
+            inserted_count = write_records_to_mysql(records, connection)
+            print(f"Inserted/Updated {inserted_count} records into MySQL database.")
+            connection.close()
+        else:
+            print("MySQL connection parameters not set. Skipping database insertion.")
+    except Error as e:
+        print(f"MySQL error: {e}")
+        if connection and connection.is_connected():
+            connection.close()
+                
+            if __name__ == "__main__":
+                main()
+                
+            
+            
+            
+    

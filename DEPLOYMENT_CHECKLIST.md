@@ -11,6 +11,17 @@
 - [x] Error handling doesn't expose sensitive information
 - [x] WAR file builds cleanly: `mvn clean package`
 - [x] All dependencies updated and vulnerable packages patched
+- [x] BCrypt password hashing implemented (org.mindrot.jbcrypt)
+- [x] Rate limiting enforced on login endpoint (RateLimitFilter)
+- [x] Input validation and sanitization via ValidationUtil
+- [x] Excel formula injection prevention in AdminExportServlet
+- [x] Email verification token flow implemented (EmailVerificationServlet)
+- [x] Audit logging for admin actions
+- [x] Email notifications for application status changes
+- [x] Announcement image upload with size/format validation (max 10MB)
+- [x] User avatar upload with image validation (ProfileServlet + UserAvatarServlet)
+- [x] Certificate/Perakuan generation (CertificateServlet)
+- [x] Application submission with DB transaction handling
 - [ ] Load testing completed (optional but recommended)
 - [ ] Security audit completed (optional)
 
@@ -26,8 +37,17 @@
 - [x] All tests pass locally: `mvn clean test`
 - [x] Web form validation working (JavaScript + server-side)
 - [x] Login functionality tested with multiple users
+- [x] Rate limiting tested (multiple failed logins trigger block)
+- [x] Email verification flow tested (register → verify email → login)
+- [x] Forgot password flow tested (request → email → reset → login)
 - [x] Admin dashboard functionality verified
+- [x] Export PDF and Export Excel (.xlsx) verified
+- [x] Announcement image upload/display verified
+- [x] User avatar upload verified
+- [x] Certificate/Perakuan generation and print verified
+- [x] Application submission transaction rollback tested
 - [x] Mobile responsiveness checked
+- [x] Smoke test passes: `ops-scripts\smoke-test.ps1`
 - [ ] Cross-browser testing (Chrome, Firefox, Safari, Edge)
 - [ ] Load testing with 100+ concurrent users (optional)
 
@@ -35,7 +55,7 @@
 - [x] README.md updated with deployment info
 - [x] DEPLOYMENT_CLOUD.md created (AWS/GCP/Railway comparison)
 - [x] DEPLOYMENT_RAILWAY.md created (step-by-step Railway guide)
-- [x] PANDUAN_PENGGUNA.md created (user guide in Malay)
+- [x] PANDUAN_PENGGUNA.md updated (user guide in Malay — all new features)
 - [x] LANCARKAN_SISTEM.md created (admin startup guide in Malay)
 - [x] .env.example created (env vars template)
 - [x] GitHub repo commits pushed
@@ -107,14 +127,19 @@
 
 ### Step 7: Launch & Testing
 - [ ] Application accessible at https://sppa.gov
-- [ ] Login page loads correctly
-- [ ] Admin login works (admin/admin123)
-- [ ] User registration works
+- [ ] Login page loads correctly (portal selection visible)
+- [ ] Admin login works (admin/admin123 — **change immediately after**)
+- [ ] User registration works with email verification
+- [ ] Forgot password flow works end-to-end
 - [ ] Database queries functional
-- [ ] File uploads/downloads working
-- [ ] Admin dashboard loading correctly
+- [ ] File uploads/downloads working (avatar, announcement images, documents)
+- [ ] Admin dashboard loading correctly with statistics
 - [ ] Products list displaying
-- [ ] Email notifications working (if configured)
+- [ ] Export PDF and Export Excel working
+- [ ] Certificate/Perakuan generation working
+- [ ] Email notifications working (registration, status changes)
+- [ ] Rate limiting active on login (test with repeated failures)
+- [ ] Announcement image upload working
 
 ### Step 8: Monitoring & Logging
 - [ ] Application logs accessible
@@ -127,17 +152,23 @@
 ### Step 9: Security Hardening
 - [ ] Firewall rules configured
 - [ ] DDoS protection enabled (Cloudflare/WAF)
-- [ ] Rate limiting configured
-- [ ] Input validation enabled
-- [ ] SQL injection protection verified
-- [ ] XSS protection verified
-- [ ] CSRF tokens functional
+- [x] Rate limiting configured (RateLimitFilter — built-in)
+- [x] Input validation enabled (ValidationUtil — built-in)
+- [x] SQL injection protection verified (PreparedStatements throughout)
+- [x] XSS protection verified (output escaping in JSPs)
+- [x] Password hashing with BCrypt (built-in)
+- [x] Excel formula injection prevention (AdminExportServlet)
+- [x] File upload type/size validation (built-in)
+- [ ] CSRF tokens (verify or add for production)
+- [ ] Change default admin credentials post-deployment
 
 ### Step 10: Post-Deployment
-- [ ] Change admin password (admin/admin123 → secure password)
+- [ ] **Change admin password immediately** (admin/admin123 → secure password)
 - [ ] Create admin accounts for team members
+- [ ] Configure SMTP settings for email notifications and verification
+- [ ] Test email verification flow with real email address
 - [ ] Announce system to users
-- [ ] Monitor logs for errors
+- [ ] Monitor logs for errors (`catalina.out` and audit log)
 - [ ] Backup schedule verified
 - [ ] Support channel established (email/ticketing)
 
