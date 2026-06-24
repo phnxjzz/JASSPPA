@@ -21,6 +21,8 @@ Scripts/
 # Runtime Tomcat logs (continuously appended while server runs)
 runtime/apache-tomcat-11.0.18/logs/*.log
 runtime/apache-tomcat-11.0.18/logs/*.txt
+runtime/apache-tomcat-11.0.18/work/
+runtime/apache-tomcat-11.0.18/temp/
 
 # Local database backups
 database/backups/

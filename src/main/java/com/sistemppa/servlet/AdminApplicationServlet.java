@@ -107,6 +107,7 @@ public class AdminApplicationServlet extends HttpServlet {
                 insertAdminAuditLog(conn, adminUserId, "REJECT APPLICATION",
                     "Admin " + adminDisplayId + " tolak permohonan PPP" + String.format("%03d", applicationId) + ". Sebab: " + adminNotes, request.getRemoteAddr());
                 sendStatusEmail(request, conn, applicationId, "REJECTED", adminNotes);
+<<<<<<< HEAD
             } else if ("under_review".equals(action) || "dalam_semakan".equals(action)) {
                 updateApplicationStatus(conn, applicationId, "UNDER_REVIEW", adminNotes, adminUserId, null);
                 insertAdminAuditLog(conn, adminUserId, "UNDER REVIEW APPLICATION",
@@ -116,6 +117,17 @@ public class AdminApplicationServlet extends HttpServlet {
                         || presentationTime == null || presentationTime.isBlank()
                         || presentationVenue == null || presentationVenue.isBlank()) {
                     String message = "Sila isi tarikh, masa, dan tempat pembentangan sebelum set status Dalam Proses.";
+=======
+            } else if ("under_review".equals(action)) {
+                updateApplicationStatus(conn, applicationId, "UNDER_REVIEW", adminNotes, adminUserId, null);
+                insertAdminAuditLog(conn, adminUserId, "UNDER_REVIEW_APPLICATION",
+                        "Admin #" + adminUserId + " set permohonan PPP" + String.format("%03d", applicationId) + " ke Under Review", request.getRemoteAddr());
+            } else if ("in_progress".equals(action)) {
+                if (presentationDate == null || presentationDate.isBlank()
+                        || presentationTime == null || presentationTime.isBlank()
+                        || presentationVenue == null || presentationVenue.isBlank()) {
+                    String message = "Sila isi tarikh, masa, dan tempat pembentangan sebelum set status In Progress.";
+>>>>>>> origin/SPPPA
                     if (ajaxRequest) {
                         writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false, message, action);
                     } else {
@@ -127,10 +139,15 @@ public class AdminApplicationServlet extends HttpServlet {
                 updateApplicationStatus(conn, applicationId, "IN_PROGRESS", adminNotes, adminUserId, null);
                 insertInProgressPresentationNotification(conn, applicationId, adminNotes,
                         presentationDate, presentationTime, presentationVenue, presentationMessage);
+<<<<<<< HEAD
                 sendInProgressPresentationEmail(request, conn, applicationId,
                     presentationDate, presentationTime, presentationVenue, presentationMessage);
                 insertAdminAuditLog(conn, adminUserId, "IN PROGRESS APPLICATION",
                         "Admin " + adminDisplayId + " set permohonan PPP" + String.format("%03d", applicationId) + " ke Dalam Proses", request.getRemoteAddr());
+=======
+                insertAdminAuditLog(conn, adminUserId, "IN_PROGRESS_APPLICATION",
+                        "Admin #" + adminUserId + " set permohonan PPP" + String.format("%03d", applicationId) + " ke In Progress", request.getRemoteAddr());
+>>>>>>> origin/SPPPA
             } else if ("suspend_application".equals(action)) {
                 updateApplicationStatus(conn, applicationId, "SUSPENDED", adminNotes, adminUserId, null);
                 insertAdminAuditLog(conn, adminUserId, "SUSPEND APPLICATION",
@@ -143,9 +160,15 @@ public class AdminApplicationServlet extends HttpServlet {
                 if (!canArchiveApplication(conn, applicationId)) {
                     if (ajaxRequest) {
                         writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false,
+<<<<<<< HEAD
                                 "Permohonan ini sudah diarkib atau tidak ditemui.", action);
                     } else {
                         request.setAttribute("error", "Permohonan ini sudah diarkib atau tidak ditemui.");
+=======
+                                "Permohonan hanya boleh diarkib selepas diambil tindakan (APPROVED/REJECTED/SUSPENDED).", action);
+                    } else {
+                        request.setAttribute("error", "Permohonan hanya boleh diarkib selepas diambil tindakan (APPROVED/REJECTED/SUSPENDED). ");
+>>>>>>> origin/SPPPA
                         renderApplicationPage(conn, request, response, applicationId, adminNotes);
                     }
                     return;

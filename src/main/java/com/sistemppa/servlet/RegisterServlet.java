@@ -91,8 +91,14 @@ public class RegisterServlet extends HttpServlet {
             }
 
             String bcryptHash = BCrypt.hashpw(password, BCrypt.gensalt(12));
+<<<<<<< HEAD
             String sql = "INSERT INTO users (username, email, phone_number, password_hash, role, full_name, status) VALUES (?, ?, ?, ?, 'USER', ?, 'ACTIVE')";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+=======
+            int newUserId = -1;
+            String sql = "INSERT INTO users (username, email, phone_number, password_hash, role, full_name, status) VALUES (?, ?, ?, ?, 'USER', ?, 'INACTIVE')";
+            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+>>>>>>> origin/SPPPA
                 stmt.setString(1, username);
                 stmt.setString(2, email);
                 stmt.setString(3, phoneNumber);

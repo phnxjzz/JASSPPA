@@ -55,7 +55,10 @@
         .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; min-width: 0; }
         .jans-contact-section .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
         .jans-contact-section .contact-line span { line-height: 1.45; }
+<<<<<<< HEAD
         .contact-line-hanging { margin-left: 21px; }
+=======
+>>>>>>> origin/SPPPA
                     /* Enforce visible white border on all clickable buttons */
         button,
         input[type="submit"],
@@ -270,6 +273,7 @@
             .doc-viewer { height: 55vh; }
             .doc-actions .btn { min-width: 84px; }
         }
+<<<<<<< HEAD
         .audit-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
         .audit-item { border: 1px solid #d8e5ef; border-radius: 10px; background: #f8fbff; padding: 10px 12px; }
         .audit-item strong { display: block; color: #0f3f61; font-size: 13px; margin-bottom: 3px; }
@@ -351,6 +355,8 @@
         .top-action-wrapper {
             margin-bottom: 16px;
         }
+=======
+>>>>>>> origin/SPPPA
     </style>
 <body>
     <div class="navbar">
@@ -504,6 +510,7 @@
             <% if (adminError != null && !adminError.isBlank()) { %>
             <div class="alert-error"><%= adminError %></div>
             <% } %>
+<<<<<<< HEAD
             <div class="label">Sebab Penolakan / Nota Pentadbir (wajib jika Tolak)</div>
             <textarea form="adminActionForm" name="admin_notes" id="adminNotes"><%= applicationData.get("admin_notes") != null ? applicationData.get("admin_notes") : "" %></textarea>
         </div>
@@ -550,6 +557,33 @@
             <div class="inprogress-modal-card" role="dialog" aria-modal="true" aria-label="Makluman pembentangan produk air">
                 <div class="inprogress-modal-head">
                     <h4>Tindakan Dalam Proses: Makluman Pembentangan</h4>
+=======
+            <form method="post" action="${pageContext.request.contextPath}/admin/application" id="adminActionForm">
+                <input type="hidden" name="_csrf" value="${csrf_token}">
+                <input type="hidden" name="id" value="<%= applicationData.get("id") %>">
+                <input type="hidden" name="presentation_date" id="presentationDateHidden">
+                <input type="hidden" name="presentation_time" id="presentationTimeHidden">
+                <input type="hidden" name="presentation_venue" id="presentationVenueHidden">
+                <input type="hidden" name="presentation_message" id="presentationMessageHidden">
+                <div class="label">Sebab Penolakan / Nota Pentadbir (wajib jika Tolak)</div>
+                <textarea name="admin_notes" id="adminNotes"><%= applicationData.get("admin_notes") != null ? applicationData.get("admin_notes") : "" %></textarea>
+                <div class="actions">
+                    <button class="btn approve" type="submit" name="action" value="approve">Luluskan</button>
+                    <button class="btn reject" type="submit" name="action" value="reject" onclick="return validateRejectReason();">Tolak</button>
+                    <button class="btn under-review" type="submit" name="action" value="under_review">Under Review</button>
+                    <button class="btn in-progress" type="button" id="openInProgressModal">In Progress</button>
+                    <button class="btn suspend" type="submit" name="action" value="suspend_application">Gantung Permohonan</button>
+                    <button class="btn suspend" type="submit" name="action" value="suspend_user">Gantung Pengguna</button>
+                    <a class="btn secondary" href="${pageContext.request.contextPath}/dashboard">Kembali</a>
+                </div>
+            </form>
+        </div>
+
+        <div id="inProgressModal" class="inprogress-modal-overlay" aria-hidden="true">
+            <div class="inprogress-modal-card" role="dialog" aria-modal="true" aria-label="Makluman pembentangan produk air">
+                <div class="inprogress-modal-head">
+                    <h4>Tindakan In Progress: Makluman Pembentangan</h4>
+>>>>>>> origin/SPPPA
                     <button type="button" class="btn secondary" id="closeInProgressModal">Tutup</button>
                 </div>
                 <div class="inprogress-grid">
@@ -572,13 +606,18 @@
                 </div>
                 <div class="inprogress-actions">
                     <button type="button" class="btn secondary" id="cancelInProgressSubmit">Batal</button>
+<<<<<<< HEAD
                     <button type="button" class="btn in-progress" id="confirmInProgressSubmit">Simpan & Tukar Ke Dalam Proses</button>
+=======
+                    <button type="button" class="btn in-progress" id="confirmInProgressSubmit">Simpan & Tukar Ke In Progress</button>
+>>>>>>> origin/SPPPA
                 </div>
             </div>
         </div>
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
+<<<<<<< HEAD
                 <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
                 <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
@@ -586,6 +625,14 @@
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+=======
+                <h3>Hubungi JANS</h3>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+>>>>>>> origin/SPPPA
         </div>
     </div>
 
@@ -608,6 +655,7 @@
         </div>
     </div>
 
+<<<<<<< HEAD
     <div id="approveConfirmModal" class="decision-modal-overlay" aria-hidden="true">
         <div class="decision-modal-card" role="dialog" aria-modal="true" aria-label="Pengesahan tindakan permohonan">
             <img class="decision-confirm-gif" src="${pageContext.request.contextPath}/icon/quiz.gif" alt="Pengesahan tindakan">
@@ -630,6 +678,8 @@
         </div>
     </div>
 
+=======
+>>>>>>> origin/SPPPA
     <script>
         function validateRejectReason() {
             var notesField = document.getElementById('adminNotes');
@@ -707,6 +757,7 @@
                         alert('Sila isi tarikh, masa, dan tempat pembentangan.');
                         return;
                     }
+<<<<<<< HEAD
                     var submitInProgress = function () {
                         dateHidden.value = dateInput.value;
                         timeHidden.value = timeInput.value;
@@ -727,6 +778,19 @@
                     }
 
                     submitInProgress();
+=======
+                    dateHidden.value = dateInput.value;
+                    timeHidden.value = timeInput.value;
+                    venueHidden.value = venueInput.value.trim();
+                    messageHidden.value = (messageInput.value || '').trim();
+
+                    var actionInput = document.createElement('input');
+                    actionInput.type = 'hidden';
+                    actionInput.name = 'action';
+                    actionInput.value = 'in_progress';
+                    form.appendChild(actionInput);
+                    form.submit();
+>>>>>>> origin/SPPPA
                 });
             }
 
@@ -833,6 +897,7 @@
                 }
             });
         })();
+<<<<<<< HEAD
 
         (function initAdminAuditToggleApplication() {
             var button = document.getElementById('toggleAuditBtnApplication');
@@ -1050,11 +1115,16 @@
                 });
             }
         })();
+=======
+>>>>>>> origin/SPPPA
     </script>
 </body>
 </html>
 
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> origin/SPPPA

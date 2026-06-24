@@ -315,8 +315,11 @@
         String roleUpdated = request.getParameter("role_updated");
         String phoneUpdated = request.getParameter("phone_updated");
         String emailUpdated = request.getParameter("email_updated");
+<<<<<<< HEAD
         String kppAdded = request.getParameter("kpp_added");
         String kppDeleted = request.getParameter("kpp_deleted");
+=======
+>>>>>>> origin/SPPPA
         String tempPw  = request.getParameter("tempPw");
         String error   = request.getParameter("error");
     %>
@@ -365,6 +368,7 @@
                 <button type="button" class="success-ok" data-close-success-popup>OK</button>
             </div>
         </div>
+<<<<<<< HEAD
     <% } else if ("1".equals(kppAdded)) { %>
         <div id="successPopup" class="success-popup show" role="dialog" aria-live="polite" aria-label="Notifikasi berjaya">
             <img class="success-gif" src="${pageContext.request.contextPath}/assets/images/success.png" alt="Berjaya">
@@ -383,6 +387,8 @@
                 <button type="button" class="success-ok" data-close-success-popup>OK</button>
             </div>
         </div>
+=======
+>>>>>>> origin/SPPPA
     <% } else if ("cannot_delete_self".equals(error)) { %>
         <div class="alert alert-error">&#10007; Anda tidak boleh memadam akaun anda sendiri.</div>
     <% } else if ("cannot_suspend_self".equals(error)) { %>
@@ -403,6 +409,7 @@
         <div class="alert alert-error">&#10007; Format e-mel tidak sah.</div>
     <% } else if ("email_exists".equals(error)) { %>
         <div class="alert alert-error">&#10007; E-mel sudah digunakan oleh pengguna lain.</div>
+<<<<<<< HEAD
     <% } else if ("kpp_invalid".equals(error)) { %>
         <div class="alert alert-error">&#10007; Maklumat KPP tidak lengkap atau tidak sah.</div>
     <% } else if ("kpp_invalid_email".equals(error)) { %>
@@ -411,6 +418,8 @@
         <div class="alert alert-error">&#10007; E-mel KPP sudah wujud dalam senarai.</div>
     <% } else if ("kpp_not_found".equals(error)) { %>
         <div class="alert alert-error">&#10007; Rekod KPP tidak ditemui.</div>
+=======
+>>>>>>> origin/SPPPA
     <% } else if ("db_error".equals(error)) { %>
         <div class="alert alert-error">&#10007; Ralat semasa memproses permintaan. Sila cuba lagi.</div>
     <% } %>
@@ -468,7 +477,11 @@
             </thead>
             <tbody>
             <% if (users == null || users.isEmpty()) { %>
+<<<<<<< HEAD
                 <tr><td colspan="10" class="empty">Tiada pengguna dijumpai.</td></tr>
+=======
+                <tr><td colspan="9" class="empty">Tiada pengguna dijumpai.</td></tr>
+>>>>>>> origin/SPPPA
             <% } else {
                 int idx = 1;
                 for (Map<String, Object> u : users) {
@@ -521,6 +534,7 @@
                                 </button>
                                 <form method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
                                     <input type="hidden" name="_csrf" value="${csrf_token}">
+<<<<<<< HEAD
                                     <input type="hidden" name="action" value="set_status">
                                     <input type="hidden" name="status" value="ACTIVE">
                                     <input type="hidden" name="userId" value="<%= userId %>">
@@ -532,6 +546,11 @@
                                     <input type="hidden" name="status" value="SUSPENDED">
                                     <input type="hidden" name="userId" value="<%= userId %>">
                                     <button type="submit" class="action-item" <%= !isActive ? "disabled" : "" %>>Nyahaktifkan</button>
+=======
+                                    <input type="hidden" name="action" value="toggle_status">
+                                    <input type="hidden" name="userId" value="<%= userId %>">
+                                    <button type="submit" class="action-item"><%= toggleLabel %></button>
+>>>>>>> origin/SPPPA
                                 </form>
                                 <button type="button" class="action-item action-item-danger"
                                         onclick="confirmDelete('<%= userId %>', '<%= username %>')">
@@ -699,7 +718,10 @@
                 <label for="roleSelect" style="display:block;font-weight:700;margin-bottom:8px;color:#334155;">Peranan</label>
                 <select id="roleSelect" name="role" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;">
                     <option value="USER">USER (Pengguna)</option>
+<<<<<<< HEAD
                     <option value="STAFF">STAFF (Staf Dalaman)</option>
+=======
+>>>>>>> origin/SPPPA
                     <option value="ADMIN">ADMIN (Pentadbir)</option>
                 </select>
             </div>
@@ -790,8 +812,12 @@
         document.getElementById('roleUserId').value = userId;
         document.getElementById('roleModalMsg').textContent =
             'Pilih peranan baharu untuk pengguna "' + username + '".';
+<<<<<<< HEAD
         document.getElementById('roleSelect').value =
             currentRole === 'ADMIN' ? 'ADMIN' : (currentRole === 'STAFF' ? 'STAFF' : 'USER');
+=======
+        document.getElementById('roleSelect').value = currentRole === 'ADMIN' ? 'ADMIN' : 'USER';
+>>>>>>> origin/SPPPA
         document.getElementById('roleModal').classList.add('active');
     }
     function confirmPhone(userId, username, currentPhone) {

@@ -2,8 +2,11 @@ package com.sistemppa.servlet;
 
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.DashboardDataService;
+<<<<<<< HEAD
 import com.sistemppa.service.KppReminderService;
 import com.sistemppa.util.EmailUtil;
+=======
+>>>>>>> origin/SPPPA
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -40,7 +43,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+<<<<<<< HEAD
 import java.sql.Timestamp;
+=======
+>>>>>>> origin/SPPPA
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -105,6 +111,7 @@ public class DashboardServlet extends HttpServlet {
         boolean viewingStaffPortal = "STAFF".equals(portalRole);
 
         try (Connection conn = DatabaseConfig.getConnection()) {
+<<<<<<< HEAD
             if (viewingStaffPortal) {
                 boolean staffPortalRoleAllowed = "ADMIN".equals(role) || "STAFF".equals(role);
                 if (staffPortalRoleAllowed && isGovernmentEmail(email)) {
@@ -117,12 +124,16 @@ public class DashboardServlet extends HttpServlet {
             }
 
             if ("ADMIN".equals(role) && !adminViewingUserPortal) {
+=======
+            if ("ADMIN".equals(role)) {
+>>>>>>> origin/SPPPA
                 Long downloadId = parseLong(request.getParameter("kpp_download_id"));
                 if (downloadId != null) {
                     handleKppSubmissionDownload(conn, downloadId, response);
                     return;
                 }
 
+<<<<<<< HEAD
                 if ("1".equals(request.getParameter("aduan_view"))) {
                     String adminDisplayId = DashboardDataService.resolveDisplayUserId(conn, userId, "ADMIN");
                     if (!"ADM001".equals(adminDisplayId)) {
@@ -145,6 +156,8 @@ public class DashboardServlet extends HttpServlet {
                     request.setAttribute("aduan_access_notice", "Permintaan akses Modul Aduan tidak sah.");
                 }
 
+=======
+>>>>>>> origin/SPPPA
                 if ("1".equals(request.getParameter("announcement_saved"))) {
                     request.setAttribute("announcement_success", "Pengumuman berjaya disimpan.");
                 }
@@ -186,6 +199,7 @@ public class DashboardServlet extends HttpServlet {
             return;
         }
 
+<<<<<<< HEAD
         String requestContentType = request.getContentType();
         if (requestContentType != null
                 && requestContentType.toLowerCase(java.util.Locale.ROOT).contains("application/json")) {
@@ -201,6 +215,10 @@ public class DashboardServlet extends HttpServlet {
         String maintenanceAction = trim(request.getParameter("maintenance_action"));
         String secureAction = trim(request.getParameter("secure_action"));
         String staffComplaintAction = trim(request.getParameter("staff_complaint_action"));
+=======
+        String action = trim(request.getParameter("announcement_action"));
+        String kppAction = trim(request.getParameter("kpp_submission_action"));
+>>>>>>> origin/SPPPA
         Integer userId = (Integer) session.getAttribute("user_id");
 
         String title = trim(request.getParameter("announcement_title"));
@@ -226,6 +244,7 @@ public class DashboardServlet extends HttpServlet {
         }
 
         try (Connection conn = DatabaseConfig.getConnection()) {
+<<<<<<< HEAD
             String adminDisplayId = DashboardDataService.resolveDisplayUserId(conn, userId, "ADMIN");
             if (secureAction != null && !secureAction.isBlank()) {
                 if (!"access_aduan".equalsIgnoreCase(secureAction)) {
@@ -267,6 +286,8 @@ public class DashboardServlet extends HttpServlet {
                 return;
             }
 
+=======
+>>>>>>> origin/SPPPA
             if (kppAction != null && !kppAction.isBlank()) {
                 Long submissionId = parseLong(request.getParameter("kpp_submission_id"));
                 String kppSearch = trim(request.getParameter("kpp_q"));
@@ -292,25 +313,34 @@ public class DashboardServlet extends HttpServlet {
 
                 if ("archive".equalsIgnoreCase(kppAction)) {
                     DashboardDataService.archiveKppGuestSubmission(conn, submissionId);
+<<<<<<< HEAD
                         insertAdminAuditLog(conn, userId, "ARCHIVE KPP SUBMISSION",
                             "Admin " + adminDisplayId + " arkib borang KPP ID " + submissionId,
                             request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                     response.sendRedirect(redirectBase + redirectQuery + "#kpp-submissions");
                     return;
                 }
                 if ("unarchive".equalsIgnoreCase(kppAction)) {
                     DashboardDataService.unarchiveKppGuestSubmission(conn, submissionId);
+<<<<<<< HEAD
                         insertAdminAuditLog(conn, userId, "UNARCHIVE KPP SUBMISSION",
                             "Admin " + adminDisplayId + " keluarkan arkib borang KPP ID " + submissionId,
                             request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                     response.sendRedirect(redirectBase + redirectQuery + "#kpp-submissions");
                     return;
                 }
                 if ("delete".equalsIgnoreCase(kppAction)) {
                     DashboardDataService.deleteKppGuestSubmission(conn, submissionId);
+<<<<<<< HEAD
                         insertAdminAuditLog(conn, userId, "DELETE KPP SUBMISSION",
                             "Admin " + adminDisplayId + " padam borang KPP ID " + submissionId,
                             request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                     response.sendRedirect(redirectBase + redirectQuery + "#kpp-submissions");
                     return;
                 }
@@ -351,9 +381,12 @@ public class DashboardServlet extends HttpServlet {
                     return;
                 }
                 DashboardDataService.createAnnouncement(conn, title, content, imageUrl, isActive, userId);
+<<<<<<< HEAD
                 insertAdminAuditLog(conn, userId, "CREATE ANNOUNCEMENT",
                     "Admin " + adminDisplayId + " cipta pengumuman: " + title,
                     request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                 response.sendRedirect(request.getContextPath() + "/dashboard?announcement_saved=1#announcementPanel");
                 return;
             }
@@ -395,9 +428,12 @@ public class DashboardServlet extends HttpServlet {
                     return;
                 }
                 DashboardDataService.updateAnnouncement(conn, announcementId, title, content, imageUrl, isActive, userId);
+<<<<<<< HEAD
                 insertAdminAuditLog(conn, userId, "UPDATE ANNOUNCEMENT",
                     "Admin " + adminDisplayId + " kemas kini pengumuman #" + announcementId + ": " + title,
                     request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                 response.sendRedirect(request.getContextPath() + "/dashboard?announcement_saved=1#announcementPanel");
                 return;
             }
@@ -411,9 +447,12 @@ public class DashboardServlet extends HttpServlet {
                     return;
                 }
                 DashboardDataService.deleteAnnouncement(conn, announcementId);
+<<<<<<< HEAD
                 insertAdminAuditLog(conn, userId, "DELETE ANNOUNCEMENT",
                     "Admin " + adminDisplayId + " padam pengumuman #" + announcementId,
                     request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                 response.sendRedirect(request.getContextPath() + "/dashboard?announcement_deleted=1#announcementPanel");
                 return;
             }
@@ -434,10 +473,13 @@ public class DashboardServlet extends HttpServlet {
         String dateTo = trim(request.getParameter("date_to"));
         String kppSearch = trim(request.getParameter("kpp_q"));
         boolean includeArchivedKpp = "1".equals(request.getParameter("kpp_show_archived"));
+<<<<<<< HEAD
         HttpSession session = request.getSession(false);
         Integer currentAdminUserId = session == null ? null : (Integer) session.getAttribute("user_id");
         request.setAttribute("current_admin_display_id",
                 DashboardDataService.resolveDisplayUserId(conn, currentAdminUserId, "ADMIN"));
+=======
+>>>>>>> origin/SPPPA
 
         Map<String, Integer> stats = DashboardDataService.loadAdminStats(conn);
         for (Map.Entry<String, Integer> entry : stats.entrySet()) {
@@ -462,6 +504,7 @@ public class DashboardServlet extends HttpServlet {
         request.setAttribute("kpp_show_archived", includeArchivedKpp);
         request.setAttribute("kpp_guest_submissions",
             DashboardDataService.loadKppGuestSubmissions(conn, 50, kppSearch, includeArchivedKpp));
+<<<<<<< HEAD
         request.setAttribute("kpp_contacts", DashboardDataService.loadKppContacts(conn));
         List<Map<String, Object>> adminAuditLogs = DashboardDataService.loadRecentAdminAuditLogs(conn, 0);
         request.setAttribute("admin_audit_logs", filterSensitiveAduanAuditLogs(adminAuditLogs));
@@ -469,6 +512,8 @@ public class DashboardServlet extends HttpServlet {
         ensureStaffComplaintTable(conn);
         request.setAttribute("staff_complaint_new_count", countStaffComplaintsByStatus(conn, "NEW"));
         request.setAttribute("staff_complaints", loadStaffComplaints(conn, 30));
+=======
+>>>>>>> origin/SPPPA
 
         List<Map<String, Object>> announcements = DashboardDataService.loadAllAnnouncements(conn, DASHBOARD_ANNOUNCEMENT_LIMIT);
         request.setAttribute("announcements", announcements);
@@ -986,6 +1031,7 @@ public class DashboardServlet extends HttpServlet {
         }
     }
 
+<<<<<<< HEAD
     private String toStatusOptionValue(String status) {
         if (status == null || status.isBlank()) {
             return "";
@@ -1021,6 +1067,8 @@ public class DashboardServlet extends HttpServlet {
     ) {
     }
 
+=======
+>>>>>>> origin/SPPPA
     private void handleKppSubmissionDownload(Connection conn, long submissionId, HttpServletResponse response)
             throws SQLException, IOException {
         Map<String, Object> row = DashboardDataService.loadKppGuestSubmissionById(conn, submissionId);

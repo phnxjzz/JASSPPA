@@ -55,6 +55,7 @@ public class ApplicationServlet extends HttpServlet {
                 showRenewalApplicationForm(request, response, session, renewalSourceId);
                 return;
             }
+<<<<<<< HEAD
             Integer userId = (Integer) session.getAttribute("user_id");
             try (Connection conn = DatabaseConfig.getConnection()) {
                 request.setAttribute("approvedApplications", fetchApprovedApplicationsForUser(conn, userId));
@@ -62,6 +63,8 @@ public class ApplicationServlet extends HttpServlet {
                 LOGGER.warning("Failed to load approved applications for renewal dropdown: " + e.getMessage());
                 request.setAttribute("approvedApplications", Collections.emptyList());
             }
+=======
+>>>>>>> origin/SPPPA
             request.setAttribute("requiredDocuments", buildRequiredDocuments());
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
         } else if (isEditPath(pathInfo)) {
@@ -189,6 +192,7 @@ public class ApplicationServlet extends HttpServlet {
             return;
         }
 
+<<<<<<< HEAD
         String applicationType = getParamUpper(request, "application_type");
         String supplierName = getParamUpper(request, "supplier_name");
         String productName = getPrimaryParamUpper(request, "product_name");
@@ -204,6 +208,16 @@ public class ApplicationServlet extends HttpServlet {
 
         if (supplierName.isEmpty() || productName.isEmpty() || productCategory.isEmpty() || applicationType.isEmpty()) {
             prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
+=======
+        String applicationType = trim(request.getParameter("application_type"));
+        String supplierName = trim(request.getParameter("supplier_name"));
+        String productName = getPrimaryParam(request, "product_name");
+        String productCategory = getPrimaryParam(request, "product_category");
+        Integer renewalSourceId = parseInteger(request.getParameter("renew_from_application_id"));
+
+        if (supplierName.isEmpty() || productName.isEmpty() || productCategory.isEmpty() || applicationType.isEmpty()) {
+            prepareCreateFormStateFromRequest(request, renewalSourceId, null);
+>>>>>>> origin/SPPPA
             request.setAttribute("error", "Sila lengkapkan bahagian wajib borang PPP1.");
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
             return;
@@ -214,7 +228,11 @@ public class ApplicationServlet extends HttpServlet {
             if (renewalSourceId != null && "PEMBAHARUAN".equalsIgnoreCase(applicationType)) {
                 Map<String, Object> renewalSource = loadRenewalSourceApplication(validationConn, renewalSourceId, userId);
                 if (renewalSource == null || renewalSource.isEmpty()) {
+<<<<<<< HEAD
                     prepareCreateFormStateFromRequest(request, null, userId, validationConn);
+=======
+                    prepareCreateFormStateFromRequest(request, null, validationConn);
+>>>>>>> origin/SPPPA
                     request.setAttribute("error", "Permohonan asal untuk pembaharuan tidak sah atau tidak ditemui.");
                     request.getRequestDispatcher("/application-form.jsp").forward(request, response);
                     return;
@@ -223,7 +241,11 @@ public class ApplicationServlet extends HttpServlet {
             }
             List<String> missingMandatoryDocs = findMissingMandatoryDocuments(request, applicationType, validationConn, validationApplicationId);
             if (!missingMandatoryDocs.isEmpty()) {
+<<<<<<< HEAD
                 prepareCreateFormStateFromRequest(request, renewalSourceId, userId, validationConn);
+=======
+                prepareCreateFormStateFromRequest(request, renewalSourceId, validationConn);
+>>>>>>> origin/SPPPA
                 request.setAttribute("error", "Tidak Berjaya Sila Lengkapkan Dokumen yang diperlukan!");
                 request.setAttribute("missingMandatoryDocuments", missingMandatoryDocs);
                 request.getRequestDispatcher("/application-form.jsp").forward(request, response);
@@ -231,7 +253,11 @@ public class ApplicationServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             LOGGER.severe("Failed to validate mandatory documents: " + e.getMessage());
+<<<<<<< HEAD
             prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
+=======
+            prepareCreateFormStateFromRequest(request, renewalSourceId, null);
+>>>>>>> origin/SPPPA
             request.setAttribute("error", "Ralat semasa menyemak dokumen. Sila cuba lagi.");
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
             return;
@@ -244,15 +270,24 @@ public class ApplicationServlet extends HttpServlet {
             limitPs.setInt(1, userId);
             try (ResultSet limitRs = limitPs.executeQuery()) {
                 if (limitRs.next() && limitRs.getInt(1) >= 3) {
+<<<<<<< HEAD
                     prepareCreateFormStateFromRequest(request, renewalSourceId, userId, limitConn);
                     request.setAttribute("error", "Anda telah mencapai had maksimum 3 permohonan aktif. Sila tunggu sehingga permohonan sedia ada diselesaikan sebelum membuat permohonan baharu.");
+=======
+                    prepareCreateFormStateFromRequest(request, renewalSourceId, limitConn);
+                    request.setAttribute("error", "Anda telah mencapai had maksimum 3 permohonan aktif (NEW/DRAFT). Sila tunggu sehingga permohonan sedia ada diselesaikan sebelum membuat permohonan baharu.");
+>>>>>>> origin/SPPPA
                     request.getRequestDispatcher("/application-form.jsp").forward(request, response);
                     return;
                 }
             }
         } catch (SQLException e) {
             LOGGER.severe("Failed to check application limit: " + e.getMessage());
+<<<<<<< HEAD
             prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
+=======
+            prepareCreateFormStateFromRequest(request, renewalSourceId, null);
+>>>>>>> origin/SPPPA
             request.setAttribute("error", "Ralat semasa memeriksa had permohonan. Sila cuba lagi.");
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
             return;
@@ -266,7 +301,11 @@ public class ApplicationServlet extends HttpServlet {
                 if (renewalSourceId != null && "PEMBAHARUAN".equalsIgnoreCase(applicationType)) {
                     Map<String, Object> renewalSource = loadRenewalSourceApplication(conn, renewalSourceId, userId);
                     if (renewalSource == null || renewalSource.isEmpty()) {
+<<<<<<< HEAD
                         prepareCreateFormStateFromRequest(request, null, userId, conn);
+=======
+                        prepareCreateFormStateFromRequest(request, null, conn);
+>>>>>>> origin/SPPPA
                         request.setAttribute("error", "Permohonan asal untuk pembaharuan tidak sah atau tidak ditemui.");
                         request.getRequestDispatcher("/application-form.jsp").forward(request, response);
                         return;
@@ -291,12 +330,20 @@ public class ApplicationServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             LOGGER.severe("Failed to save application: " + e.getMessage());
+<<<<<<< HEAD
             prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
+=======
+            prepareCreateFormStateFromRequest(request, renewalSourceId, null);
+>>>>>>> origin/SPPPA
             request.setAttribute("error", "Permohonan tidak berjaya disimpan. Sila cuba lagi.");
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
         } catch (IOException | ServletException e) {
             LOGGER.severe("IO/Servlet error saving application: " + e.getMessage());
+<<<<<<< HEAD
             prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
+=======
+            prepareCreateFormStateFromRequest(request, renewalSourceId, null);
+>>>>>>> origin/SPPPA
             request.setAttribute("error", "Ralat sistem semasa menghantar permohonan. Sila cuba lagi.");
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
         }
@@ -317,8 +364,13 @@ public class ApplicationServlet extends HttpServlet {
 
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, userId);
+<<<<<<< HEAD
             stmt.setString(2, getPrimaryParamUpper(request, "product_name"));
             stmt.setString(3, getPrimaryParamUpper(request, "product_category"));
+=======
+            stmt.setString(2, getPrimaryParam(request, "product_name"));
+            stmt.setString(3, getPrimaryParam(request, "product_category"));
+>>>>>>> origin/SPPPA
             stmt.setString(4, buildApplicationSummary(request));
             stmt.setString(5, getParamUpper(request, "supplier_name"));
             stmt.setString(6, getParamUpper(request, "supplier_address"));
@@ -343,6 +395,7 @@ public class ApplicationServlet extends HttpServlet {
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, applicationId);
+<<<<<<< HEAD
             stmt.setString(2, getParamUpper(request, "application_type"));
             stmt.setString(3, getParamUpper(request, "supplier_name"));
             stmt.setString(4, getParamUpper(request, "supplier_address"));
@@ -364,6 +417,29 @@ public class ApplicationServlet extends HttpServlet {
             stmt.setString(20, getParamUpper(request, "sabah_rep_phone"));
             stmt.setString(21, getParamUpper(request, "declaration_name"));
             stmt.setString(22, getParamUpper(request, "declaration_position"));
+=======
+            stmt.setString(2, trim(request.getParameter("application_type")));
+            stmt.setString(3, trim(request.getParameter("supplier_name")));
+            stmt.setString(4, trim(request.getParameter("supplier_address")));
+            stmt.setString(5, trim(request.getParameter("supplier_phone")));
+            stmt.setString(6, trim(request.getParameter("manufacturer_name")));
+            stmt.setString(7, trim(request.getParameter("manufacturer_address")));
+            stmt.setString(8, trim(request.getParameter("manufacturer_phone")));
+            stmt.setString(9, trim(request.getParameter("principal_name")));
+            stmt.setString(10, trim(request.getParameter("principal_address")));
+            stmt.setString(11, trim(request.getParameter("principal_phone")));
+            stmt.setString(12, getPrimaryParam(request, "standard_name"));
+            stmt.setString(13, getPrimaryParam(request, "certification_license"));
+            stmt.setDate(14, parseDate(getPrimaryParam(request, "certification_valid_until")));
+            stmt.setString(15, getPrimaryParam(request, "test_report_reference"));
+            stmt.setDate(16, parseDate(getPrimaryParam(request, "test_report_date")));
+            stmt.setBigDecimal(17, parseDecimal(getPrimaryParam(request, "warranty_years")));
+            stmt.setString(18, trim(request.getParameter("sabah_rep_name")));
+            stmt.setString(19, trim(request.getParameter("sabah_rep_address")));
+            stmt.setString(20, trim(request.getParameter("sabah_rep_phone")));
+            stmt.setString(21, trim(request.getParameter("declaration_name")));
+            stmt.setString(22, trim(request.getParameter("declaration_position")));
+>>>>>>> origin/SPPPA
             stmt.executeUpdate();
         }
     }
@@ -379,6 +455,7 @@ public class ApplicationServlet extends HttpServlet {
                 + "WHERE application_id = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+<<<<<<< HEAD
             stmt.setString(1, getParamUpper(request, "application_type"));
             stmt.setString(2, getParamUpper(request, "supplier_name"));
             stmt.setString(3, getParamUpper(request, "supplier_address"));
@@ -400,6 +477,29 @@ public class ApplicationServlet extends HttpServlet {
             stmt.setString(19, getParamUpper(request, "sabah_rep_phone"));
             stmt.setString(20, getParamUpper(request, "declaration_name"));
             stmt.setString(21, getParamUpper(request, "declaration_position"));
+=======
+            stmt.setString(1, trim(request.getParameter("application_type")));
+            stmt.setString(2, trim(request.getParameter("supplier_name")));
+            stmt.setString(3, trim(request.getParameter("supplier_address")));
+            stmt.setString(4, trim(request.getParameter("supplier_phone")));
+            stmt.setString(5, trim(request.getParameter("manufacturer_name")));
+            stmt.setString(6, trim(request.getParameter("manufacturer_address")));
+            stmt.setString(7, trim(request.getParameter("manufacturer_phone")));
+            stmt.setString(8, trim(request.getParameter("principal_name")));
+            stmt.setString(9, trim(request.getParameter("principal_address")));
+            stmt.setString(10, trim(request.getParameter("principal_phone")));
+            stmt.setString(11, getPrimaryParam(request, "standard_name"));
+            stmt.setString(12, getPrimaryParam(request, "certification_license"));
+            stmt.setDate(13, parseDate(getPrimaryParam(request, "certification_valid_until")));
+            stmt.setString(14, getPrimaryParam(request, "test_report_reference"));
+            stmt.setDate(15, parseDate(getPrimaryParam(request, "test_report_date")));
+            stmt.setBigDecimal(16, parseDecimal(getPrimaryParam(request, "warranty_years")));
+            stmt.setString(17, trim(request.getParameter("sabah_rep_name")));
+            stmt.setString(18, trim(request.getParameter("sabah_rep_address")));
+            stmt.setString(19, trim(request.getParameter("sabah_rep_phone")));
+            stmt.setString(20, trim(request.getParameter("declaration_name")));
+            stmt.setString(21, trim(request.getParameter("declaration_position")));
+>>>>>>> origin/SPPPA
             stmt.setInt(22, applicationId);
             int affected = stmt.executeUpdate();
             if (affected == 0) {
@@ -414,12 +514,21 @@ public class ApplicationServlet extends HttpServlet {
                 + "admin_notes = NULL, reviewed_at = NULL, reviewed_by = NULL, certificate_number = NULL, issued_at = NULL, valid_until = NULL "
                 + "WHERE id = ? AND user_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+<<<<<<< HEAD
             stmt.setString(1, getPrimaryParamUpper(request, "product_name"));
             stmt.setString(2, getPrimaryParamUpper(request, "product_category"));
             stmt.setString(3, buildApplicationSummary(request));
             stmt.setString(4, getParamUpper(request, "supplier_name"));
             stmt.setString(5, getParamUpper(request, "supplier_address"));
             stmt.setString(6, getParamUpper(request, "supplier_phone"));
+=======
+            stmt.setString(1, getPrimaryParam(request, "product_name"));
+            stmt.setString(2, getPrimaryParam(request, "product_category"));
+            stmt.setString(3, buildApplicationSummary(request));
+            stmt.setString(4, trim(request.getParameter("supplier_name")));
+            stmt.setString(5, trim(request.getParameter("supplier_address")));
+            stmt.setString(6, trim(request.getParameter("supplier_phone")));
+>>>>>>> origin/SPPPA
             stmt.setString(7, trim(request.getParameter("supplier_email")));
             stmt.setInt(8, applicationId);
             stmt.setInt(9, userId);
@@ -511,10 +620,17 @@ public class ApplicationServlet extends HttpServlet {
 
     private void processApplicationUpdate(HttpServletRequest request, HttpServletResponse response,
             HttpSession session, Integer userId, int applicationId) throws ServletException, IOException {
+<<<<<<< HEAD
         String applicationType = getParamUpper(request, "application_type");
         String supplierName = getParamUpper(request, "supplier_name");
         String productName = getPrimaryParamUpper(request, "product_name");
         String productCategory = getPrimaryParamUpper(request, "product_category");
+=======
+        String applicationType = trim(request.getParameter("application_type"));
+        String supplierName = trim(request.getParameter("supplier_name"));
+        String productName = getPrimaryParam(request, "product_name");
+        String productCategory = getPrimaryParam(request, "product_category");
+>>>>>>> origin/SPPPA
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             String currentStatus = getUserApplicationStatus(conn, applicationId, userId);
@@ -550,11 +666,18 @@ public class ApplicationServlet extends HttpServlet {
                 updateApplicationDetails(conn, applicationId, request);
                 saveUploadedDocuments(conn, applicationId, request, true);
 
+<<<<<<< HEAD
                 DashboardDataService.ensureAuditLogTable(conn);
                 try (PreparedStatement stmt = conn.prepareStatement(
                         "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)")) {
                     stmt.setInt(1, userId);
                     stmt.setString(2, "UPDATE APPLICATION");
+=======
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)")) {
+                    stmt.setInt(1, userId);
+                    stmt.setString(2, "UPDATE_APPLICATION");
+>>>>>>> origin/SPPPA
                     stmt.setString(3, "Pemohon mengemaskini permohonan. ID: " + applicationId + " (Status asal: " + currentStatus + ")");
                     stmt.setString(4, request.getRemoteAddr());
                     stmt.executeUpdate();
@@ -591,6 +714,7 @@ public class ApplicationServlet extends HttpServlet {
         request.setAttribute("formAction", request.getContextPath() + "/applications/" + applicationId + "/edit");
     }
 
+<<<<<<< HEAD
     private void prepareCreateFormStateFromRequest(HttpServletRequest request, Integer renewalSourceId, Integer userId, Connection conn) {
         request.setAttribute("application", buildApplicationFromRequest(request));
         request.setAttribute("requiredDocuments", buildRequiredDocuments());
@@ -610,6 +734,11 @@ public class ApplicationServlet extends HttpServlet {
                 request.setAttribute("approvedApplications", Collections.emptyList());
             }
         }
+=======
+    private void prepareCreateFormStateFromRequest(HttpServletRequest request, Integer renewalSourceId, Connection conn) {
+        request.setAttribute("application", buildApplicationFromRequest(request));
+        request.setAttribute("requiredDocuments", buildRequiredDocuments());
+>>>>>>> origin/SPPPA
         if (renewalSourceId != null) {
             request.setAttribute("renewalMode", true);
             request.setAttribute("renewalSourceApplicationId", renewalSourceId);
@@ -625,6 +754,7 @@ public class ApplicationServlet extends HttpServlet {
 
     private Map<String, Object> buildApplicationFromRequest(HttpServletRequest request) {
         Map<String, Object> app = new HashMap<>();
+<<<<<<< HEAD
         app.put("application_type", getParamUpper(request, "application_type"));
         app.put("supplier_name", getParamUpper(request, "supplier_name"));
         app.put("supplier_email", trim(request.getParameter("supplier_email")));
@@ -653,6 +783,34 @@ public class ApplicationServlet extends HttpServlet {
         app.put("sabah_rep_phone", getParamUpper(request, "sabah_rep_phone"));
         app.put("declaration_name", getParamUpper(request, "declaration_name"));
         app.put("declaration_position", getParamUpper(request, "declaration_position"));
+=======
+        app.put("application_type", trim(request.getParameter("application_type")));
+        app.put("supplier_name", trim(request.getParameter("supplier_name")));
+        app.put("supplier_email", trim(request.getParameter("supplier_email")));
+        app.put("supplier_phone", trim(request.getParameter("supplier_phone")));
+        app.put("supplier_address", trim(request.getParameter("supplier_address")));
+        app.put("manufacturer_name", trim(request.getParameter("manufacturer_name")));
+        app.put("manufacturer_address", trim(request.getParameter("manufacturer_address")));
+        app.put("manufacturer_phone", trim(request.getParameter("manufacturer_phone")));
+        app.put("principal_name", trim(request.getParameter("principal_name")));
+        app.put("principal_address", trim(request.getParameter("principal_address")));
+        app.put("principal_phone", trim(request.getParameter("principal_phone")));
+        app.put("product_name", getPrimaryParam(request, "product_name"));
+        app.put("product_category", getPrimaryParam(request, "product_category"));
+        app.put("brand", getPrimaryParam(request, "brand"));
+        app.put("standard_name", getPrimaryParam(request, "standard_name"));
+        app.put("certification_license", getPrimaryParam(request, "certification_license"));
+        app.put("certification_valid_until", getPrimaryParam(request, "certification_valid_until"));
+        app.put("test_report_reference", getPrimaryParam(request, "test_report_reference"));
+        app.put("test_report_date", getPrimaryParam(request, "test_report_date"));
+        app.put("warranty_years", getPrimaryParam(request, "warranty_years"));
+        app.put("product_description", getPrimaryParam(request, "product_description"));
+        app.put("sabah_rep_name", trim(request.getParameter("sabah_rep_name")));
+        app.put("sabah_rep_address", trim(request.getParameter("sabah_rep_address")));
+        app.put("sabah_rep_phone", trim(request.getParameter("sabah_rep_phone")));
+        app.put("declaration_name", trim(request.getParameter("declaration_name")));
+        app.put("declaration_position", trim(request.getParameter("declaration_position")));
+>>>>>>> origin/SPPPA
         return app;
     }
 
@@ -708,7 +866,10 @@ public class ApplicationServlet extends HttpServlet {
             HttpSession session, int sourceApplicationId) throws ServletException, IOException {
         Integer userId = (Integer) session.getAttribute("user_id");
         try (Connection conn = DatabaseConfig.getConnection()) {
+<<<<<<< HEAD
             request.setAttribute("approvedApplications", fetchApprovedApplicationsForUser(conn, userId));
+=======
+>>>>>>> origin/SPPPA
             Map<String, Object> app = loadRenewalSourceApplication(conn, sourceApplicationId, userId);
             if (app == null || app.isEmpty()) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Permohonan asal yang diluluskan tidak ditemui");
@@ -774,12 +935,16 @@ public class ApplicationServlet extends HttpServlet {
                 app.put("warranty_years", firstNonBlank(
                         rs.getBigDecimal("warranty_years") == null ? "" : rs.getBigDecimal("warranty_years").toPlainString(),
                         extractFieldFromSummary(productSummary, "Tempoh Jaminan:")));
+<<<<<<< HEAD
                 String summaryPerihal = extractFieldFromSummary(productSummary, "Perihal Produk:");
                 String summaryClass = extractFieldFromSummary(productSummary, "Class Produk:");
                 String summarySize = extractFieldFromSummary(productSummary, "Saiz Produk:");
                 app.put("product_model", extractFieldFromSummary(productSummary, "Model:"));
                 app.put("product_series", extractFieldFromSummary(productSummary, "Siri:"));
                 app.put("product_description", composeDescriptionWithClassAndSize(summaryPerihal, summaryClass, summarySize));
+=======
+                app.put("product_description", extractFieldFromSummary(productSummary, "Perihal Produk:"));
+>>>>>>> origin/SPPPA
                 app.put("sabah_rep_name", rs.getString("sabah_rep_name"));
                 app.put("sabah_rep_address", rs.getString("sabah_rep_address"));
                 app.put("sabah_rep_phone", rs.getString("sabah_rep_phone"));
@@ -794,7 +959,10 @@ public class ApplicationServlet extends HttpServlet {
             HttpSession session, int applicationId) throws ServletException, IOException {
         Integer userId = (Integer) session.getAttribute("user_id");
         try (Connection conn = DatabaseConfig.getConnection()) {
+<<<<<<< HEAD
             request.setAttribute("approvedApplications", fetchApprovedApplicationsForUser(conn, userId));
+=======
+>>>>>>> origin/SPPPA
             String status = getUserApplicationStatus(conn, applicationId, userId);
             if (status == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -851,12 +1019,16 @@ public class ApplicationServlet extends HttpServlet {
                         app.put("warranty_years", firstNonBlank(
                             rs.getBigDecimal("warranty_years") == null ? "" : rs.getBigDecimal("warranty_years").toPlainString(),
                             extractFieldFromSummary(productSummary, "Tempoh Jaminan:")));
+<<<<<<< HEAD
                         String summaryPerihal = extractFieldFromSummary(productSummary, "Perihal Produk:");
                         String summaryClass = extractFieldFromSummary(productSummary, "Class Produk:");
                         String summarySize = extractFieldFromSummary(productSummary, "Saiz Produk:");
                         app.put("product_model", extractFieldFromSummary(productSummary, "Model:"));
                         app.put("product_series", extractFieldFromSummary(productSummary, "Siri:"));
                         app.put("product_description", composeDescriptionWithClassAndSize(summaryPerihal, summaryClass, summarySize));
+=======
+                        app.put("product_description", extractFieldFromSummary(productSummary, "Perihal Produk:"));
+>>>>>>> origin/SPPPA
                     app.put("sabah_rep_name", rs.getString("sabah_rep_name"));
                     app.put("sabah_rep_address", rs.getString("sabah_rep_address"));
                     app.put("sabah_rep_phone", rs.getString("sabah_rep_phone"));
@@ -896,6 +1068,7 @@ public class ApplicationServlet extends HttpServlet {
         return "-".equals(extracted) ? "" : extracted;
     }
 
+<<<<<<< HEAD
     private List<Map<String, Object>> fetchApprovedApplicationsForUser(Connection conn, int userId) throws SQLException {
         List<Map<String, Object>> approvedApps = new ArrayList<>();
         String sql = "SELECT a.id, a.product_name, a.product_category, a.product_description, a.company_name, a.company_address, a.contact_number, a.email, "
@@ -955,6 +1128,8 @@ public class ApplicationServlet extends HttpServlet {
         return approvedApps;
     }
 
+=======
+>>>>>>> origin/SPPPA
     private String firstNonBlank(String... values) {
         if (values == null) {
             return "";
@@ -1122,6 +1297,7 @@ public class ApplicationServlet extends HttpServlet {
     }
 
     private String buildApplicationSummary(HttpServletRequest request) {
+<<<<<<< HEAD
         List<String> productNames = getParamListUpper(request, "product_name");
         List<String> productCategories = getParamListUpper(request, "product_category");
         List<String> brands = getParamListUpper(request, "brand");
@@ -1134,6 +1310,18 @@ public class ApplicationServlet extends HttpServlet {
         List<String> productModels = getParamListUpper(request, "product_model");
         List<String> productSeries = getParamListUpper(request, "product_series");
         List<String> productDescriptions = getParamListUpper(request, "product_description");
+=======
+        List<String> productNames = getParamList(request, "product_name");
+        List<String> productCategories = getParamList(request, "product_category");
+        List<String> brands = getParamList(request, "brand");
+        List<String> standards = getParamList(request, "standard_name");
+        List<String> certificationLicenses = getParamList(request, "certification_license");
+        List<String> certificationValidUntil = getParamList(request, "certification_valid_until");
+        List<String> testReportReferences = getParamList(request, "test_report_reference");
+        List<String> testReportDates = getParamList(request, "test_report_date");
+        List<String> warrantyYears = getParamList(request, "warranty_years");
+        List<String> productDescriptions = getParamList(request, "product_description");
+>>>>>>> origin/SPPPA
 
         int productCount = productNames.size();
         productCount = Math.max(productCount, productCategories.size());
@@ -1144,8 +1332,11 @@ public class ApplicationServlet extends HttpServlet {
         productCount = Math.max(productCount, testReportReferences.size());
         productCount = Math.max(productCount, testReportDates.size());
         productCount = Math.max(productCount, warrantyYears.size());
+<<<<<<< HEAD
         productCount = Math.max(productCount, productModels.size());
         productCount = Math.max(productCount, productSeries.size());
+=======
+>>>>>>> origin/SPPPA
         productCount = Math.max(productCount, productDescriptions.size());
         StringBuilder productLines = new StringBuilder();
         for (int i = 0; i < productCount; i++) {
@@ -1158,13 +1349,20 @@ public class ApplicationServlet extends HttpServlet {
             String testReportReference = getValueAt(testReportReferences, i);
             String testReportDate = getValueAt(testReportDates, i);
             String warranty = getValueAt(warrantyYears, i);
+<<<<<<< HEAD
             String model = getValueAt(productModels, i);
             String series = getValueAt(productSeries, i);
+=======
+>>>>>>> origin/SPPPA
             String description = getValueAt(productDescriptions, i);
             if (name.isEmpty() && category.isEmpty() && brand.isEmpty() && standard.isEmpty()
                     && certificationLicense.isEmpty() && certificationUntil.isEmpty()
                     && testReportReference.isEmpty() && testReportDate.isEmpty()
+<<<<<<< HEAD
                     && warranty.isEmpty() && model.isEmpty() && series.isEmpty() && description.isEmpty()) {
+=======
+                    && warranty.isEmpty() && description.isEmpty()) {
+>>>>>>> origin/SPPPA
                 continue;
             }
             if (productLines.length() > 0) {
@@ -1180,6 +1378,7 @@ public class ApplicationServlet extends HttpServlet {
                     .append(" | No. Laporan Ujian: ").append(testReportReference.isEmpty() ? "-" : testReportReference)
                     .append(" | Tarikh Laporan Ujian: ").append(testReportDate.isEmpty() ? "-" : testReportDate)
                     .append(" | Tempoh Jaminan: ").append(warranty.isEmpty() ? "-" : warranty)
+<<<<<<< HEAD
                     .append(" | Model: ").append(model.isEmpty() ? "-" : model)
                     .append(" | Siri: ").append(series.isEmpty() ? "-" : series)
                     .append(" | Perihal Produk: ").append(description.isEmpty() ? "-" : description);
@@ -1205,6 +1404,13 @@ public class ApplicationServlet extends HttpServlet {
             segments.add("Saiz: " + safeSize);
         }
         return String.join(" | ", segments);
+=======
+                    .append(" | Perihal Produk: ").append(description.isEmpty() ? "-" : description);
+        }
+
+        return "Jenis Permohonan: " + trim(request.getParameter("application_type"))
+                + "\nSenarai Produk:\n" + (productLines.length() == 0 ? "-" : productLines);
+>>>>>>> origin/SPPPA
     }
 
     private String extractSubmittedFileName(Part part) {
@@ -1219,6 +1425,7 @@ public class ApplicationServlet extends HttpServlet {
         return value == null ? "" : value.trim();
     }
 
+<<<<<<< HEAD
     private String toUpperInfo(String value) {
         String cleaned = trim(value);
         return cleaned.isEmpty() ? cleaned : cleaned.toUpperCase(Locale.ROOT);
@@ -1228,6 +1435,8 @@ public class ApplicationServlet extends HttpServlet {
         return toUpperInfo(request.getParameter(paramName));
     }
 
+=======
+>>>>>>> origin/SPPPA
     private String getPrimaryParam(HttpServletRequest request, String baseName) {
         List<String> values = getParamList(request, baseName);
         if (!values.isEmpty()) {
@@ -1236,10 +1445,13 @@ public class ApplicationServlet extends HttpServlet {
         return "";
     }
 
+<<<<<<< HEAD
     private String getPrimaryParamUpper(HttpServletRequest request, String baseName) {
         return toUpperInfo(getPrimaryParam(request, baseName));
     }
 
+=======
+>>>>>>> origin/SPPPA
     private List<String> getParamList(HttpServletRequest request, String baseName) {
         List<String> values = new ArrayList<>();
         String[] arrayValues = request.getParameterValues(baseName + "[]");
@@ -1260,6 +1472,7 @@ public class ApplicationServlet extends HttpServlet {
         return values;
     }
 
+<<<<<<< HEAD
     private List<String> getParamListUpper(HttpServletRequest request, String baseName) {
         List<String> values = getParamList(request, baseName);
         List<String> upperValues = new ArrayList<>(values.size());
@@ -1269,6 +1482,8 @@ public class ApplicationServlet extends HttpServlet {
         return upperValues;
     }
 
+=======
+>>>>>>> origin/SPPPA
     private String getValueAt(List<String> values, int index) {
         if (index < 0 || index >= values.size()) {
             return "";

@@ -30,12 +30,18 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.mindrot.jbcrypt.BCrypt;
 import com.sistemppa.util.ValidationUtil;
+<<<<<<< HEAD
 import com.sistemppa.util.UserDisplayIdUtil;
+=======
+>>>>>>> origin/SPPPA
 
 public class AdminUserServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(AdminUserServlet.class.getName());
     private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9+()\\-\\s]{8,20}$");
+<<<<<<< HEAD
     private static final Path KPP_CSV_PATH = Paths.get("P:/ProjectLI/data/Senarai KPP.csv");
+=======
+>>>>>>> origin/SPPPA
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -49,10 +55,15 @@ public class AdminUserServlet extends HttpServlet {
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             ensureUsersPhoneNumberColumn(conn);
+<<<<<<< HEAD
             ensureUsersRoleSupportsStaff(conn);
             syncKppContactsFromCsv(conn);
 
             String sql = "SELECT id, username, email, phone_number, full_name, role, role_seq, status, created_at " +
+=======
+
+            String sql = "SELECT id, username, email, phone_number, full_name, role, status, created_at " +
+>>>>>>> origin/SPPPA
                          "FROM users " +
                          (search != null && !search.isEmpty()
                              ? "WHERE username LIKE ? OR email LIKE ? OR full_name LIKE ? "
@@ -174,6 +185,7 @@ public class AdminUserServlet extends HttpServlet {
         }
     }
 
+<<<<<<< HEAD
     private void handleAddKppContact(HttpServletRequest request, HttpServletResponse response,
             int currentAdminId) throws IOException {
         String name = request.getParameter("kpp_name");
@@ -257,6 +269,8 @@ public class AdminUserServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/admin/users?kpp_deleted=1");
     }
 
+=======
+>>>>>>> origin/SPPPA
     private void handleUpdateEmail(HttpServletRequest request, HttpServletResponse response,
             int targetUserId, int currentAdminId) throws IOException {
         String email = request.getParameter("email");
@@ -297,9 +311,14 @@ public class AdminUserServlet extends HttpServlet {
                 update.executeUpdate();
             }
 
+<<<<<<< HEAD
             insertAdminAuditLog(conn, currentAdminId, "UPDATE USER EMAIL",
                     "Admin " + resolveDisplayUserId(conn, currentAdminId)
                         + " kemaskini e-mel pengguna " + resolveDisplayUserId(conn, targetUserId),
+=======
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_EMAIL",
+                    "Admin #" + currentAdminId + " kemaskini e-mel pengguna #" + targetUserId,
+>>>>>>> origin/SPPPA
                     request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to update user email: " + e.getMessage());
@@ -340,9 +359,14 @@ public class AdminUserServlet extends HttpServlet {
                 update.executeUpdate();
             }
 
+<<<<<<< HEAD
             insertAdminAuditLog(conn, currentAdminId, "UPDATE USER PHONE",
                     "Admin " + resolveDisplayUserId(conn, currentAdminId)
                         + " kemaskini nombor telefon pengguna " + resolveDisplayUserId(conn, targetUserId),
+=======
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_PHONE",
+                    "Admin #" + currentAdminId + " kemaskini nombor telefon pengguna #" + targetUserId,
+>>>>>>> origin/SPPPA
                     request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to update user phone number: " + e.getMessage());
@@ -362,7 +386,11 @@ public class AdminUserServlet extends HttpServlet {
         }
 
         String newRole = roleParam.trim().toUpperCase(Locale.ROOT);
+<<<<<<< HEAD
         if (!"ADMIN".equals(newRole) && !"USER".equals(newRole) && !"STAFF".equals(newRole)) {
+=======
+        if (!"ADMIN".equals(newRole) && !"USER".equals(newRole)) {
+>>>>>>> origin/SPPPA
             response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_role");
             return;
         }
@@ -393,7 +421,11 @@ public class AdminUserServlet extends HttpServlet {
                 return;
             }
 
+<<<<<<< HEAD
             if ("ADMIN".equals(existingRole) && !"ADMIN".equals(newRole)) {
+=======
+            if ("ADMIN".equals(existingRole) && "USER".equals(newRole)) {
+>>>>>>> origin/SPPPA
                 try (PreparedStatement ps = conn.prepareStatement(
                         "SELECT COUNT(*) FROM users WHERE role = 'ADMIN'")) {
                     try (ResultSet rs = ps.executeQuery()) {
@@ -412,9 +444,14 @@ public class AdminUserServlet extends HttpServlet {
                 update.executeUpdate();
             }
 
+<<<<<<< HEAD
             insertAdminAuditLog(conn, currentAdminId, "UPDATE USER ROLE",
                     "Admin " + resolveDisplayUserId(conn, currentAdminId)
                         + " tukar peranan pengguna " + resolveDisplayUserId(conn, targetUserId)
+=======
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_ROLE",
+                    "Admin #" + currentAdminId + " tukar peranan pengguna #" + targetUserId
+>>>>>>> origin/SPPPA
                             + " daripada " + existingRole + " kepada " + newRole,
                     request.getRemoteAddr());
         } catch (SQLException e) {
@@ -618,6 +655,7 @@ public class AdminUserServlet extends HttpServlet {
             stmt.executeUpdate();
         }
     }
+<<<<<<< HEAD
 
     private void ensureUsersRoleSupportsStaff(Connection conn) throws SQLException {
         String sql = "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS "
@@ -813,4 +851,6 @@ public class AdminUserServlet extends HttpServlet {
         }
         return escaped;
     }
+=======
+>>>>>>> origin/SPPPA
 }

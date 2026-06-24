@@ -15,7 +15,11 @@
             --brand-yellow: #F2F72E;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+<<<<<<< HEAD
         body { font-family: inherit; background: url('${pageContext.request.contextPath}/assets/images/login-register-bg.jpg') center/cover no-repeat fixed; min-height: 100vh; display: grid; place-items: center; padding: 24px; position: relative; }
+=======
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: url('${pageContext.request.contextPath}/assets/images/login-register-bg.jpg') center/cover no-repeat fixed; min-height: 100vh; display: grid; place-items: center; padding: 24px; position: relative; }
+>>>>>>> origin/SPPPA
         body::before { content: ''; position: fixed; inset: 0; background: rgba(255,255,255,0.45); z-index: 0; pointer-events: none; }
         .shell { position: relative; z-index: 1; }
         .shell { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 1040px; border-radius: 24px; overflow: hidden; box-shadow: 0 22px 58px rgba(6, 52, 79, 0.2); }
@@ -40,7 +44,10 @@
         .privacy-consent-box { margin: 14px 0 16px; padding: 12px 14px; background: #f5f8fb; border: 1px solid #d7e7ef; border-radius: 12px; }
         .privacy-consent-label { display: flex; align-items: flex-start; gap: 10px; margin: 0; font-weight: 600; color: #173040; line-height: 1.5; font-size: 14px; }
         .privacy-consent-label input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: 0 0 18px; }
+<<<<<<< HEAD
         .privacy-consent-label span { display: block; text-align: justify; text-justify: inter-word; line-height: 1.65; letter-spacing: 0.01em; }
+=======
+>>>>>>> origin/SPPPA
         .footer { margin-top: 18px; text-align: center; color: #64748b; }
         .footer a { color: var(--brand-blue); text-decoration: none; font-weight: 700; }
         @media (max-width: 920px) { .shell { grid-template-columns: 1fr; } .info { display: none; } }
@@ -102,6 +109,7 @@
             height: 20px;
             object-fit: contain;
         }
+<<<<<<< HEAD
         .top-home-btn:hover {
             transform: translateY(-1px) scale(1.03);
             background: rgba(15, 107, 174, 0.8);
@@ -112,12 +120,20 @@
         .jans-contact-section .contact-icon { width: 13px; height: 13px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
         .jans-contact-section .contact-line span { line-height: 1.45; }
         .contact-line-hanging { margin-left: 21px; }
+=======
+        .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
+        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; }
+        .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; font-size: 13px; color: #4e6a7c; line-height: 1.45; }
+        .jans-contact-section .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .jans-contact-section .contact-line span { line-height: 1.45; }
+>>>>>>> origin/SPPPA
         </style>
 </head>
 <body>
     <a class="top-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/icon/home.png" alt="Laman utama"></a>
     <div class="shell">
         <div class="info">
+<<<<<<< HEAD
             <h1>Daftar Akaun Sistem Pendaftaran Pembekal dan Produk Air</h1>
             <div class="container" style="padding-top:0;">
                 <div class="jans-contact-section">
@@ -128,6 +144,17 @@
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+=======
+            <h1>Daftar Akaun Sistem Pendaftaran Produk Air</h1>
+            <div class="container" style="padding-top:0;">
+                <div class="jans-contact-section">
+                    <h3>Hubungi JANS</h3>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+>>>>>>> origin/SPPPA
             </div>
         </div>
         <div class="card">
@@ -168,7 +195,11 @@
             <div class="privacy-consent-box">
                 <label for="privacy_consent" class="privacy-consent-label">
                     <input id="privacy_consent" name="privacy_consent" type="checkbox" value="1" required>
+<<<<<<< HEAD
                     <span>Segala maklumat yang dikemukakan semasa pendaftaran akan digunakan hanya bagi tujuan pendaftaran akaun. Maklumat peribadi akan dirahsiakan dan tidak akan didedahkan atau dikongsi dengan mana-mana pihak ketiga.</span>
+=======
+                    <span>Dengan mendaftar anda bersetuju bahawa maklumat anda hanya akan digunakan untuk tujuan pendaftaran akaun sahaja. Kami menjamin maklumat peribadi anda tidak akan didedahkan atau dikongsi kepada mana-mana pihak ketiga.</span>
+>>>>>>> origin/SPPPA
                 </label>
             </div>
             <button id="registerSubmitBtn" class="btn" type="submit" disabled>Daftar Akaun</button>
@@ -227,5 +258,8 @@
 </body>
 </html>
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> origin/SPPPA

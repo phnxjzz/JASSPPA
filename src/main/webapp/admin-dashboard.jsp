@@ -144,7 +144,11 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Dashboard Pentadbir - SPPPA</title>
     <style>
+<<<<<<< HEAD
 /*A��─ Design tokensA��──────────────────────────── */
+=======
+        /* ── Design tokens ───────────────────────────── */
+>>>>>>> origin/SPPPA
         :root {
             --brand-blue: #0097d9;
             --brand-navy: #06344f;
@@ -157,7 +161,11 @@
             --tr: 0.2s ease;
         }
         * { box-sizing: border-box; }
+<<<<<<< HEAD
         body { margin: 0; font-family: inherit; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
+=======
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
+>>>>>>> origin/SPPPA
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 76%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 52px; height: 52px; border-radius: 14px; object-fit: contain; padding: 4px; }
@@ -201,6 +209,7 @@
         .stats .stat-card:nth-child(6) h3, .stats .stat-card:nth-child(6) .number { color: #5b2491; }
         .layout { display: grid; grid-template-columns: 1.9fr 1fr; gap: 20px; }
         .toolbar { display: grid; grid-template-columns: minmax(220px, 1.6fr) repeat(3, minmax(140px, 1fr)); gap: 12px; align-items: end; margin-bottom: 16px; }
+<<<<<<< HEAD
         .status-filter-compact .status-filter-controls {
             display: flex;
             align-items: center;
@@ -242,6 +251,8 @@
         .btn-archive-main:focus-visible .archive-hover-label {
             display: inline-flex;
         }
+=======
+>>>>>>> origin/SPPPA
         .export-control { min-width: 0; }
         .export-help { margin-top: 6px; font-size: 12px; color: var(--muted); }
         .field { min-width: 0; }
@@ -300,7 +311,10 @@
         .status-new { background: #dbeafe; color: #1e40af; }
         .status-under_review { background: #e0f2fe; color: #0369a1; }
         .status-in_progress { background: #ede9fe; color: #7c3aed; }
+<<<<<<< HEAD
         .status-resolved { background: #dcfce7; color: #166534; }
+=======
+>>>>>>> origin/SPPPA
         .status-approved { background: #dff5e7; color: #156b3c; }
         .status-rejected { background: #ffe1e4; color: #9f1f2b; }
         .status-suspended { background: #ececf2; color: #4a4a60; }
@@ -358,6 +372,7 @@
             font-weight: 700;
             color: #24495e;
         }
+<<<<<<< HEAD
         .sent-popup {
             position: fixed;
             inset: 0;
@@ -556,6 +571,8 @@
         .aduan-password-popup-btn-cancel:hover {
             background: #d8e7f3;
         }
+=======
+>>>>>>> origin/SPPPA
         @keyframes toastPulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.16); }
@@ -565,6 +582,7 @@
         .export-metric { border: 1px solid var(--line); border-radius: 10px; background: #f9fcff; padding: 8px 10px; }
         .export-metric small { display: block; color: #617c8d; font-size: 11px; }
         .export-metric strong { display: block; color: #0a4a7b; font-size: 18px; margin-top: 2px; }
+<<<<<<< HEAD
         .quick-actions-sidebar {
             position: fixed;
             left: 16px;
@@ -645,10 +663,14 @@
             color: #4a167f;
             border-color: #b590ef;
         }
+=======
+        .quick-actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
+>>>>>>> origin/SPPPA
         .notification-list, .activity-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
         .notification-item, .activity-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: #f9fcff; }
         .notification-item strong, .activity-item strong { display: block; margin-bottom: 4px; font-size: 13px; color: #0d4f80; }
         .notification-item span, .activity-item span { color: #577082; font-size: 12px; }
+<<<<<<< HEAD
         .audit-content {
             max-height: 420px;
             display: flex;
@@ -693,6 +715,8 @@
             text-align: center;
         }
         .audit-content.is-hidden { display: none; }
+=======
+>>>>>>> origin/SPPPA
         .notif-warning { border-left: 4px solid #f1b100; }
         .notif-recent { border-left: 4px solid #0f6bae; }
         .status-alert-panel { margin-bottom: 16px; border: 1px solid #ffe6a7; border-left: 5px solid #f4b400; background: #fff9e8; border-radius: 12px; padding: 12px 14px; }
@@ -706,6 +730,7 @@
         .legend-dot.rejected { background: #cf4e4e; }
         .legend-dot.new { background: #3b82f6; }
         .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
+<<<<<<< HEAD
         .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; display: inline-flex; align-items: center; gap: 8px; }
         .contact-line { display: flex; gap: 8px; align-items: flex-start; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; }
         .contact-icon { width: 13px; height: 13px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
@@ -784,6 +809,55 @@
             margin-top: 8px;
             flex-wrap: wrap;
         }
+=======
+        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; }
+        .contact-line { display: flex; gap: 8px; align-items: flex-start; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; }
+        .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .jans-contact-section .contact-line span { line-height: 1.45; }
+        .contact-address-link { color: #0f6bae; text-decoration: none; }
+        .contact-address-link:hover { text-decoration: underline; }
+
+        @media (max-width: 1200px) {
+            .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .layout { grid-template-columns: 1fr; }
+            .toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .export-summary { grid-template-columns: 1fr; }
+            .kpp-action-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 860px) {
+            .navbar { padding: 12px 14px; flex-direction: column; align-items: flex-start; }
+            .navbar > div:last-child { justify-content: flex-start; }
+            .container { padding: 0 10px 20px; }
+            .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .toolbar { grid-template-columns: 1fr; }
+            .panel { padding: 14px; border-radius: 14px; }
+            .brand-logo { width: 42px; height: 42px; }
+            .brand h1 { font-size: 16px; }
+            table { min-width: 620px; }
+            .action-cell { flex-direction: column; }
+            body.popup-open .table-card.popup-active,
+            body.popup-open #announcementPanel.popup-active {
+                width: calc(100vw - 10px);
+                max-height: calc(100vh - 12px);
+                border-radius: 12px;
+            }
+        }
+
+        /* ── Misc ────────────────────────────────────── */
+        .announce-with-gif { display: flex; align-items: center; gap: 10px; }
+        .announce-title  { font-weight: 700; color: var(--brand-navy); }
+        .announce-content { color: var(--muted); margin-top: 4px; white-space: pre-wrap; }
+        .announce-status { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+        .announce-active   { background: #d1fae5; color: #065f46; }
+        .announce-inactive { background: #e9edf2; color: #374151; }
+        .analytics-chart {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+>>>>>>> origin/SPPPA
         .pie-chart {
             width: 128px;
             height: 128px;
@@ -871,18 +945,24 @@
             display: grid;
             gap: 8px;
         }
+<<<<<<< HEAD
         .kpp-inline-help {
             margin-top: 6px;
             font-size: 12px;
             color: #5e798b;
         }
+=======
+>>>>>>> origin/SPPPA
         .kpp-draft label {
             font-size: 12px;
             font-weight: 700;
             color: #5b7485;
         }
         .kpp-draft input,
+<<<<<<< HEAD
         .kpp-draft select,
+=======
+>>>>>>> origin/SPPPA
         .kpp-draft textarea {
             width: 100%;
             border: 1px solid #d4e4ef;
@@ -898,6 +978,7 @@
             resize: vertical;
             line-height: 1.45;
         }
+<<<<<<< HEAD
         .kpp-picker {
             position: relative;
         }
@@ -965,6 +1046,8 @@
             color: #dc3545;
             font-weight: 700;
         }
+=======
+>>>>>>> origin/SPPPA
         .kpp-help {
             margin: 0;
             color: #5f7787;
@@ -1069,6 +1152,7 @@
             border-radius: 10px;
             background: #f8fcff;
             padding: 8px 10px;
+<<<<<<< HEAD
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -1122,6 +1206,8 @@
             background: #eef2f6;
             color: #4b6070;
             border-color: #d3dce3;
+=======
+>>>>>>> origin/SPPPA
         }
         .kpp-submission-item strong {
             display: block;
@@ -1268,12 +1354,36 @@
         }
         .expand-overlay {
             position: fixed;
+<<<<<<< HEAD
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 1099;
             display: none;
+=======
+            inset: 0;
+            background: rgba(3, 18, 32, 0.62);
+            backdrop-filter: blur(2px);
+            display: none;
+            z-index: 1200;
+        }
+        body.popup-open { overflow: hidden; }
+        body.popup-open .expand-overlay { display: block; }
+        body.popup-open .table-card.popup-active,
+        body.popup-open #announcementPanel.popup-active {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(1120px, calc(100vw - 24px));
+            max-height: calc(100vh - 38px);
+            overflow: auto;
+            z-index: 1210;
+            border-radius: 18px;
+            box-shadow: 0 30px 90px rgba(2, 24, 43, 0.44);
+            margin: 0;
+>>>>>>> origin/SPPPA
         }
         .panel-expand-btn[aria-expanded="true"] img { transform: rotate(180deg); }
         .panel-expand-btn img { transition: transform var(--tr); }
@@ -1402,6 +1512,7 @@
         <%
             List<Map<String, Object>> applications = (List<Map<String, Object>>) request.getAttribute("pending_applications");
             List<Map<String, Object>> kppGuestSubmissions = (List<Map<String, Object>>) request.getAttribute("kpp_guest_submissions");
+<<<<<<< HEAD
             List<Map<String, Object>> adminAuditLogs = (List<Map<String, Object>>) request.getAttribute("admin_audit_logs");
             List<Map<String, Object>> kppContacts = (List<Map<String, Object>>) request.getAttribute("kpp_contacts");
             boolean isAdminRole = "ADMIN".equals(String.valueOf(session.getAttribute("role")));
@@ -1473,6 +1584,9 @@
                     }
                 }
             }
+=======
+            boolean isAdminRole = "ADMIN".equals(String.valueOf(session.getAttribute("role")));
+>>>>>>> origin/SPPPA
         %>
 
         <div class="layout">
@@ -1491,6 +1605,7 @@
                     </div>
                     <div class="field status-filter-compact">
                         <label for="status">Status</label>
+<<<<<<< HEAD
                         <div class="status-filter-controls">
                             <select id="status" name="status">
                                 <option value="">Semua status</option>
@@ -1512,6 +1627,29 @@
                         <label for="date_to">Tarikh Hingga</label>
                         <input id="date_to" name="date_to" type="date" value="<%= request.getAttribute("date_to") != null ? request.getAttribute("date_to") : "" %>">
                     </div>
+=======
+                        <select id="status" name="status">
+                            <option value="">Semua status</option>
+                            <option value="NEW" <%= "NEW".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>NEW</option>
+                            <option value="UNDER_REVIEW" <%= "UNDER_REVIEW".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>UNDER REVIEW</option>
+                            <option value="IN_PROGRESS" <%= "IN_PROGRESS".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>IN PROGRESS</option>
+                            <option value="APPROVED" <%= "APPROVED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>APPROVED</option>
+                            <option value="REJECTED" <%= "REJECTED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>REJECTED</option>
+                            <option value="SUSPENDED" <%= "SUSPENDED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>SUSPENDED</option>
+                            <option value="DRAFT" <%= "DRAFT".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DRAFT</option>
+                            <option value="ARCHIVED" <%= "ARCHIVED".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>ARCHIVED</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="date_from">Tarikh Dari</label>
+                        <input id="date_from" name="date_from" type="date" value="<%= request.getAttribute("date_from") != null ? request.getAttribute("date_from") : "" %>">
+                    </div>
+                    <div class="field">
+                        <label for="date_to">Tarikh Hingga</label>
+                        <input id="date_to" name="date_to" type="date" value="<%= request.getAttribute("date_to") != null ? request.getAttribute("date_to") : "" %>">
+                    </div>
+                    <button class="btn btn-primary" type="submit">Tapis</button>
+>>>>>>> origin/SPPPA
                     <div class="field export-control">
                         <label for="exportOption">Eksport</label>
                         <select id="exportOption" name="exportOption">
@@ -1527,8 +1665,12 @@
                             </optgroup>
                         </select>
                     </div>
+<<<<<<< HEAD
                     <button class="btn btn-secondary" type="button" id="exportDownloadBtn" aria-label="Muat Turun" title="Muat Turun"><img src="${pageContext.request.contextPath}/assets/images/icon-download.png" class="icon-inline" alt="Ikon turun"></button>
                     <button class="btn btn-secondary btn-archive-main" type="button" id="latestArchiveBtn" aria-label="Arkib" title="Arkib"><img src="${pageContext.request.contextPath}/icon/archive.png" class="icon-inline" alt="Ikon arkib" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/icon-archive.png';"><span id="latestArchiveBtnLabel" class="archive-hover-label">Arkib</span></button>
+=======
+                    <button class="btn btn-secondary" type="button" id="exportDownloadBtn" aria-label="Turun" title="Turun"><img src="${pageContext.request.contextPath}/assets/images/icon-download.png" class="icon-inline" alt="Ikon turun"></button>
+>>>>>>> origin/SPPPA
                     </form>
 
                     <% if (isAdminRole) { %>
@@ -1537,7 +1679,11 @@
                         <input type="hidden" id="bulkSelectedIds" name="selected_ids" value="">
                         <input type="hidden" id="bulkFirstId" name="id" value="">
                         <div class="bulk-toolbar">
+<<<<<<< HEAD
                             <button class="btn btn-primary" id="bulkApproveBtn" type="button">Approve Selected</button> 
+=======
+                            <button class="btn btn-primary" id="bulkApproveBtn" type="button">Approve Selected</button>
+>>>>>>> origin/SPPPA
                             <button class="btn btn-secondary" id="bulkRejectBtn" type="button">Reject Selected</button>
                             <button class="btn btn-accent" id="bulkExportBtn" type="button">Export Selected</button>
                             <span class="bulk-count" id="bulkSelectedCount">0 dipilih</span>
@@ -1569,6 +1715,7 @@
                                 Timestamp submittedAt = (Timestamp) applicationRow.get("submitted_at");
                                 Timestamp archivedAt = (Timestamp) applicationRow.get("archived_at");
                                 String archiveNotes = applicationRow.get("archive_notes") == null ? "" : String.valueOf(applicationRow.get("archive_notes"));
+<<<<<<< HEAD
                                 String statusRaw = applicationRow.get("status") == null ? "" : String.valueOf(applicationRow.get("status"));
                                 String status = statusRaw.trim().toLowerCase(java.util.Locale.ROOT);
                                 String statusDisplay = displayStatusLabel(statusRaw);
@@ -1581,6 +1728,24 @@
                         <tr>
                             <% if (isAdminRole) { %>
                             <td><input type="checkbox" class="app-row-check table-check" value="<%= applicationRow.get("id") %>" data-can-archive="<%= canArchiveRow ? "1" : "0" %>" data-is-archived="<%= isArchivedRow ? "1" : "0" %>" aria-label="Pilih permohonan"></td>
+=======
+                                String status = String.valueOf(applicationRow.get("status")).toLowerCase();
+                                int appIdNumeric = applicationRow.get("id") instanceof Number ? ((Number) applicationRow.get("id")).intValue() : 0;
+                                int appIdDisplayNumeric = Math.max(0, appIdNumeric - 1);
+                                String appIdDisplay = String.format("PPP%03d", appIdDisplayNumeric);
+                                boolean isArchivedRow = "archived".equals(status);
+                                boolean canArchiveRow = "approved".equals(status) || "rejected".equals(status) || "suspended".equals(status);
+                                String archiveConfirmText = isArchivedRow ? "Buka semula arkib permohonan ini?" : "Arkibkan permohonan ini?";
+                                String archiveButtonText = isArchivedRow ? "Buka Arkib" : "Arkib";
+                                String archiveActionValue = isArchivedRow ? "unarchive" : "archive";
+                                String archiveIconPath = isArchivedRow
+                                    ? (request.getContextPath() + "/assets/images/icon-unarchive.png")
+                                    : (request.getContextPath() + "/assets/images/icon-archive.png");
+                        %>
+                        <tr>
+                            <% if (isAdminRole) { %>
+                            <td><input type="checkbox" class="app-row-check table-check" value="<%= applicationRow.get("id") %>" aria-label="Pilih permohonan"></td>
+>>>>>>> origin/SPPPA
                             <% } %>
                             <td><strong><%= appIdDisplay %></strong></td>
                             <td>
@@ -1589,7 +1754,11 @@
                                 <% if (isArchivedRow && archivedAt != null) { %><br>Arkib: <%= archivedAt %><% } %>
                                 </span>
                             </td>
+<<<<<<< HEAD
                             <td><span class="status-pill status-<%= status %>"><%= statusDisplay %></span></td>
+=======
+                            <td><span class="status-pill status-<%= status %>"><%= applicationRow.get("status") %></span></td>
+>>>>>>> origin/SPPPA
                             <td><%= submittedAt != null ? submittedAt.toString() : "Belum dihantar" %></td>
                             <td>
                                 <div class="action-cell">
@@ -1601,7 +1770,11 @@
                                     data-category="<%= escapeHtml(applicationRow.get("product_category") == null ? "" : String.valueOf(applicationRow.get("product_category")) ) %>"
                                     data-product="<%= escapeHtml(applicationRow.get("product_name") == null ? "" : String.valueOf(applicationRow.get("product_name")) ) %>"
                                     data-description="<%= escapeHtml(applicationRow.get("product_description") == null ? "" : String.valueOf(applicationRow.get("product_description")) ) %>"
+<<<<<<< HEAD
                                     data-status="<%= escapeHtml(statusDisplay) %>"
+=======
+                                    data-status="<%= escapeHtml(applicationRow.get("status") == null ? "" : String.valueOf(applicationRow.get("status")) ) %>"
+>>>>>>> origin/SPPPA
                                     data-submitted="<%= escapeHtml(submittedAt != null ? submittedAt.toString() : "Belum dihantar") %>"
                                     data-user="<%= escapeHtml(applicationRow.get("full_name") == null ? "" : String.valueOf(applicationRow.get("full_name")) ) %>"
                                     data-email="<%= escapeHtml(applicationRow.get("user_email") == null ? "" : String.valueOf(applicationRow.get("user_email")) ) %>"
@@ -1609,6 +1782,23 @@
                                     data-attachment-pdf="<%= escapeHtml(applicationRow.get("attachment_pdf_url") == null ? "" : String.valueOf(applicationRow.get("attachment_pdf_url")) ) %>">
                                     Semak
                                 </a>
+<<<<<<< HEAD
+=======
+                                <% if (isArchivedRow || canArchiveRow) { %>
+                                <button
+                                    class="btn btn-archive js-archive-btn"
+                                    type="button"
+                                    title="<%= archiveButtonText %>"
+                                    aria-label="<%= archiveButtonText %>"
+                                    data-app-id="<%= escapeHtml(String.valueOf(applicationRow.get("id"))) %>"
+                                    data-action="<%= escapeHtml(archiveActionValue) %>"
+                                    data-confirm="<%= escapeHtml(archiveConfirmText) %>"
+                                    data-csrf="${csrf_token}"
+                                    data-ctx="${pageContext.request.contextPath}">
+                                    <img src="<%= archiveIconPath %>" class="icon-btn" alt="Arkib">
+                                </button>
+                                <% } %>
+>>>>>>> origin/SPPPA
                                 </div>
                             </td>
                         </tr>
@@ -1621,11 +1811,16 @@
                 </div>
 
                 <div class="panel kpp-action-panel">
+<<<<<<< HEAD
                     <h3 class="section-title">Tindakan Ketua Penolong Pengarah</h3>
+=======
+                    <h3 class="section-title">Tindakan KPP</h3>
+>>>>>>> origin/SPPPA
                     <div class="kpp-action-grid">
                         <div class="kpp-draft">
                             <div class="kpp-form-grid">
                                 <div>
+<<<<<<< HEAD
                                     <label for="kppRecipientPickerBtn">Kepada &amp; Emel Penerima (Checklist KPP)</label>
                                     <div class="kpp-picker" id="kppRecipientPicker">
                                         <button id="kppRecipientPickerBtn" class="kpp-picker-btn" type="button">Pilih KPP (boleh pilih lebih dari satu)</button>
@@ -1661,6 +1856,14 @@
                                 <div>
                                     <label for="kppEmailTo">Emel Penerima</label>
                                     <input id="kppEmailTo" type="text" readonly placeholder="Belum pilih emel">
+=======
+                                    <label for="kppRecipientName">Kepada (Nama Penerima)</label>
+                                    <input id="kppRecipientName" type="text" placeholder="Contoh: KPP Bahagian Teknikal">
+                                </div>
+                                <div>
+                                    <label for="kppEmailTo">Emel Penerima</label>
+                                    <input id="kppEmailTo" type="email" placeholder="contoh@jans.sabah.gov.my">
+>>>>>>> origin/SPPPA
                                 </div>
                                 <div class="kpp-form-span">
                                     <label for="kppActionType">Tindakan Diperlukan</label>
@@ -1670,6 +1873,7 @@
                                         <option value="KSPP_UJPPP">Isi Kedua-dua Borang (KSPP dan UJPPP)</option>
                                     </select>
                                 </div>
+<<<<<<< HEAD
                                 <div class="kpp-form-span">
                                     <label for="kppApplicationRef">Borang Permohonan (Dihantar Pemohon)</label>
                                     <input id="kppApplicationSearch" type="text" placeholder="Cari ikut kod borang, syarikat, atau produk">
@@ -1699,13 +1903,27 @@
                                 <label for="kppEmailBody">Isi Email</label>
                                 <textarea id="kppEmailBody" placeholder="Isi email boleh diedit sebelum hantar"></textarea>
                                 <div class="kpp-inline-help">Tip: kekalkan teks [Pautan khas akan dijana semasa Hantar Email] dalam isi email untuk gantian pautan automatik.</div>
+=======
+                            </div>
+                            <div>
+                                <label for="kppEmailSubject">Subjek Email</label>
+                                <input id="kppEmailSubject" type="text" readonly>
+                            </div>
+                            <div>
+                                <label for="kppEmailBody">Isi Email Auto-Generate</label>
+                                <textarea id="kppEmailBody" readonly></textarea>
+>>>>>>> origin/SPPPA
                             </div>
                             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                                 <button class="btn btn-primary" type="button" id="kppEmailSendBtn">Hantar Email</button>
                             </div>
                         </div>
                         <div class="kpp-submission-box" id="kpp-submissions">
+<<<<<<< HEAD
                             <h4 class="kpp-submission-title">Senarai Respon Ketua Penolong Pengarah</h4>
+=======
+                            <h4 class="kpp-submission-title">Senarai Tindakan KPP</h4>
+>>>>>>> origin/SPPPA
                             <form class="kpp-submission-toolbar" method="get" action="${pageContext.request.contextPath}/dashboard#kpp-submissions">
                                 <div class="kpp-search-wrap">
                                     <img src="${pageContext.request.contextPath}/assets/images/kpp-search.png" alt="Carian">
@@ -1728,11 +1946,18 @@
                                         boolean kppArchived = Boolean.TRUE.equals(kppSubmission.get("archived"));
                                     %>
                                     <li class="kpp-submission-item">
+<<<<<<< HEAD
                                         <div class="kpp-submission-main">
                                             <strong><%= escapeHtml(String.valueOf(kppSubmission.get("kpp_display"))) %> - <%= escapeHtml(String.valueOf(kppSubmission.get("form_display"))) %></strong>
                                             <span>Tarikh Hantar: <%= submittedAt == null ? "-" : escapeHtml(String.valueOf(submittedAt)) %></span>
                                             <span>Emel Penerima: <%= escapeHtml(String.valueOf(kppSubmission.get("recipient_email"))) %></span>
                                             <div class="kpp-submission-actions">
+=======
+                                        <strong><%= escapeHtml(String.valueOf(kppSubmission.get("kpp_display"))) %> - <%= escapeHtml(String.valueOf(kppSubmission.get("form_display"))) %></strong>
+                                        <span>Tarikh Hantar: <%= submittedAt == null ? "-" : escapeHtml(String.valueOf(submittedAt)) %></span>
+                                        <span>Emel Penerima: <%= escapeHtml(String.valueOf(kppSubmission.get("recipient_email"))) %></span>
+                                        <div class="kpp-submission-actions">
+>>>>>>> origin/SPPPA
                                             <button
                                                     class="kpp-action-btn js-kpp-view-btn"
                                                     type="button"
@@ -1768,6 +1993,7 @@
                                                     <img src="${pageContext.request.contextPath}/assets/images/kpp-delete.png" alt="Delete">
                                                 </button>
                                             </form>
+<<<<<<< HEAD
                                             </div>
                                         </div>
                                         <div class="kpp-submission-status">
@@ -1775,6 +2001,8 @@
                                                  data-action="<%= escapeHtml(String.valueOf(kppSubmission.get("action_type"))) %>"
                                                  data-payload="<%= escapeHtml(String.valueOf(kppSubmission.get("form_payload"))) %>">
                                             </div>
+=======
+>>>>>>> origin/SPPPA
                                         </div>
                                     </li>
                                     <% } %>
@@ -1784,10 +2012,52 @@
                     </div>
                 </div>
 
+<<<<<<< HEAD
+=======
+                <div class="panel">
+                    <h3 class="section-title">Analitik Status Permohonan</h3>
+                    <%
+                        int approvedChart = request.getAttribute("approved_count") instanceof Number ? ((Number) request.getAttribute("approved_count")).intValue() : 0;
+                        int rejectedChart = request.getAttribute("rejected_count") instanceof Number ? ((Number) request.getAttribute("rejected_count")).intValue() : 0;
+                        int pendingChart = request.getAttribute("pending_count") instanceof Number ? ((Number) request.getAttribute("pending_count")).intValue() : 0;
+                        int totalChart = Math.max(1, approvedChart + rejectedChart + pendingChart);
+                        int approvedDeg = (int) Math.round((approvedChart * 360.0) / totalChart);
+                        int rejectedDeg = (int) Math.round((rejectedChart * 360.0) / totalChart);
+                        int pendingDeg = 360 - approvedDeg - rejectedDeg; // Pastikan total 360 darjah
+                        int approvedEnd = approvedDeg;
+                        int rejectedEnd = approvedDeg + rejectedDeg;
+                        String pieGradient = "conic-gradient(#1b8f55 0deg " + approvedEnd + "deg, #cf4e4e " + approvedEnd + "deg " + rejectedEnd + "deg, #df8f1f " + rejectedEnd + "deg 360deg)";
+                    %>
+                    <div class="analytics-chart" aria-label="Carta status permohonan">
+                        <div class="pie-chart" data-gradient="<%= pieGradient %>">
+                            <div class="pie-center">
+                                <small>Total</small>
+                                <strong><%= approvedChart + rejectedChart + pendingChart %></strong>
+                            </div>
+                        </div>
+                        <ul class="analytics-legend">
+                            <li>
+                                <span class="legend-label"><span class="legend-dot approved"></span>Diluluskan</span>
+                                <span class="legend-value"><%= approvedChart %></span>
+                            </li>
+                            <li>
+                                <span class="legend-label"><span class="legend-dot rejected"></span>Ditolak</span>
+                                <span class="legend-value"><%= rejectedChart %></span>
+                            </li>
+                            <li>
+                                <span class="legend-label"><span class="legend-dot new"></span>Baharu</span>
+                                <span class="legend-value"><%= pendingChart %></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+>>>>>>> origin/SPPPA
             </div>
 
             <div class="right-panel">
                 <div class="panel">
+<<<<<<< HEAD
                     <h3 class="section-title">Aktiviti Terkini</h3>
                     <ul class="activity-list">
                         <% if (applications != null && !applications.isEmpty()) {
@@ -1853,7 +2123,62 @@
                     <% if (adminAuditLogs != null && !adminAuditLogs.isEmpty()) { %>
                     <div class="audit-filter-empty" id="auditFilterEmptyDashboard" style="display:none;">Tiada rekod sepadan dengan penapis semasa.</div>
                     <% } %>
+=======
+                    <h3 class="section-title">Quick Actions</h3>
+                    <div class="quick-actions">
+                        <a class="btn btn-primary" href="#announcementPanel">Tambah Pengumuman</a>
+                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/users">Urus Pengguna</a>
+                        <a class="btn btn-archive" href="${pageContext.request.contextPath}/dashboard?status=ARCHIVED">Lihat Arkib</a>
+                        <button class="btn btn-accent" type="button" id="quickExportBtn">Eksport</button>
+>>>>>>> origin/SPPPA
                     </div>
+                </div>
+
+                <div class="panel">
+                    <h3 class="section-title">Pemberitahuan</h3>
+                    <ul class="notification-list">
+                        <li class="notification-item notif-warning">
+                            <strong>Permohonan Menunggu</strong>
+                            <span><%= request.getAttribute("pending_count") != null ? request.getAttribute("pending_count") : "0" %> permohonan perlu semakan.</span>
+                        </li>
+                        <li class="notification-item notif-warning">
+                            <strong>Permohonan Ditolak</strong>
+                            <span><%= request.getAttribute("rejected_count") != null ? request.getAttribute("rejected_count") : "0" %> rekod memerlukan tindakan susulan.</span>
+                        </li>
+                        <% if (applications != null && !applications.isEmpty()) {
+                            int noticeShown = 0;
+                            for (Map<String, Object> appNotice : applications) {
+                                if (noticeShown >= 3) { break; }
+                                noticeShown++;
+                        %>
+                        <li class="notification-item notif-recent">
+                            <strong><%= escapeHtml(String.valueOf(appNotice.get("company_name"))) %></strong>
+                            <span>Status: <%= escapeHtml(String.valueOf(appNotice.get("status"))) %></span>
+                        </li>
+                        <%      }
+                           } %>
+                    </ul>
+                </div>
+
+                <div class="panel">
+                    <h3 class="section-title">Aktiviti Terkini</h3>
+                    <ul class="activity-list">
+                        <% if (applications != null && !applications.isEmpty()) {
+                            int activityShown = 0;
+                            for (Map<String, Object> activityRow : applications) {
+                                if (activityShown >= 5) { break; }
+                                activityShown++;
+                                Timestamp activityTime = (Timestamp) activityRow.get("submitted_at");
+                        %>
+                        <li class="activity-item">
+                            <strong><%= escapeHtml(String.valueOf(activityRow.get("full_name"))) %></strong> mengemaskini permohonan
+                            <span class="muted"><%= activityTime != null ? escapeHtml(activityTime.toString()) : "Masa tidak tersedia" %></span>
+                        </li>
+                        <%      }
+                           } else { %>
+                        <li class="activity-item">Tiada aktiviti terkini buat masa ini.</li>
+                        <% } %>
+                    </ul>
                 </div>
 
                 <div class="panel announcement-panel" id="announcementPanel">
@@ -2012,6 +2337,7 @@
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
+<<<<<<< HEAD
                 <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
                 <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
@@ -2064,7 +2390,30 @@
                 <button type="button" class="aduan-password-popup-btn aduan-password-popup-btn-cancel" id="aduanPasswordPopupCancelBtn">Batal</button>
                 <button type="button" class="aduan-password-popup-btn aduan-password-popup-btn-confirm" id="aduanPasswordPopupConfirmBtn">Teruskan</button>
             </div>
+=======
+                <h3>Hubungi JANS</h3>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
+                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+>>>>>>> origin/SPPPA
         </div>
+    </div>
+    <div class="expand-overlay" id="expandOverlay" aria-hidden="true"></div>
+    <div class="kpp-modal" id="kppSubmissionModal" aria-hidden="true">
+        <div class="kpp-modal-card" role="dialog" aria-modal="true" aria-labelledby="kppSubmissionModalTitle">
+            <div class="kpp-modal-head">
+                <h4 id="kppSubmissionModalTitle">Borang Dihantar KPP</h4>
+                <button class="kpp-modal-close" type="button" id="kppSubmissionCloseBtn">Tutup</button>
+            </div>
+            <p class="kpp-modal-meta" id="kppSubmissionMeta"></p>
+            <div class="kpp-modal-grid" id="kppSubmissionContent"></div>
+        </div>
+    </div>
+    <div class="archive-toast" id="archiveToast" role="status" aria-live="polite">
+        <img src="${pageContext.request.contextPath}/assets/images/icon-archive.png" alt="Notifikasi arkib" id="archiveToastIcon">
+        <span id="archiveToastText">Berjaya.</span>
     </div>
 <script>
     (function () {
@@ -2075,8 +2424,12 @@
         
         var toolbarForm = document.querySelector('.toolbar');
         var exportButton = document.getElementById('exportDownloadBtn');
+<<<<<<< HEAD
         var latestArchiveBtn = document.getElementById('latestArchiveBtn');
         var latestArchiveBtnLabel = document.getElementById('latestArchiveBtnLabel');
+=======
+        var quickExportButton = document.getElementById('quickExportBtn');
+>>>>>>> origin/SPPPA
         var exportOption = document.getElementById('exportOption');
         var searchInput = document.getElementById('q');
         var statusSelect = document.getElementById('status');
@@ -2102,6 +2455,7 @@
         var archiveToast = document.getElementById('archiveToast');
         var archiveToastIcon = document.getElementById('archiveToastIcon');
         var archiveToastText = document.getElementById('archiveToastText');
+<<<<<<< HEAD
         var sentPopup = document.getElementById('sentPopup');
         var sentPopupOkBtn = document.getElementById('sentPopupOkBtn');
         var toastTimer = null;
@@ -2117,12 +2471,22 @@
         var kppEmailBody = document.getElementById('kppEmailBody');
         var kppEmailSendBtn = document.getElementById('kppEmailSendBtn');
         var kppStatusBadgeBoxes = Array.prototype.slice.call(document.querySelectorAll('.js-kpp-status-badge'));
+=======
+        var toastTimer = null;
+        var kppRecipientName = document.getElementById('kppRecipientName');
+        var kppEmailTo = document.getElementById('kppEmailTo');
+        var kppActionType = document.getElementById('kppActionType');
+        var kppEmailSubject = document.getElementById('kppEmailSubject');
+        var kppEmailBody = document.getElementById('kppEmailBody');
+        var kppEmailSendBtn = document.getElementById('kppEmailSendBtn');
+>>>>>>> origin/SPPPA
         var kppViewButtons = Array.prototype.slice.call(document.querySelectorAll('.js-kpp-view-btn'));
         var kppSubmissionModal = document.getElementById('kppSubmissionModal');
         var kppSubmissionCloseBtn = document.getElementById('kppSubmissionCloseBtn');
         var kppSubmissionMeta = document.getElementById('kppSubmissionMeta');
         var kppSubmissionContent = document.getElementById('kppSubmissionContent');
         var kppSubmissionsBox = document.getElementById('kpp-submissions');
+<<<<<<< HEAD
         var aduanSecureForm = document.getElementById('aduanSecureForm');
         var aduanSecureBtn = document.getElementById('aduanSecureBtn');
         var aduanSecurePassword = document.getElementById('aduanSecurePassword');
@@ -2130,6 +2494,8 @@
         var aduanPasswordPopupInput = document.getElementById('aduanPasswordPopupInput');
         var aduanPasswordPopupCancelBtn = document.getElementById('aduanPasswordPopupCancelBtn');
         var aduanPasswordPopupConfirmBtn = document.getElementById('aduanPasswordPopupConfirmBtn');
+=======
+>>>>>>> origin/SPPPA
 
         var appDetailModal = document.getElementById('appDetailModal');
         var appModalCloseBtn = document.getElementById('appModalCloseBtn');
@@ -2140,6 +2506,7 @@
 
         var contextPath = '<%= request.getContextPath() %>';
 
+<<<<<<< HEAD
         function closeAduanPasswordPopup() {
             if (!aduanPasswordPopup) {
                 return;
@@ -2211,11 +2578,17 @@
             });
         }
 
+=======
+>>>>>>> origin/SPPPA
         function keepKppPanelOnScreen() {
             try {
                 sessionStorage.setItem('dashboardAnchor', 'kpp-submissions');
             } catch (error) {
+<<<<<<< HEAD
                 
+=======
+                // Ignore storage errors and continue normal navigation.
+>>>>>>> origin/SPPPA
             }
         }
 
@@ -2279,6 +2652,7 @@
             window.location.href = url;
         }
 
+<<<<<<< HEAD
         function resolveLatestArchiveMode() {
             var selectedRows = appRowChecks.filter(function(row) {
                 return row && row.checked;
@@ -2317,6 +2691,8 @@
             }
         }
 
+=======
+>>>>>>> origin/SPPPA
         function getKppActionLabel(actionType) {
             if (actionType === 'UJPPP') {
                 return 'Borang Ulasan Jawatankuasa Pendaftaran Pembekal dan Produk Bekalan Air (UJPPP)';
@@ -2327,6 +2703,7 @@
             return 'Borang Kaji Selidik Prestasi Pembekal dan Produk Bekalan Air (KSPP)';
         }
 
+<<<<<<< HEAD
         function getSelectedKppApplicationLabel() {
             if (!kppApplicationRef || !kppApplicationRef.options || kppApplicationRef.selectedIndex < 0) {
                 return '';
@@ -2404,6 +2781,13 @@
         var KPP_LINK_PLACEHOLDER = '[Pautan khas akan dijana semasa Hantar Email]';
 
         function buildKppBody(recipientLabel, actionType, guestLinkBlock, applicationLabel) {
+=======
+        function buildKppSubject(actionType) {
+            return 'Tindakan KPP: ' + getKppActionLabel(actionType);
+        }
+
+        function buildKppBody(kppName, actionType, guestLink) {
+>>>>>>> origin/SPPPA
             var actionLine = '';
             if (actionType === 'UJPPP') {
                 actionLine = '1) Sila isi Borang Ulasan Jawatankuasa Pendaftaran Pembekal dan Produk Bekalan Air (UJPPP).';
@@ -2414,6 +2798,7 @@
                 actionLine = '1) Sila isi Borang Kaji Selidik Prestasi Pembekal dan Produk Bekalan Air (KSPP).';
             }
 
+<<<<<<< HEAD
             var applicationLine = applicationLabel
                 ? ('Borang permohonan dirujuk: ' + applicationLabel + '\n\n')
                 : '';
@@ -2434,6 +2819,20 @@
                 + '&app_ref=' + encodeURIComponent(applicationRef || '')
                 + '&recipient_name=' + encodeURIComponent(recipientName || '')
                 + '&recipient_title=' + encodeURIComponent(recipientTitle || '');
+=======
+            return 'Assalamualaikum dan salam sejahtera ' + kppName + ',\n\n'
+                + 'Admin SPPA memaklumkan bahawa terdapat tindakan tuan/puan berkenaan proses Pendaftaran Produk Air.\n'
+                + 'Tindakan diperlukan:\n'
+                + actionLine + '\n\n'
+                + 'Sila tekan pautan khas di bawah untuk semakan dan tindakan lanjut:\n'
+                + guestLink + '\n\n'
+                + 'Terima kasih.';
+        }
+
+        function generateKppGuestLink(emailTo, actionType) {
+            var url = contextPath + '/kpp/generate-link?recipient_email=' + encodeURIComponent(emailTo)
+                + '&action_type=' + encodeURIComponent(actionType || 'KSPP');
+>>>>>>> origin/SPPPA
 
             return fetch(url, {
                 method: 'GET',
@@ -2454,6 +2853,7 @@
             });
         }
 
+<<<<<<< HEAD
         function sendKppEmails(emailRequests) {
             return fetch(contextPath + '/dashboard', {
                 method: 'POST',
@@ -2549,6 +2949,8 @@
             }
         }
 
+=======
+>>>>>>> origin/SPPPA
         function updateKppDraft() {
             if (!kppEmailSubject || !kppEmailBody) {
                 return;
@@ -2558,6 +2960,7 @@
                 ? kppRecipientName.value.trim()
                 : 'tuan/puan';
             var actionType = kppActionType ? (kppActionType.value || 'KSPP') : 'KSPP';
+<<<<<<< HEAD
             var applicationLabel = getSelectedKppApplicationLabel();
             kppEmailSubject.value = buildKppSubject(actionType, applicationLabel);
             kppEmailBody.value = buildKppBody(kppName, actionType, KPP_LINK_PLACEHOLDER, applicationLabel);
@@ -2740,6 +3143,10 @@
                 box.innerHTML = '';
                 box.appendChild(createKppStatusBadge(selectedStatus.text, selectedStatus.css));
             });
+=======
+            kppEmailSubject.value = buildKppSubject(actionType);
+            kppEmailBody.value = buildKppBody(kppName, actionType, '[Pautan khas akan dijana semasa Hantar Email]');
+>>>>>>> origin/SPPPA
         }
 
         function setExpandState(button, expanded) {
@@ -2784,7 +3191,11 @@
             if (actionValue === 'archive') {
                 if (statusCell) {
                     statusCell.className = 'status-pill status-archived';
+<<<<<<< HEAD
                     statusCell.textContent = 'DIARKIB';
+=======
+                    statusCell.textContent = 'ARCHIVED';
+>>>>>>> origin/SPPPA
                 }
                 if (actionInput) {
                     actionInput.value = 'unarchive';
@@ -2800,7 +3211,11 @@
             }
 
             // For unarchive, remove row from archived view (or fallback to reload if row cannot be removed safely)
+<<<<<<< HEAD
             if (statusSelect && statusSelect.value === 'DIARKIB') {
+=======
+            if (statusSelect && statusSelect.value === 'ARCHIVED') {
+>>>>>>> origin/SPPPA
                 row.remove();
                 var remainingRows = toolbarForm ? document.querySelectorAll('tbody tr').length : 0;
                 if (remainingRows === 0) {
@@ -2835,6 +3250,7 @@
             }
         }
 
+<<<<<<< HEAD
         function showSentPopup() {
             if (!sentPopup) {
                 alert('Berjaya Dihantar');
@@ -2852,6 +3268,8 @@
             sentPopup.setAttribute('aria-hidden', 'true');
         }
 
+=======
+>>>>>>> origin/SPPPA
         function getValue(payload, key) {
             if (!payload || typeof payload !== 'object') {
                 return '';
@@ -2924,7 +3342,10 @@
 
         function buildRespondentSection(payload) {
             return createSection('Bahagian A: Maklumat Responden', [
+<<<<<<< HEAD
                 { label: 'Borang Permohonan Dirujuk', value: getValue(payload, 'f_application_ref') },
+=======
+>>>>>>> origin/SPPPA
                 { label: 'Nama Penuh', value: getValue(payload, 'f_respondent_name') },
                 { label: 'Cawangan / Jabatan Air Daerah', value: getValue(payload, 'f_respondent_branch') },
                 { label: 'Jawatan Hakiki & Gred', value: getValue(payload, 'f_respondent_position_grade') },
@@ -3134,6 +3555,7 @@
             });
         }
 
+<<<<<<< HEAD
         if (sentPopupOkBtn) {
             sentPopupOkBtn.addEventListener('click', function() {
                 hideSentPopup();
@@ -3148,6 +3570,8 @@
             });
         }
 
+=======
+>>>>>>> origin/SPPPA
         kppViewButtons.forEach(function(button) {
             button.addEventListener('click', function() {
                 openKppSubmissionModal(button);
@@ -3186,6 +3610,7 @@
             });
         }
 
+<<<<<<< HEAD
         if (latestArchiveBtn) {
             latestArchiveBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -3268,6 +3693,20 @@
                 updateKppDraft();
             });
         });
+=======
+        if (quickExportButton) {
+            quickExportButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                runExport();
+            });
+        }
+
+        if (kppRecipientName) {
+            kppRecipientName.addEventListener('input', function() {
+                updateKppDraft();
+            });
+        }
+>>>>>>> origin/SPPPA
 
         if (kppActionType) {
             kppActionType.addEventListener('change', function() {
@@ -3275,6 +3714,7 @@
             });
         }
 
+<<<<<<< HEAD
         if (kppApplicationRef) {
             kppApplicationRef.addEventListener('change', function() {
                 updateKppDraft();
@@ -3328,11 +3768,29 @@
                     alert('Sila isi kandungan Isi Email dahulu.');
                     return;
                 }
+=======
+        updateKppDraft();
+
+        if (kppEmailSendBtn) {
+            kppEmailSendBtn.addEventListener('click', function() {
+                var to = kppEmailTo ? (kppEmailTo.value || '').trim() : '';
+                var actionType = kppActionType ? (kppActionType.value || 'KSPP') : 'KSPP';
+
+                if (!to) {
+                    alert('Sila isi emel penerima dahulu.');
+                    return;
+                }
+
+                var kppName = kppRecipientName && kppRecipientName.value && kppRecipientName.value.trim()
+                    ? kppRecipientName.value.trim()
+                    : 'tuan/puan';
+>>>>>>> origin/SPPPA
 
                 var previousLabel = kppEmailSendBtn.textContent;
                 kppEmailSendBtn.disabled = true;
                 kppEmailSendBtn.textContent = 'Menjana Pautan...';
 
+<<<<<<< HEAD
                 Promise.all(selectedRecipients.map(function(recipient) {
                     return generateKppGuestLink(
                         recipient.email,
@@ -3405,6 +3863,27 @@
                             return;
                         }
                         alert('Gagal menghantar email KPP. ' + (error && error.message ? error.message : ''));
+=======
+                generateKppGuestLink(to, actionType)
+                    .then(function(guestLink) {
+                        var subject = buildKppSubject(actionType);
+                        var body = buildKppBody(kppName, actionType, guestLink);
+
+                        if (kppEmailSubject) {
+                            kppEmailSubject.value = subject;
+                        }
+                        if (kppEmailBody) {
+                            kppEmailBody.value = body;
+                        }
+
+                        var mailtoUrl = 'mailto:' + encodeURIComponent(to)
+                            + '?subject=' + encodeURIComponent(subject)
+                            + '&body=' + encodeURIComponent(body);
+                        window.location.href = mailtoUrl;
+                    })
+                    .catch(function(error) {
+                        alert('Gagal jana pautan khas. Sila cuba lagi. ' + (error && error.message ? error.message : ''));
+>>>>>>> origin/SPPPA
                     })
                     .finally(function() {
                         kppEmailSendBtn.disabled = false;
@@ -3414,13 +3893,22 @@
         }
     })();
 
+<<<<<<< HEAD
     function doArchiveRequest(appId, actionValue, csrfToken, ctxPath) {
+=======
+    function doArchive(appId, actionValue, confirmText, csrfToken, ctxPath) {
+        if (!window.confirm(confirmText)) { return; }
+>>>>>>> origin/SPPPA
         var body = 'id=' + encodeURIComponent(appId) +
                    '&action=' + encodeURIComponent(actionValue) +
                    '&ajax=1' +
                    '&_csrf=' + encodeURIComponent(csrfToken);
+<<<<<<< HEAD
 
         return fetch(ctxPath + '/admin/application', {
+=======
+        fetch(ctxPath + '/admin/application', {
+>>>>>>> origin/SPPPA
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -3431,6 +3919,7 @@
             body: body
         }).then(function(resp) {
             if (resp.ok) {
+<<<<<<< HEAD
                 return;
             }
             return resp.text().then(function(t) {
@@ -3487,6 +3976,15 @@
         });
     })();
 </script>
+=======
+                window.location.reload();
+            } else {
+                resp.text().then(function(t) { alert('Gagal: ' + resp.status + ' ' + t.substring(0, 200)); });
+            }
+        }).catch(function(err) { alert('Ralat rangkaian: ' + err); });
+    }
+</script>
+>>>>>>> origin/SPPPA
 </body>
 </html>
 

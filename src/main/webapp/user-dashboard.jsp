@@ -1100,6 +1100,7 @@
         var notifShortcut = document.getElementById('notifShortcut');
         var notifModal = document.getElementById('notifModal');
         var notifClose = document.getElementById('notifClose');
+<<<<<<< HEAD
         var openCertificateListBtn = document.getElementById('openCertificateListBtn');
         var certificateListModal = document.getElementById('certificateListModal');
         var certificateListClose = document.getElementById('certificateListClose');
@@ -1108,6 +1109,8 @@
         var certificateFrame = document.getElementById('certificateFrame');
         var presentationPopup = document.getElementById('presentationPopup');
         var closePresentationPopup = document.getElementById('closePresentationPopup');
+=======
+>>>>>>> origin/SPPPA
         var total = pages.length;
         var index = 0;
 
