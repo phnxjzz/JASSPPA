@@ -29,7 +29,11 @@ public class LoginServlet extends HttpServlet {
         if (session.getAttribute("user_id") != null) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
         } else {
-            request.setAttribute("selected_role", normalizeRole(request.getParameter("role")));
+            String selectedRole = normalizeRole(request.getParameter("role"));
+            boolean maintenanceMode = Boolean.TRUE.equals(getServletContext().getAttribute("maintenanceMode"));
+            request.setAttribute("selected_role", selectedRole);
+            request.setAttribute("maintenance_mode", maintenanceMode);
+
             if (request.getParameter("registered") != null) {
                 request.setAttribute("success", "Akaun berjaya didaftarkan. Sila log masuk.");
             } else if (request.getParameter("verify_pending") != null) {
@@ -49,6 +53,9 @@ public class LoginServlet extends HttpServlet {
         String username = trim(request.getParameter("username"));
         String password = trim(request.getParameter("password"));
         String selectedRole = normalizeRole(request.getParameter("portal_role"));
+        boolean maintenanceMode = Boolean.TRUE.equals(getServletContext().getAttribute("maintenanceMode"));
+
+        request.setAttribute("maintenance_mode", maintenanceMode);
 
         if (username.isEmpty() || password.isEmpty()) {
             request.setAttribute("error", "Username dan kata laluan diperlukan.");
@@ -58,7 +65,7 @@ public class LoginServlet extends HttpServlet {
         }
 
         try (Connection conn = DatabaseConfig.getConnection()) {
-            String sql = "SELECT id, username, role, status, password_hash FROM users WHERE username = ? LIMIT 1";
+            String sql = "SELECT id, username, email, role, status, password_hash FROM users WHERE username = ? LIMIT 1";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
 
@@ -86,16 +93,49 @@ public class LoginServlet extends HttpServlet {
                         }
 
                         String userRole = rs.getString("role");
-                        if (selectedRole != null && !selectedRole.equals(userRole)) {
-                            RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
-                            if ("ADMIN".equals(selectedRole) && "USER".equals(userRole)) {
-                                request.setAttribute("portal_error", "Sila Pergi ke Portal Pemohon!");
-                            } else {
-                                request.setAttribute("error", "Akaun ini tidak sepadan dengan portal yang dipilih.");
-                            }
-                            request.setAttribute("selected_role", selectedRole);
+                        String userEmail = trim(rs.getString("email"));
+                        if (maintenanceMode && "USER".equals(userRole)) {
+                            request.setAttribute("error", "Portal Pemohon sedang dalam penyelenggaraan. Sila cuba lagi sebentar.");
+                            request.setAttribute("selected_role", selectedRole != null ? selectedRole : "USER");
                             request.getRequestDispatcher("/login.jsp").forward(request, response);
                             return;
+                        }
+
+                        if ("STAFF".equals(selectedRole)) {
+                            boolean staffPortalRoleAllowed = "ADMIN".equals(userRole) || "STAFF".equals(userRole);
+                            if (!staffPortalRoleAllowed) {
+                                RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
+                                request.setAttribute("error", "Portal Staff hanya untuk akaun Admin atau Staff.");
+                                request.setAttribute("selected_role", selectedRole);
+                                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                                return;
+                            }
+                            if (!isGovernmentEmail(userEmail)) {
+                                RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
+                                request.setAttribute("error", "Portal Staff memerlukan e-mel rasmi kerajaan (contoh: @sabah.gov.my). ");
+                                request.setAttribute("selected_role", selectedRole);
+                                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                                return;
+                            }
+                        } else if (selectedRole != null && !selectedRole.equals(userRole)) {
+                            boolean userTryingAdminPortal = "ADMIN".equals(selectedRole) && "USER".equals(userRole);
+                            boolean adminUsingApplicantPortal = "USER".equals(selectedRole) && "ADMIN".equals(userRole);
+
+                            if (userTryingAdminPortal) {
+                                RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
+                                request.setAttribute("portal_error", "Sila Pergi ke Portal Pemohon!");
+                                request.setAttribute("selected_role", selectedRole);
+                                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                                return;
+                            }
+
+                            if (!adminUsingApplicantPortal) {
+                                RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
+                                request.setAttribute("error", "Akaun ini tidak sepadan dengan portal yang dipilih.");
+                                request.setAttribute("selected_role", selectedRole);
+                                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                                return;
+                            }
                         }
 
                         // Migrate plain-text or SHA-256 hashes to BCrypt on successful login
@@ -111,7 +151,12 @@ public class LoginServlet extends HttpServlet {
                         HttpSession session = request.getSession();
                         session.setAttribute("user_id", rs.getInt("id"));
                         session.setAttribute("username", rs.getString("username"));
+                        session.setAttribute("email", userEmail);
                         session.setAttribute("role", userRole);
+                        String effectivePortalRole = selectedRole != null && !selectedRole.isBlank()
+                            ? selectedRole
+                            : userRole;
+                        session.setAttribute("portal_role", effectivePortalRole);
                         session.setAttribute("login_time", new Timestamp(System.currentTimeMillis()));
 
                         LOGGER.info("User logged in: " + username);
@@ -137,7 +182,7 @@ public class LoginServlet extends HttpServlet {
             return null;
         }
         String role = value.trim().toUpperCase();
-        if ("ADMIN".equals(role) || "USER".equals(role)) {
+        if ("ADMIN".equals(role) || "USER".equals(role) || "STAFF".equals(role)) {
             return role;
         }
         return null;
@@ -145,6 +190,14 @@ public class LoginServlet extends HttpServlet {
 
     private String trim(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private boolean isGovernmentEmail(String email) {
+        if (email == null) {
+            return false;
+        }
+        String normalizedEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
+        return normalizedEmail.endsWith(".gov.my");
     }
 
     private boolean passwordMatches(String inputPassword, String storedPassword) {

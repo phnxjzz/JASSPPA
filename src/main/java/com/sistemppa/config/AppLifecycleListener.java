@@ -24,7 +24,7 @@ public class AppLifecycleListener implements ServletContextListener {
             LOGGER.log(Level.WARNING, "Failed to shut down MySQL cleanup thread", e);
         }
 
-        // Unregister JDBC drivers loaded by webapp classloader.
+        //Unregister JDBC drivers loaded by webapp classloader
         ClassLoader webappClassLoader = Thread.currentThread().getContextClassLoader();
         Enumeration<Driver> drivers = DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {
@@ -32,10 +32,11 @@ public class AppLifecycleListener implements ServletContextListener {
             if (driver.getClass().getClassLoader() == webappClassLoader) {
                 try {
                     DriverManager.deregisterDriver(driver);
-                } catch (SQLException e) {
-                    LOGGER.log(Level.WARNING, "Failed to deregister JDBC driver: " + driver, e);
+                } catch(SQLException e) {
+                    LOGGER.log(Level.WARNING, "Failed to deregister JDBC driver:" + driver, e);
                 }
             }
         }
     }
 }
+            

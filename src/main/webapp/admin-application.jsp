@@ -1,15 +1,27 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.sql.Timestamp" %>
+<%!
+    private String esc(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+%>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semakan Permohonan - SPPA</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
+    <title>Semakan Permohonan - SPPPA</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #eff8ff 0%, #f7fbfd 100%); margin: 0; color: #1e293b; }
+* { box-sizing: border-box; }
+        body { font-family: inherit; background: linear-gradient(180deg, #eff8ff 0%, #f7fbfd 100%); margin: 0; color: #1e293b; }
         .navbar { background: linear-gradient(130deg, #0F6BAE 0%, #2A9D8F 30%, #6DBE45 58%, #CDE11D 80%, #F2F72E 100%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: contain; padding: 3px; }
@@ -43,6 +55,10 @@
         .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; min-width: 0; }
         .jans-contact-section .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
         .jans-contact-section .contact-line span { line-height: 1.45; }
+<<<<<<< HEAD
+        .contact-line-hanging { margin-left: 21px; }
+=======
+>>>>>>> origin/SPPPA
                     /* Enforce visible white border on all clickable buttons */
         button,
         input[type="submit"],
@@ -257,18 +273,103 @@
             .doc-viewer { height: 55vh; }
             .doc-actions .btn { min-width: 84px; }
         }
+<<<<<<< HEAD
+        .audit-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+        .audit-item { border: 1px solid #d8e5ef; border-radius: 10px; background: #f8fbff; padding: 10px 12px; }
+        .audit-item strong { display: block; color: #0f3f61; font-size: 13px; margin-bottom: 3px; }
+        .audit-item p { margin: 0; color: #486376; font-size: 12px; line-height: 1.4; }
+        .audit-meta { margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; color: #708798; font-size: 11px; }
+        .audit-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+        .audit-toggle-btn { width: 34px; height: 34px; border: 1px solid #c9dcea; border-radius: 8px; background: #f7fbff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+        .audit-toggle-btn img { width: 18px; height: 18px; object-fit: contain; }
+        .audit-content.is-hidden { display: none; }
+
+        .decision-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.62);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1300;
+            padding: 16px;
+        }
+        .decision-modal-overlay.open { display: flex; }
+        .decision-modal-card {
+            width: min(420px, 100%);
+            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid #d8e5ef;
+            box-shadow: 0 24px 56px rgba(15, 23, 42, 0.34);
+            padding: 18px;
+            text-align: center;
+        }
+        .decision-modal-card h4 {
+            margin: 0 0 8px;
+            color: #0f3f61;
+            font-size: 22px;
+            font-weight: 800;
+        }
+        .decision-modal-card p {
+            margin: 0;
+            color: #4e6a7c;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+        .decision-gif {
+            width: 92px;
+            height: 92px;
+            object-fit: contain;
+            margin: 8px auto 12px;
+            display: none;
+        }
+        .decision-gif.show { display: block; }
+        .decision-actions {
+            margin-top: 14px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .decision-confirm-gif {
+            width: 92px;
+            height: 92px;
+            object-fit: contain;
+            margin: 6px auto 10px;
+            display: block;
+        }
+        .action-toolbar-sticky {
+            position: sticky;
+            top: 10px;
+            z-index: 1100;
+            background: #fff7bf;
+            border: 1px solid #ecd86b;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+        }
+        .action-toolbar-sticky .actions {
+            margin-top: 0;
+        }
+        .top-action-wrapper {
+            margin-bottom: 16px;
+        }
+=======
+>>>>>>> origin/SPPPA
     </style>
 <body>
     <div class="navbar">
         <div class="brand">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
-                <strong>SPPA - Semakan Permohonan</strong>
+                <strong>SPPPA - Semakan Permohonan</strong>
                 <span>Jabatan Air Negeri Sabah</span>
             </div>
         </div>
         <div>
-            <a href="${pageContext.request.contextPath}/dashboard">Kembali ke Dashboard</a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/dashboard" title="
+             Dashboard" aria-label="Kembali ke Dashboard"><img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard"></a>
             <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
             <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
         </div>
@@ -279,7 +380,32 @@
             Map<String, Object> applicationData = (Map<String, Object>) request.getAttribute("application");
             Map<String, Object> detail = (Map<String, Object>) request.getAttribute("applicationDetail");
             List<Map<String, Object>> documents = (List<Map<String, Object>>) request.getAttribute("documents");
+            List<Map<String, Object>> adminAuditLogs = (List<Map<String, Object>>) request.getAttribute("admin_audit_logs");
+            String adminError = request.getAttribute("error") == null ? null : String.valueOf(request.getAttribute("error"));
         %>
+
+        <div class="top-action-wrapper">
+            <form method="post" action="${pageContext.request.contextPath}/admin/application" id="adminActionForm" data-current-status="<%= applicationData.get("status") == null ? "" : String.valueOf(applicationData.get("status")) %>">
+                <input type="hidden" name="_csrf" value="${csrf_token}">
+                <input type="hidden" name="id" value="<%= applicationData.get("id") %>">
+                <input type="hidden" name="presentation_date" id="presentationDateHidden">
+                <input type="hidden" name="presentation_time" id="presentationTimeHidden">
+                <input type="hidden" name="presentation_venue" id="presentationVenueHidden">
+                <input type="hidden" name="presentation_message" id="presentationMessageHidden">
+                <div class="action-toolbar-sticky">
+                    <div class="actions">
+                        <button class="btn under-review" type="submit" name="action" value="dalam_semakan">Dalam Semakan</button>
+                        <button class="btn in-progress" type="button" id="openInProgressModal">Dalam Proses</button>
+                        <button class="btn suspend" type="submit" name="action" value="suspend_application">Gantung Permohonan</button>
+                        <button class="btn suspend" type="submit" name="action" value="suspend_user">Gantung Pengguna</button>
+                        <button class="btn approve" type="submit" name="action" value="approve">Luluskan</button>
+                        <button class="btn reject" type="submit" name="action" value="reject" onclick="return validateRejectReason();">Tolak</button>
+                        <a class="btn secondary" href="${pageContext.request.contextPath}/dashboard">Kembali</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
         <div class="panel">
             <h2>Permohonan <%= String.format("PPP%03d", ((Number)applicationData.get("id")).intValue()) %></h2>
             <p>Status semasa: <span class="status"><%= applicationData.get("status") %></span></p>
@@ -381,12 +507,57 @@
 
         <div class="panel">
             <h3>Tindakan Pentadbir</h3>
-            <%
-                String adminError = request.getAttribute("error") == null ? null : String.valueOf(request.getAttribute("error"));
-                if (adminError != null && !adminError.isBlank()) {
-            %>
+            <% if (adminError != null && !adminError.isBlank()) { %>
             <div class="alert-error"><%= adminError %></div>
             <% } %>
+<<<<<<< HEAD
+            <div class="label">Sebab Penolakan / Nota Pentadbir (wajib jika Tolak)</div>
+            <textarea form="adminActionForm" name="admin_notes" id="adminNotes"><%= applicationData.get("admin_notes") != null ? applicationData.get("admin_notes") : "" %></textarea>
+        </div>
+
+        <div class="panel">
+            <div class="audit-panel-header">
+                <h3 style="margin:0;">Tindakan Admin (Permohonan Ini)</h3>
+                <button type="button" class="audit-toggle-btn" id="toggleAuditBtnApplication" aria-expanded="true" aria-controls="adminAuditContentApplication" title="Sembunyi rekod tindakan admin">
+                    <img id="toggleAuditIconApplication" src="${pageContext.request.contextPath}/icon/hide.png" alt="Sembunyikan rekod tindakan admin">
+                </button>
+            </div>
+            <div id="adminAuditContentApplication" class="audit-content">
+            <ul class="audit-list">
+                <% if (adminAuditLogs != null && !adminAuditLogs.isEmpty()) {
+                    for (Map<String, Object> auditRow : adminAuditLogs) {
+                        String actorName = auditRow.get("full_name") == null
+                                ? String.valueOf(auditRow.get("username") == null ? "Admin" : auditRow.get("username"))
+                                : String.valueOf(auditRow.get("full_name"));
+                        String actorDisplayId = String.valueOf(auditRow.get("display_user_id") == null ? "-" : auditRow.get("display_user_id"));
+                        String action = String.valueOf(auditRow.get("action") == null ? "-" : auditRow.get("action"));
+                        String actionDisplay = action.replace('_', ' ').replaceAll("\\s+", " ").trim();
+                        String details = String.valueOf(auditRow.get("details") == null ? "Tiada perincian." : auditRow.get("details"));
+                        Timestamp actionAt = (Timestamp) auditRow.get("created_at");
+                %>
+                <li class="audit-item">
+                    <strong><%= esc(actorName) %> (<%= esc(actorDisplayId) %>) · <%= esc(actionDisplay) %></strong>
+                    <p><%= esc(details) %></p>
+                    <div class="audit-meta">
+                        <span><%= actionAt == null ? "Masa tidak direkod" : esc(actionAt.toString()) %></span>
+                    </div>
+                </li>
+                <%      }
+                   } else { %>
+                <li class="audit-item">
+                    <strong>Belum ada rekod tindakan untuk permohonan ini</strong>
+                    <p>Sebaik tindakan admin dibuat, rekod akan dipaparkan di sini.</p>
+                </li>
+                <% } %>
+            </ul>
+            </div>
+        </div>
+
+        <div id="inProgressModal" class="inprogress-modal-overlay" aria-hidden="true">
+            <div class="inprogress-modal-card" role="dialog" aria-modal="true" aria-label="Makluman pembentangan produk air">
+                <div class="inprogress-modal-head">
+                    <h4>Tindakan Dalam Proses: Makluman Pembentangan</h4>
+=======
             <form method="post" action="${pageContext.request.contextPath}/admin/application" id="adminActionForm">
                 <input type="hidden" name="_csrf" value="${csrf_token}">
                 <input type="hidden" name="id" value="<%= applicationData.get("id") %>">
@@ -412,6 +583,7 @@
             <div class="inprogress-modal-card" role="dialog" aria-modal="true" aria-label="Makluman pembentangan produk air">
                 <div class="inprogress-modal-head">
                     <h4>Tindakan In Progress: Makluman Pembentangan</h4>
+>>>>>>> origin/SPPPA
                     <button type="button" class="btn secondary" id="closeInProgressModal">Tutup</button>
                 </div>
                 <div class="inprogress-grid">
@@ -434,19 +606,33 @@
                 </div>
                 <div class="inprogress-actions">
                     <button type="button" class="btn secondary" id="cancelInProgressSubmit">Batal</button>
+<<<<<<< HEAD
+                    <button type="button" class="btn in-progress" id="confirmInProgressSubmit">Simpan & Tukar Ke Dalam Proses</button>
+=======
                     <button type="button" class="btn in-progress" id="confirmInProgressSubmit">Simpan & Tukar Ke In Progress</button>
+>>>>>>> origin/SPPPA
                 </div>
             </div>
         </div>
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
+<<<<<<< HEAD
+                <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+=======
                 <h3>Hubungi JANS</h3>
                 <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
                 <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
                 <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
                 <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
                 <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+>>>>>>> origin/SPPPA
         </div>
     </div>
 
@@ -469,6 +655,31 @@
         </div>
     </div>
 
+<<<<<<< HEAD
+    <div id="approveConfirmModal" class="decision-modal-overlay" aria-hidden="true">
+        <div class="decision-modal-card" role="dialog" aria-modal="true" aria-label="Pengesahan tindakan permohonan">
+            <img class="decision-confirm-gif" src="${pageContext.request.contextPath}/icon/quiz.gif" alt="Pengesahan tindakan">
+            <h4 id="actionConfirmTitle">Pengesahan Tindakan</h4>
+            <p id="actionConfirmMessage">Adakah anda ingin teruskan tindakan ini?</p>
+            <div class="decision-actions">
+                <button type="button" class="btn approve" id="approveConfirmYes">Ya, teruskan</button>
+                <button type="button" class="btn secondary" id="approveConfirmBack">Kembali</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="decisionResultModal" class="decision-modal-overlay" aria-hidden="true">
+        <div class="decision-modal-card" role="dialog" aria-modal="true" aria-label="Notifikasi tindakan permohonan">
+            <img id="decisionResultGif" class="decision-gif" src="${pageContext.request.contextPath}/icon/stamp.gif" alt="Cop kelulusan">
+            <h4 id="decisionResultTitle">Permohonan Diluluskan!</h4>
+            <div class="decision-actions">
+                <button type="button" class="btn secondary" id="decisionResultClose">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+=======
+>>>>>>> origin/SPPPA
     <script>
         function validateRejectReason() {
             var notesField = document.getElementById('adminNotes');
@@ -546,6 +757,28 @@
                         alert('Sila isi tarikh, masa, dan tempat pembentangan.');
                         return;
                     }
+<<<<<<< HEAD
+                    var submitInProgress = function () {
+                        dateHidden.value = dateInput.value;
+                        timeHidden.value = timeInput.value;
+                        venueHidden.value = venueInput.value.trim();
+                        messageHidden.value = (messageInput.value || '').trim();
+
+                        var actionInput = document.createElement('input');
+                        actionInput.type = 'hidden';
+                        actionInput.name = 'action';
+                        actionInput.value = 'dalam_proses';
+                        form.appendChild(actionInput);
+                        form.submit();
+                    };
+
+                    if (typeof window.requestAdminActionProceed === 'function') {
+                        window.requestAdminActionProceed('dalam_proses', submitInProgress);
+                        return;
+                    }
+
+                    submitInProgress();
+=======
                     dateHidden.value = dateInput.value;
                     timeHidden.value = timeInput.value;
                     venueHidden.value = venueInput.value.trim();
@@ -557,6 +790,7 @@
                     actionInput.value = 'in_progress';
                     form.appendChild(actionInput);
                     form.submit();
+>>>>>>> origin/SPPPA
                 });
             }
 
@@ -663,8 +897,234 @@
                 }
             });
         })();
+<<<<<<< HEAD
+
+        (function initAdminAuditToggleApplication() {
+            var button = document.getElementById('toggleAuditBtnApplication');
+            var content = document.getElementById('adminAuditContentApplication');
+            var icon = document.getElementById('toggleAuditIconApplication');
+            if (!button || !content || !icon) {
+                return;
+            }
+
+            function setState(hidden) {
+                content.classList.toggle('is-hidden', hidden);
+                button.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+                button.setAttribute('title', hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyi rekod tindakan admin');
+                icon.src = hidden ? '${pageContext.request.contextPath}/icon/unhide.png' : '${pageContext.request.contextPath}/icon/hide.png';
+                icon.alt = hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyikan rekod tindakan admin';
+            }
+
+            button.addEventListener('click', function () {
+                setState(!content.classList.contains('is-hidden'));
+            });
+
+            setState(false);
+        })();
+
+        (function initDecisionPopups() {
+            var form = document.getElementById('adminActionForm');
+            if (!form) return;
+
+            var approveButton = form.querySelector('button[name="action"][value="approve"]');
+            var rejectButton = form.querySelector('button[name="action"][value="reject"]');
+            var currentStatus = (form.getAttribute('data-current-status') || '').trim().toLowerCase();
+
+            var approveConfirmModal = document.getElementById('approveConfirmModal');
+            var approveConfirmYes = document.getElementById('approveConfirmYes');
+            var approveConfirmBack = document.getElementById('approveConfirmBack');
+            var actionConfirmTitle = document.getElementById('actionConfirmTitle');
+            var actionConfirmMessage = document.getElementById('actionConfirmMessage');
+
+            var resultModal = document.getElementById('decisionResultModal');
+            var resultTitle = document.getElementById('decisionResultTitle');
+            var resultGif = document.getElementById('decisionResultGif');
+            var resultClose = document.getElementById('decisionResultClose');
+
+            var pendingAction = '';
+            var pendingContinue = null;
+            var bypassGuard = false;
+
+            var actionLabels = {
+                dalam_semakan: 'Dalam Semakan',
+                dalam_proses: 'Dalam Proses',
+                suspend_application: 'Digantung',
+                suspend_user: 'Pengguna Digantung',
+                approve: 'Lulus',
+                reject: 'Ditolak'
+            };
+
+            var statusAliases = {
+                dalam_semakan: ['dalam_semakan', 'dalam semakan'],
+                dalam_proses: ['dalam_proses', 'dalam proses'],
+                suspend_application: ['suspended', 'digantung'],
+                suspend_user: ['suspended', 'digantung'],
+                approve: ['approved', 'lulus', 'diluluskan'],
+                reject: ['rejected', 'ditolak']
+            };
+
+            function setModalOpen(modal, isOpen) {
+                if (!modal) return;
+                modal.classList.toggle('open', isOpen);
+                modal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            }
+
+            function statusMatches(actionValue) {
+                var aliases = statusAliases[actionValue] || [];
+                for (var i = 0; i < aliases.length; i++) {
+                    if (currentStatus === aliases[i]) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            function showActionConfirm(actionValue, onContinue) {
+                var label = actionLabels[actionValue] || actionValue;
+                if (actionConfirmTitle) {
+                    actionConfirmTitle.textContent = 'Pengesahan Tindakan';
+                }
+                if (actionConfirmMessage) {
+                    if (statusMatches(actionValue)) {
+                        actionConfirmMessage.textContent = 'Permohonan telah berada dalam status ' + label + ', adakah anda ingin teruskan tindakan ini?';
+                    } else {
+                        actionConfirmMessage.textContent = 'Permohonan akan ditukar kepada status ' + label + ', adakah anda ingin teruskan tindakan ini?';
+                    }
+                }
+                pendingContinue = onContinue;
+                setModalOpen(approveConfirmModal, true);
+            }
+
+            window.requestAdminActionProceed = function (actionValue, onContinue) {
+                showActionConfirm(actionValue, onContinue);
+            };
+
+            function submitWithAction(actionValue) {
+                var existing = form.querySelector('input[data-popup-action="1"]');
+                if (existing) {
+                    existing.remove();
+                }
+                var hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'action';
+                hidden.value = actionValue;
+                hidden.setAttribute('data-popup-action', '1');
+                form.appendChild(hidden);
+                bypassGuard = true;
+                form.submit();
+            }
+
+            function showResultModal(title, withGif, actionValue) {
+                if (resultTitle) {
+                    resultTitle.textContent = title;
+                }
+                if (resultGif) {
+                    resultGif.classList.toggle('show', !!withGif);
+                }
+                setModalOpen(resultModal, true);
+
+                if (resultClose) {
+                    resultClose.onclick = function () {
+                        setModalOpen(resultModal, false);
+                        submitWithAction(actionValue);
+                    };
+                }
+            }
+
+            if (approveButton) {
+                approveButton.addEventListener('click', function () {
+                    pendingAction = 'approve';
+                });
+            }
+
+            if (rejectButton) {
+                rejectButton.addEventListener('click', function () {
+                    pendingAction = 'reject';
+                });
+            }
+
+            form.addEventListener('submit', function (event) {
+                if (bypassGuard) {
+                    return;
+                }
+
+                var submitterAction = pendingAction;
+                if (!submitterAction && event.submitter && event.submitter.name === 'action') {
+                    submitterAction = event.submitter.value;
+                }
+
+                if (submitterAction === 'approve') {
+                    event.preventDefault();
+                    showActionConfirm('approve', function () {
+                        showResultModal('Permohonan Diluluskan!', true, 'approve');
+                    });
+                    return;
+                }
+
+                if (submitterAction === 'reject') {
+                    event.preventDefault();
+                    if (!validateRejectReason()) {
+                        return;
+                    }
+                    showActionConfirm('reject', function () {
+                        showResultModal('Permohonan Ditolak', false, 'reject');
+                    });
+                    return;
+                }
+
+                if (submitterAction === 'dalam_semakan' || submitterAction === 'suspend_application' || submitterAction === 'suspend_user') {
+                    event.preventDefault();
+                    showActionConfirm(submitterAction, function () {
+                        submitWithAction(submitterAction);
+                    });
+                    return;
+                }
+            });
+
+            if (approveConfirmBack) {
+                approveConfirmBack.addEventListener('click', function () {
+                    setModalOpen(approveConfirmModal, false);
+                    pendingContinue = null;
+                });
+            }
+
+            if (approveConfirmYes) {
+                approveConfirmYes.addEventListener('click', function () {
+                    setModalOpen(approveConfirmModal, false);
+                    if (typeof pendingContinue === 'function') {
+                        var continueFn = pendingContinue;
+                        pendingContinue = null;
+                        continueFn();
+                    }
+                });
+            }
+
+            if (approveConfirmModal) {
+                approveConfirmModal.addEventListener('click', function (event) {
+                    if (event.target === approveConfirmModal) {
+                        setModalOpen(approveConfirmModal, false);
+                    }
+                });
+            }
+
+            if (resultModal) {
+                resultModal.addEventListener('click', function (event) {
+                    if (event.target === resultModal && resultClose) {
+                        resultClose.click();
+                    }
+                });
+            }
+        })();
+=======
+>>>>>>> origin/SPPPA
     </script>
 </body>
 </html>
 
 
+<<<<<<< HEAD
+
+
+
+=======
+>>>>>>> origin/SPPPA

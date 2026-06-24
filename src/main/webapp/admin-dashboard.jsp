@@ -1,4 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
+<%@ page import="java.nio.file.Files" %>
+<%@ page import="java.nio.file.Path" %>
+<%@ page import="java.nio.file.Paths" %>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.LinkedHashMap" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.sql.Timestamp" %>
@@ -75,15 +81,74 @@
 
         return safeContextPath + "/" + raw;
     }
+
+    private List<String> parseCsvLine(String line) {
+        List<String> columns = new ArrayList<>();
+        if (line == null) {
+            return columns;
+        }
+
+        StringBuilder current = new StringBuilder();
+        boolean insideQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char ch = line.charAt(i);
+            if (ch == '"') {
+                insideQuotes = !insideQuotes;
+                continue;
+            }
+            if (ch == ',' && !insideQuotes) {
+                columns.add(current.toString().trim());
+                current.setLength(0);
+                continue;
+            }
+            current.append(ch);
+        }
+        columns.add(current.toString().trim());
+        return columns;
+    }
+
+    private String displayStatusLabel(String status) {
+        if (status == null) {
+            return "";
+        }
+        String normalized = status.trim().toUpperCase(java.util.Locale.ROOT);
+        if ("APPROVED".equals(normalized) || "DILULUSKAN".equals(normalized)) {
+            return "DILULUSKAN";
+        }
+        if ("REJECTED".equals(normalized) || "DITOLAK".equals(normalized)) {
+            return "DITOLAK";
+        }
+        if ("SUSPENDED".equals(normalized) || "DIGANTUNG".equals(normalized)) {
+            return "DIGANTUNG";
+        }
+        if ("DRAFT".equals(normalized) || "DRAF".equals(normalized)) {
+            return "NEW";
+        }
+        if ("ARCHIVED".equals(normalized) || "DIARKIB".equals(normalized)) {
+            return "DIARKIB";
+        }
+        if ("UNDER_REVIEW".equals(normalized) || "DALAM_SEMAKAN".equals(normalized) || "DALAM SEMAKAN".equals(normalized)) {
+            return "DALAM SEMAKAN";
+        }
+        if ("IN_PROGRESS".equals(normalized) || "DALAM_PROSES".equals(normalized) || "DALAM PROSES".equals(normalized)) {
+            return "DALAM PROSES";
+        }
+        return status;
+    }
 %>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Pentadbir - SPPA</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
+    <title>Dashboard Pentadbir - SPPPA</title>
     <style>
+<<<<<<< HEAD
+/*A��─ Design tokensA��──────────────────────────── */
+=======
         /* ── Design tokens ───────────────────────────── */
+>>>>>>> origin/SPPPA
         :root {
             --brand-blue: #0097d9;
             --brand-navy: #06344f;
@@ -96,7 +161,11 @@
             --tr: 0.2s ease;
         }
         * { box-sizing: border-box; }
+<<<<<<< HEAD
+        body { margin: 0; font-family: inherit; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
+=======
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
+>>>>>>> origin/SPPPA
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 76%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 52px; height: 52px; border-radius: 14px; object-fit: contain; padding: 4px; }
@@ -126,8 +195,64 @@
         .stat-card { background: var(--surface); padding: 18px; border-radius: 18px; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(6, 52, 79, 0.06); }
         .stat-card h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
         .stat-card .number { font-size: 30px; font-weight: 800; color: var(--brand-navy); }
+        .stats .stat-card:nth-child(1) { background: #d9ecff; border-color: #afd3f8; }
+        .stats .stat-card:nth-child(1) h3, .stats .stat-card:nth-child(1) .number { color: #0f4f8f; }
+        .stats .stat-card:nth-child(2) { background: #d9f7df; border-color: #aee5bb; }
+        .stats .stat-card:nth-child(2) h3, .stats .stat-card:nth-child(2) .number { color: #125c2b; }
+        .stats .stat-card:nth-child(3) { background: #fffef5; border-color: #ece7c9; }
+        .stats .stat-card:nth-child(3) h3, .stats .stat-card:nth-child(3) .number { color: #57513a; }
+        .stats .stat-card:nth-child(4) { background: #ffd9e8; border-color: #f6b6d1; }
+        .stats .stat-card:nth-child(4) h3, .stats .stat-card:nth-child(4) .number { color: #7b1f49; }
+        .stats .stat-card:nth-child(5) { background: #fff3a3; border-color: #f7df6b; }
+        .stats .stat-card:nth-child(5) h3, .stats .stat-card:nth-child(5) .number { color: #6a5700; }
+        .stats .stat-card:nth-child(6) { background: #eadcff; border-color: #cdb0f5; }
+        .stats .stat-card:nth-child(6) h3, .stats .stat-card:nth-child(6) .number { color: #5b2491; }
         .layout { display: grid; grid-template-columns: 1.9fr 1fr; gap: 20px; }
         .toolbar { display: grid; grid-template-columns: minmax(220px, 1.6fr) repeat(3, minmax(140px, 1fr)); gap: 12px; align-items: end; margin-bottom: 16px; }
+<<<<<<< HEAD
+        .status-filter-compact .status-filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+        .status-filter-compact .status-filter-controls select {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .btn-archive-main {
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            position: relative;
+        }
+        .archive-hover-label {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: #163b56;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+            padding: 7px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+            box-shadow: 0 10px 20px rgba(9, 36, 56, 0.24);
+            z-index: 40;
+            pointer-events: none;
+        }
+        .btn-archive-main:hover .archive-hover-label,
+        .btn-archive-main:focus-visible .archive-hover-label {
+            display: inline-flex;
+        }
+=======
+>>>>>>> origin/SPPPA
         .export-control { min-width: 0; }
         .export-help { margin-top: 6px; font-size: 12px; color: var(--muted); }
         .field { min-width: 0; }
@@ -186,6 +311,10 @@
         .status-new { background: #dbeafe; color: #1e40af; }
         .status-under_review { background: #e0f2fe; color: #0369a1; }
         .status-in_progress { background: #ede9fe; color: #7c3aed; }
+<<<<<<< HEAD
+        .status-resolved { background: #dcfce7; color: #166534; }
+=======
+>>>>>>> origin/SPPPA
         .status-approved { background: #dff5e7; color: #156b3c; }
         .status-rejected { background: #ffe1e4; color: #9f1f2b; }
         .status-suspended { background: #ececf2; color: #4a4a60; }
@@ -243,6 +372,207 @@
             font-weight: 700;
             color: #24495e;
         }
+<<<<<<< HEAD
+        .sent-popup {
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 25, 40, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1600;
+            padding: 16px;
+        }
+        .sent-popup.show {
+            display: flex;
+        }
+        .sent-popup-card {
+            width: min(360px, 100%);
+            background: #ffffff;
+            border: 1px solid #d8e5ef;
+            border-radius: 16px;
+            box-shadow: 0 24px 54px rgba(3, 30, 54, 0.28);
+            padding: 20px 18px 16px;
+            text-align: center;
+        }
+        .sent-popup-icon {
+            width: 78px;
+            height: 78px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        .sent-popup-title {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f3f61;
+        }
+        .sent-popup-ok {
+            min-width: 130px;
+            border: none;
+            border-radius: 10px;
+            background: #0a7fbf;
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 10px 14px;
+            cursor: pointer;
+        }
+        .sent-popup-ok:hover {
+            background: #086da5;
+        }
+        .maintenance-popup {
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 25, 40, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1650;
+            padding: 16px;
+        }
+        .maintenance-popup.show {
+            display: flex;
+        }
+        .maintenance-popup-card {
+            width: min(400px, 100%);
+            background: #ffffff;
+            border: 1px solid #d8e5ef;
+            border-radius: 16px;
+            box-shadow: 0 24px 54px rgba(3, 30, 54, 0.28);
+            padding: 20px 18px 16px;
+            text-align: center;
+        }
+        .maintenance-popup-icon {
+            width: 84px;
+            height: 84px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        .maintenance-popup-title {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f3f61;
+        }
+        .maintenance-popup-text {
+            margin: 8px 0 14px;
+            color: #3f6278;
+            font-size: 14px;
+        }
+        .maintenance-popup-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .maintenance-popup-btn {
+            min-width: 120px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 10px 14px;
+            cursor: pointer;
+        }
+        .maintenance-popup-btn-confirm {
+            background: #0a7fbf;
+            color: #fff;
+        }
+        .maintenance-popup-btn-confirm:hover {
+            background: #086da5;
+        }
+        .maintenance-popup-btn-cancel {
+            background: #e8f1f8;
+            color: #24506e;
+        }
+        .maintenance-popup-btn-cancel:hover {
+            background: #d8e7f3;
+        }
+        .aduan-password-popup {
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 25, 40, 0.52);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1680;
+            padding: 16px;
+        }
+        .aduan-password-popup.show {
+            display: flex;
+        }
+        .aduan-password-popup-card {
+            width: min(420px, 100%);
+            background: #ffffff;
+            border: 1px solid #d8e5ef;
+            border-radius: 16px;
+            box-shadow: 0 24px 54px rgba(3, 30, 54, 0.28);
+            padding: 20px 18px 16px;
+            text-align: center;
+        }
+        .aduan-password-popup-icon {
+            width: 84px;
+            height: 84px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        .aduan-password-popup-title {
+            margin: 0;
+            font-size: 21px;
+            font-weight: 800;
+            color: #0f3f61;
+        }
+        .aduan-password-popup-text {
+            margin: 8px 0 12px;
+            color: #3f6278;
+            font-size: 14px;
+        }
+        .aduan-password-popup-input {
+            width: 100%;
+            border: 1px solid #cfe1ee;
+            border-radius: 10px;
+            background: #f9fcff;
+            color: #214e69;
+            padding: 10px 12px;
+            font: inherit;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .aduan-password-popup-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .aduan-password-popup-btn {
+            min-width: 120px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 10px 14px;
+            cursor: pointer;
+        }
+        .aduan-password-popup-btn-confirm {
+            background: #0a7fbf;
+            color: #fff;
+        }
+        .aduan-password-popup-btn-confirm:hover {
+            background: #086da5;
+        }
+        .aduan-password-popup-btn-cancel {
+            background: #e8f1f8;
+            color: #24506e;
+        }
+        .aduan-password-popup-btn-cancel:hover {
+            background: #d8e7f3;
+        }
+=======
+>>>>>>> origin/SPPPA
         @keyframes toastPulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.16); }
@@ -252,11 +582,141 @@
         .export-metric { border: 1px solid var(--line); border-radius: 10px; background: #f9fcff; padding: 8px 10px; }
         .export-metric small { display: block; color: #617c8d; font-size: 11px; }
         .export-metric strong { display: block; color: #0a4a7b; font-size: 18px; margin-top: 2px; }
+<<<<<<< HEAD
+        .quick-actions-sidebar {
+            position: fixed;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1100;
+            display: grid;
+            gap: 10px;
+        }
+        .quick-actions {
+            display: grid;
+            gap: 10px;
+            justify-items: start;
+        }
+        .quick-actions .btn {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            border-radius: 999px;
+            box-shadow: 0 10px 24px rgba(6, 52, 79, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            flex: 0 0 auto;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            transform-origin: center;
+            will-change: transform;
+        }
+        .quick-actions .btn:hover,
+        .quick-actions .btn:focus-visible {
+            transform: translateY(-2px) scale(1.12);
+            box-shadow: 0 16px 28px rgba(6, 52, 79, 0.28);
+            filter: saturate(1.05);
+        }
+        .quick-actions .btn:active {
+            transform: translateY(0) scale(1.04);
+        }
+        .quick-action-icon { width: 22px; height: 22px; object-fit: contain; }
+        .quick-btn-blue { background: #d9ecff; color: #0f4f8f; border-color: #afd3f8; }
+        .quick-btn-green { background: #d9f7df; color: #125c2b; border-color: #aee5bb; }
+        .quick-btn-white { background: #ffffff; color: #1f2937; border-color: #d7dee8; }
+        .quick-btn-pink { background: #ffd9e8; color: #7b1f49; border-color: #f6b6d1; }
+        .quick-btn-yellow { background: #fff3a3; color: #6a5700; border-color: #f7df6b; }
+        .quick-btn-purple { background: #eadcff; color: #5b2491; border-color: #cdb0f5; }
+        .quick-btn-red { background: #ffd9d9; color: #8f1d1d; border-color: #f0a9a9; }
+        .quick-btn-brown { background: #ead7c4; color: #6f4a2a; border-color: #cfb08f; }
+        .quick-btn-aduan { background: #ef4444; color: #ffffff; border-color: #d02f2f; }
+        .quick-btn-aduan.is-locked { background: #f9c7c7; color: #8f1d1d; border-color: #eaa3a3; }
+        .quick-btn-aduan.has-unread { position: relative; overflow: visible; }
+        .quick-btn-aduan .unread-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff1b1b;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+        }
+        .staff-complaint-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+        .staff-complaint-item { border: 1px solid #dbe7ef; border-radius: 12px; background: #f9fcff; padding: 10px; }
+        .staff-complaint-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .staff-complaint-title { margin: 0; color: #0d4f80; font-size: 14px; }
+        .staff-complaint-meta { margin-top: 4px; color: #577082; font-size: 12px; line-height: 1.45; }
+        .staff-complaint-actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+        .staff-complaint-actions form { margin: 0; }
+        .staff-complaint-actions .btn { padding: 7px 10px; border-radius: 8px; font-size: 12px; }
+        .staff-complaint-empty { color: #637d8d; font-size: 13px; margin: 0; }
+        .staff-new-count { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 999px; padding: 0 7px; background: #ffe4e4; color: #b91c1c; font-size: 12px; font-weight: 800; }
+        .quick-actions form { margin: 0; }
+        .quick-actions form .btn {
+            cursor: pointer;
+            background: #eadcff;
+            color: #5b2491;
+            border-color: #cdb0f5;
+        }
+        .quick-actions form .btn.quick-btn-maintenance-on {
+            background: #d7bcff;
+            color: #4a167f;
+            border-color: #b590ef;
+        }
+=======
         .quick-actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
+>>>>>>> origin/SPPPA
         .notification-list, .activity-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
         .notification-item, .activity-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: #f9fcff; }
         .notification-item strong, .activity-item strong { display: block; margin-bottom: 4px; font-size: 13px; color: #0d4f80; }
         .notification-item span, .activity-item span { color: #577082; font-size: 12px; }
+<<<<<<< HEAD
+        .audit-content {
+            max-height: 420px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .audit-list {
+            list-style: none;
+            margin: 0;
+            padding: 0 4px 0 0;
+            display: grid;
+            gap: 8px;
+            overflow-y: auto;
+            min-height: 0;
+            scrollbar-gutter: stable;
+        }
+        .audit-item { border: 1px solid #dbe7ef; border-radius: 10px; background: #fbfdff; padding: 10px; }
+        .audit-item strong { display: block; color: #123f5a; font-size: 12px; margin-bottom: 3px; }
+        .audit-item p { margin: 0; color: #486375; font-size: 12px; line-height: 1.4; }
+        .audit-meta { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; color: #6d8595; font-size: 11px; }
+        .audit-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+        .audit-toggle-btn { width: 34px; height: 34px; border: 1px solid #c9dcea; border-radius: 8px; background: #f7fbff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+        .audit-toggle-btn img { width: 18px; height: 18px; object-fit: contain; }
+        .audit-filter-bar { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 10px; }
+        .audit-filter-bar input {
+            width: 100%;
+            border: 1px solid #cfe1ee;
+            border-radius: 10px;
+            background: #f9fcff;
+            color: #214e69;
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+        .audit-filter-empty {
+            margin-top: 8px;
+            border: 1px dashed #c9dcea;
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: #f8fbfe;
+            color: #5f7a8c;
+            font-size: 12px;
+            text-align: center;
+        }
+        .audit-content.is-hidden { display: none; }
+=======
+>>>>>>> origin/SPPPA
         .notif-warning { border-left: 4px solid #f1b100; }
         .notif-recent { border-left: 4px solid #0f6bae; }
         .status-alert-panel { margin-bottom: 16px; border: 1px solid #ffe6a7; border-left: 5px solid #f4b400; background: #fff9e8; border-radius: 12px; padding: 12px 14px; }
@@ -270,6 +730,86 @@
         .legend-dot.rejected { background: #cf4e4e; }
         .legend-dot.new { background: #3b82f6; }
         .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
+<<<<<<< HEAD
+        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; display: inline-flex; align-items: center; gap: 8px; }
+        .contact-line { display: flex; gap: 8px; align-items: flex-start; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; }
+        .contact-icon { width: 13px; height: 13px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
+        .jans-contact-section .contact-line span { line-height: 1.45; }
+        .contact-line-hanging { margin-left: 21px; }
+        .contact-address-link { color: #0f6bae; text-decoration: none; }
+        .contact-address-link:hover { text-decoration: underline; }
+        body.popup-open {
+            overflow: hidden;
+        }
+        body.popup-open .expand-overlay {
+            display: block;
+            background: rgba(4, 23, 39, 0.52);
+            backdrop-filter: blur(1.5px);
+        }
+        body.popup-open .table-card.popup-active,
+        body.popup-open #announcementPanel.popup-active {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(1220px, calc(100vw - 34px));
+            max-height: calc(100vh - 40px);
+            overflow: auto;
+            z-index: 1101;
+            margin: 0;
+            box-shadow: 0 26px 52px rgba(3, 22, 38, 0.35);
+            border-radius: 16px;
+        }
+
+        @media (max-width: 1200px) {
+            .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .layout { grid-template-columns: 1fr; }
+            .toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .export-summary { grid-template-columns: 1fr; }
+            .kpp-action-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 860px) {
+            .navbar { padding: 12px 14px; flex-direction: column; align-items: flex-start; }
+            .navbar > div:last-child { justify-content: flex-start; }
+            .container { padding: 0 10px 20px; }
+            .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .quick-actions-sidebar {
+                left: auto;
+                right: 10px;
+                top: auto;
+                bottom: 14px;
+                transform: none;
+            }
+            .toolbar { grid-template-columns: 1fr; }
+            .panel { padding: 14px; border-radius: 14px; }
+            .brand-logo { width: 42px; height: 42px; }
+            .brand h1 { font-size: 16px; }
+            table { min-width: 620px; }
+            .action-cell { flex-direction: column; }
+            body.popup-open .table-card.popup-active,
+            body.popup-open #announcementPanel.popup-active {
+                width: calc(100vw - 10px);
+                max-height: calc(100vh - 12px);
+                border-radius: 12px;
+            }
+            .audit-content { max-height: 340px; }
+        }
+
+        /*A��─ MiscA��───────────────────────────────────── */
+        .announce-with-gif { display: flex; align-items: center; gap: 10px; }
+        .announce-title  { font-weight: 700; color: var(--brand-navy); }
+        .announce-content { color: var(--muted); margin-top: 4px; white-space: pre-wrap; }
+        .announce-status { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+        .announce-active   { background: #d1fae5; color: #065f46; }
+        .announce-inactive { background: #e9edf2; color: #374151; }
+        .analytics-chart {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+=======
         .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; }
         .contact-line { display: flex; gap: 8px; align-items: flex-start; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; }
         .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
@@ -317,6 +857,7 @@
             margin-top: 8px;
             flex-wrap: wrap;
         }
+>>>>>>> origin/SPPPA
         .pie-chart {
             width: 128px;
             height: 128px;
@@ -404,12 +945,24 @@
             display: grid;
             gap: 8px;
         }
+<<<<<<< HEAD
+        .kpp-inline-help {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #5e798b;
+        }
+=======
+>>>>>>> origin/SPPPA
         .kpp-draft label {
             font-size: 12px;
             font-weight: 700;
             color: #5b7485;
         }
         .kpp-draft input,
+<<<<<<< HEAD
+        .kpp-draft select,
+=======
+>>>>>>> origin/SPPPA
         .kpp-draft textarea {
             width: 100%;
             border: 1px solid #d4e4ef;
@@ -425,6 +978,76 @@
             resize: vertical;
             line-height: 1.45;
         }
+<<<<<<< HEAD
+        .kpp-picker {
+            position: relative;
+        }
+        .kpp-picker-btn {
+            width: 100%;
+            border: 1px solid #d4e4ef;
+            border-radius: 10px;
+            background: #f9fcff;
+            padding: 9px 10px;
+            font: inherit;
+            font-size: 13px;
+            color: #28475c;
+            text-align: left;
+            cursor: pointer;
+        }
+        .kpp-picker-btn:after {
+            content: '▾';
+            float: right;
+            color: #4f6f83;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .kpp-picker.open .kpp-picker-btn:after {
+            content: '▴';
+        }
+        .kpp-picker-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            z-index: 30;
+            border: 1px solid #d4e4ef;
+            border-radius: 10px;
+            background: #ffffff;
+            box-shadow: 0 12px 28px rgba(8, 49, 74, 0.14);
+            max-height: 260px;
+            overflow: auto;
+            padding: 8px;
+        }
+        .kpp-picker.open .kpp-picker-menu {
+            display: block;
+        }
+        .kpp-picker-item {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            padding: 6px 6px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .kpp-picker-item:hover {
+            background: #f2f8fd;
+        }
+        .kpp-picker-item input {
+            width: auto;
+            margin-top: 2px;
+        }
+        .kpp-picker-item span {
+            color: #28475c;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .kpp-picker-item[data-admin="true"] strong {
+            color: #dc3545;
+            font-weight: 700;
+        }
+=======
+>>>>>>> origin/SPPPA
         .kpp-help {
             margin: 0;
             color: #5f7787;
@@ -529,6 +1152,62 @@
             border-radius: 10px;
             background: #f8fcff;
             padding: 8px 10px;
+<<<<<<< HEAD
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .kpp-submission-main {
+            flex: 1 1 270px;
+            min-width: 220px;
+        }
+        .kpp-submission-status {
+            flex: 0 0 auto;
+            min-width: 180px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .kpp-status-badge-stack {
+            display: grid;
+            gap: 6px;
+            justify-items: end;
+        }
+        .kpp-status-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 4px 9px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.3;
+            border: 1px solid #d4e4ef;
+            background: #eef5fb;
+            color: #355367;
+            white-space: nowrap;
+        }
+        .kpp-status-good {
+            background: #dff6e8;
+            color: #196f40;
+            border-color: #b7e3c8;
+        }
+        .kpp-status-bad {
+            background: #ffe6e8;
+            color: #9b1d2a;
+            border-color: #f6c1c8;
+        }
+        .kpp-status-warn {
+            background: #fff3d8;
+            color: #8a5a00;
+            border-color: #f0d5a2;
+        }
+        .kpp-status-neutral {
+            background: #eef2f6;
+            color: #4b6070;
+            border-color: #d3dce3;
+=======
+>>>>>>> origin/SPPPA
         }
         .kpp-submission-item strong {
             display: block;
@@ -675,6 +1354,14 @@
         }
         .expand-overlay {
             position: fixed;
+<<<<<<< HEAD
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1099;
+            display: none;
+=======
             inset: 0;
             background: rgba(3, 18, 32, 0.62);
             backdrop-filter: blur(2px);
@@ -696,25 +1383,80 @@
             border-radius: 18px;
             box-shadow: 0 30px 90px rgba(2, 24, 43, 0.44);
             margin: 0;
+>>>>>>> origin/SPPPA
         }
         .panel-expand-btn[aria-expanded="true"] img { transform: rotate(180deg); }
         .panel-expand-btn img { transition: transform var(--tr); }
         </style>
 </head>
 <body>
+    <%
+        boolean maintenanceMode = Boolean.TRUE.equals(application.getAttribute("maintenanceMode"));
+        String maintenanceConfirmText = maintenanceMode
+            ? "Nyahaktifkan mod penyelenggaraan dan teruskan sistem?"
+            : "Aktifkan mod penyelenggaraan sekarang?";
+        String maintenanceButtonText = maintenanceMode
+            ? "Nyahaktifkan mod Penyelenggaraan"
+            : "Aktifkan mod Penyelenggaraan";
+        String currentAdminDisplayId = request.getAttribute("current_admin_display_id") == null
+            ? "-"
+            : String.valueOf(request.getAttribute("current_admin_display_id"));
+        String currentAdminUsername = session.getAttribute("username") == null ? "admin" : String.valueOf(session.getAttribute("username"));
+        String aduanPasswordPromptLabel = currentAdminUsername + " (" + currentAdminDisplayId + ")";
+        boolean canAccessSecureAduan = "ADMIN".equals(String.valueOf(session.getAttribute("role"))) && "ADM001".equals(currentAdminDisplayId);
+        int staffComplaintNewCount = request.getAttribute("staff_complaint_new_count") instanceof Number
+            ? ((Number) request.getAttribute("staff_complaint_new_count")).intValue() : 0;
+    %>
+    <div class="quick-actions-sidebar" aria-label="Tindakan Pantas">
+        <div class="quick-actions">
+            <a class="btn quick-btn-blue" href="#kpp-submissions" title="Tindakan Ketua Penolong Pengarah" aria-label="Tindakan Ketua Penolong Pengarah"><img src="${pageContext.request.contextPath}/icon/kpp.png" class="quick-action-icon" alt="Tindakan Ketua Penolong Pengarah"></a>
+            <a class="btn quick-btn-green" href="${pageContext.request.contextPath}/products" title="Senarai Produk" aria-label="Senarai Produk"><img src="${pageContext.request.contextPath}/icon/senarai-produk.png" class="quick-action-icon" alt="Senarai Produk"></a>
+            <a class="btn quick-btn-white" href="${pageContext.request.contextPath}/admin/users" title="Urus Pengguna" aria-label="Urus Pengguna"><img src="${pageContext.request.contextPath}/icon/urus-pengguna.png" class="quick-action-icon" alt="Urus Pengguna"></a>
+            <a class="btn quick-btn-pink" href="#announcementPanel" title="Tambah Pengumuman" aria-label="Tambah Pengumuman"><img src="${pageContext.request.contextPath}/icon/tambah-pengumuman.png" class="quick-action-icon" alt="Tambah Pengumuman"></a>
+            <a class="btn quick-btn-yellow" href="${pageContext.request.contextPath}/profile" title="Kemaskini Profil" aria-label="Kemaskini Profil"><img src="${pageContext.request.contextPath}/icon/kemaskini-profile.png" class="quick-action-icon" alt="Kemaskini Profil"></a>
+            <form id="maintenanceActionForm" method="post" action="${pageContext.request.contextPath}/dashboard">
+                <input type="hidden" name="_csrf" value="${csrf_token}">
+                <input type="hidden" name="maintenance_action" value="<%= maintenanceMode ? "disable" : "enable" %>">
+                <button
+                    id="maintenanceActionBtn"
+                    class="btn quick-btn-purple <%= maintenanceMode ? "quick-btn-maintenance-on" : "quick-btn-maintenance-off" %>"
+                    type="button"
+                    title="<%= maintenanceButtonText %>"
+                    aria-label="<%= maintenanceButtonText %>"
+                    data-maintenance-confirm="<%= maintenanceConfirmText %>">
+                    <img src="${pageContext.request.contextPath}/icon/penyelenggaraan.png" class="quick-action-icon" alt="Penyelenggaraan">
+                </button>
+            </form>
+            <a class="btn quick-btn-red" href="${pageContext.request.contextPath}/admin-portal-guide.html" title="Panduan Admin Portal" aria-label="Panduan Admin Portal" target="_blank" rel="noopener"><img src="${pageContext.request.contextPath}/icon/panduan.png" class="quick-action-icon" alt="Panduan Admin Portal"></a>
+            <a class="btn quick-btn-brown" href="${pageContext.request.contextPath}/dashboard?status=DIARKIB" title="Lihat Arkib" aria-label="Lihat Arkib"><img src="${pageContext.request.contextPath}/icon/lihat-arkib.png" class="quick-action-icon" alt="Lihat Arkib"></a>
+            <form id="aduanSecureForm" method="post" action="${pageContext.request.contextPath}/dashboard">
+                <input type="hidden" name="_csrf" value="${csrf_token}">
+                <input type="hidden" name="secure_action" value="access_aduan">
+                <input type="hidden" name="secure_password" id="aduanSecurePassword">
+                <button
+                    id="aduanSecureBtn"
+                    class="btn quick-btn-aduan<%= canAccessSecureAduan ? "" : " is-locked" %><%= staffComplaintNewCount > 0 ? " has-unread" : "" %>"
+                    type="button"
+                    title="Aduan"
+                    aria-label="Aduan"
+                    data-allowed="<%= canAccessSecureAduan ? "1" : "0" %>">
+                    <img src="${pageContext.request.contextPath}/icon/Aduan.png" class="quick-action-icon" alt="Aduan">
+                    <% if (staffComplaintNewCount > 0) { %><span class="unread-dot" aria-hidden="true"></span><% } %>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <div class="navbar">
         <div class="brand">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <h1>Dashboard Pentadbir</h1>
-                <p>Pusat kawalan permohonan, produk, dan laporan SPPA</p>
+                <p>Pusat kawalan permohonan, produk, dan laporan SPPPA</p>
             </div>
         </div>
         <div>
             <span>Selamat datang, <%= session.getAttribute("username") %></span>
-            <a href="${pageContext.request.contextPath}/admin/users">Senarai Pengguna</a>
-            <a href="${pageContext.request.contextPath}/products">Senarai Produk</a>
-            <a href="${pageContext.request.contextPath}/profile">Kemaskini Profil</a>
             <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
             <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
         </div>
@@ -770,7 +1512,81 @@
         <%
             List<Map<String, Object>> applications = (List<Map<String, Object>>) request.getAttribute("pending_applications");
             List<Map<String, Object>> kppGuestSubmissions = (List<Map<String, Object>>) request.getAttribute("kpp_guest_submissions");
+<<<<<<< HEAD
+            List<Map<String, Object>> adminAuditLogs = (List<Map<String, Object>>) request.getAttribute("admin_audit_logs");
+            List<Map<String, Object>> kppContacts = (List<Map<String, Object>>) request.getAttribute("kpp_contacts");
             boolean isAdminRole = "ADMIN".equals(String.valueOf(session.getAttribute("role")));
+            List<Map<String, String>> kppRecipients = new ArrayList<>();
+
+            if (kppContacts != null && !kppContacts.isEmpty()) {
+                for (Map<String, Object> contact : kppContacts) {
+                    String name = contact.get("name") == null ? "" : String.valueOf(contact.get("name")).trim();
+                    String branch = contact.get("branch") == null ? "" : String.valueOf(contact.get("branch")).trim();
+                    String email = contact.get("email") == null ? "" : String.valueOf(contact.get("email")).trim();
+                    if (name.isEmpty() || email.isEmpty()) {
+                        continue;
+                    }
+
+                    Map<String, String> entry = new LinkedHashMap<>();
+                    entry.put("name", name);
+                    entry.put("jawatan", branch);
+                    entry.put("email", email);
+                    kppRecipients.add(entry);
+                }
+            }
+
+            if (kppRecipients.isEmpty()) {
+                List<Path> csvCandidates = new ArrayList<>();
+                String csvFromWebRoot = application.getRealPath("/data/Senarai KPP.csv");
+                if (csvFromWebRoot != null && !csvFromWebRoot.isBlank()) {
+                    csvCandidates.add(Paths.get(csvFromWebRoot));
+                }
+                csvCandidates.add(Paths.get(System.getProperty("user.dir"), "data", "Senarai KPP.csv"));
+                csvCandidates.add(Paths.get("P:/ProjectLI/data/Senarai KPP.csv"));
+
+                Path csvPath = null;
+                for (Path candidate : csvCandidates) {
+                    if (candidate != null && Files.exists(candidate)) {
+                        csvPath = candidate;
+                        break;
+                    }
+                }
+
+                if (csvPath != null) {
+                    try {
+                        List<String> csvLines = Files.readAllLines(csvPath, StandardCharsets.UTF_8);
+                        for (int i = 1; i < csvLines.size(); i++) {
+                            String line = csvLines.get(i);
+                            if (line == null || line.isBlank()) {
+                                continue;
+                            }
+
+                            List<String> parts = parseCsvLine(line);
+                            if (parts.size() < 3) {
+                                continue;
+                            }
+
+                            String name = parts.get(0).trim();
+                            String jawatan = parts.get(1).trim();
+                            String email = parts.get(2).trim();
+                            if (name.isEmpty() || email.isEmpty()) {
+                                continue;
+                            }
+
+                            Map<String, String> entry = new LinkedHashMap<>();
+                            entry.put("name", name);
+                            entry.put("jawatan", jawatan);
+                            entry.put("email", email);
+                            kppRecipients.add(entry);
+                        }
+                    } catch (Exception ignore) {
+                        // If CSV cannot be read, UI remains usable with manual fallback text.
+                    }
+                }
+            }
+=======
+            boolean isAdminRole = "ADMIN".equals(String.valueOf(session.getAttribute("role")));
+>>>>>>> origin/SPPPA
         %>
 
         <div class="layout">
@@ -787,8 +1603,31 @@
                         <label for="q"><img src="${pageContext.request.contextPath}/assets/images/icon-search.png" class="icon-inline" alt="Ikon carian"> Carian</label>
                         <input id="q" name="q" type="text" value="<%= request.getAttribute("search_query") %>" placeholder="Cari syarikat, produk, pemohon atau email">
                     </div>
-                    <div class="field">
+                    <div class="field status-filter-compact">
                         <label for="status">Status</label>
+<<<<<<< HEAD
+                        <div class="status-filter-controls">
+                            <select id="status" name="status">
+                                <option value="">Semua status</option>
+                                <option value="NEW" <%= "NEW".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>NEW</option>
+                                <option value="DALAM_SEMAKAN" <%= "DALAM_SEMAKAN".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DALAM SEMAKAN</option>
+                                <option value="DALAM_PROSES" <%= "DALAM_PROSES".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DALAM PROSES</option>
+                                <option value="DILULUSKAN" <%= "DILULUSKAN".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DILULUSKAN</option>
+                                <option value="DITOLAK" <%= "DITOLAK".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DITOLAK</option>
+                                <option value="DIGANTUNG" <%= "DIGANTUNG".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DIGANTUNG</option>
+                                <option value="DIARKIB" <%= "DIARKIB".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DIARKIB</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="date_from">Tarikh Dari</label>
+                        <input id="date_from" name="date_from" type="date" value="<%= request.getAttribute("date_from") != null ? request.getAttribute("date_from") : "" %>">
+                    </div>
+                    <div class="field">
+                        <label for="date_to">Tarikh Hingga</label>
+                        <input id="date_to" name="date_to" type="date" value="<%= request.getAttribute("date_to") != null ? request.getAttribute("date_to") : "" %>">
+                    </div>
+=======
                         <select id="status" name="status">
                             <option value="">Semua status</option>
                             <option value="NEW" <%= "NEW".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>NEW</option>
@@ -810,6 +1649,7 @@
                         <input id="date_to" name="date_to" type="date" value="<%= request.getAttribute("date_to") != null ? request.getAttribute("date_to") : "" %>">
                     </div>
                     <button class="btn btn-primary" type="submit">Tapis</button>
+>>>>>>> origin/SPPPA
                     <div class="field export-control">
                         <label for="exportOption">Eksport</label>
                         <select id="exportOption" name="exportOption">
@@ -818,14 +1658,19 @@
                                 <option value="pdf_current">PDF</option>
                             </optgroup>
                             <optgroup label="Status khusus">
-                                <option value="xlsx_approved">Excel - APPROVED</option>
-                                <option value="xlsx_rejected">Excel - REJECTED</option>
-                                <option value="pdf_approved">PDF - APPROVED</option>
-                                <option value="pdf_rejected">PDF - REJECTED</option>
+                                <option value="xlsx_approved">Excel - DILULUSKAN</option>
+                                <option value="xlsx_rejected">Excel - DITOLAK</option>
+                                <option value="pdf_approved">PDF - DILULUSKAN</option>
+                                <option value="pdf_rejected">PDF - DITOLAK</option>
                             </optgroup>
                         </select>
                     </div>
+<<<<<<< HEAD
+                    <button class="btn btn-secondary" type="button" id="exportDownloadBtn" aria-label="Muat Turun" title="Muat Turun"><img src="${pageContext.request.contextPath}/assets/images/icon-download.png" class="icon-inline" alt="Ikon turun"></button>
+                    <button class="btn btn-secondary btn-archive-main" type="button" id="latestArchiveBtn" aria-label="Arkib" title="Arkib"><img src="${pageContext.request.contextPath}/icon/archive.png" class="icon-inline" alt="Ikon arkib" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/icon-archive.png';"><span id="latestArchiveBtnLabel" class="archive-hover-label">Arkib</span></button>
+=======
                     <button class="btn btn-secondary" type="button" id="exportDownloadBtn" aria-label="Turun" title="Turun"><img src="${pageContext.request.contextPath}/assets/images/icon-download.png" class="icon-inline" alt="Ikon turun"></button>
+>>>>>>> origin/SPPPA
                     </form>
 
                     <% if (isAdminRole) { %>
@@ -834,7 +1679,11 @@
                         <input type="hidden" id="bulkSelectedIds" name="selected_ids" value="">
                         <input type="hidden" id="bulkFirstId" name="id" value="">
                         <div class="bulk-toolbar">
+<<<<<<< HEAD
+                            <button class="btn btn-primary" id="bulkApproveBtn" type="button">Approve Selected</button> 
+=======
                             <button class="btn btn-primary" id="bulkApproveBtn" type="button">Approve Selected</button>
+>>>>>>> origin/SPPPA
                             <button class="btn btn-secondary" id="bulkRejectBtn" type="button">Reject Selected</button>
                             <button class="btn btn-accent" id="bulkExportBtn" type="button">Export Selected</button>
                             <span class="bulk-count" id="bulkSelectedCount">0 dipilih</span>
@@ -866,6 +1715,20 @@
                                 Timestamp submittedAt = (Timestamp) applicationRow.get("submitted_at");
                                 Timestamp archivedAt = (Timestamp) applicationRow.get("archived_at");
                                 String archiveNotes = applicationRow.get("archive_notes") == null ? "" : String.valueOf(applicationRow.get("archive_notes"));
+<<<<<<< HEAD
+                                String statusRaw = applicationRow.get("status") == null ? "" : String.valueOf(applicationRow.get("status"));
+                                String status = statusRaw.trim().toLowerCase(java.util.Locale.ROOT);
+                                String statusDisplay = displayStatusLabel(statusRaw);
+                                int appIdNumeric = applicationRow.get("id") instanceof Number ? ((Number) applicationRow.get("id")).intValue() : 0;
+                                int appIdDisplayNumeric = Math.max(0, appIdNumeric);
+                                String appIdDisplay = String.format("PPP%03d", appIdDisplayNumeric);
+                                boolean isArchivedRow = archivedAt != null;
+                                boolean canArchiveRow = !isArchivedRow;
+                        %>
+                        <tr>
+                            <% if (isAdminRole) { %>
+                            <td><input type="checkbox" class="app-row-check table-check" value="<%= applicationRow.get("id") %>" data-can-archive="<%= canArchiveRow ? "1" : "0" %>" data-is-archived="<%= isArchivedRow ? "1" : "0" %>" aria-label="Pilih permohonan"></td>
+=======
                                 String status = String.valueOf(applicationRow.get("status")).toLowerCase();
                                 int appIdNumeric = applicationRow.get("id") instanceof Number ? ((Number) applicationRow.get("id")).intValue() : 0;
                                 int appIdDisplayNumeric = Math.max(0, appIdNumeric - 1);
@@ -882,6 +1745,7 @@
                         <tr>
                             <% if (isAdminRole) { %>
                             <td><input type="checkbox" class="app-row-check table-check" value="<%= applicationRow.get("id") %>" aria-label="Pilih permohonan"></td>
+>>>>>>> origin/SPPPA
                             <% } %>
                             <td><strong><%= appIdDisplay %></strong></td>
                             <td>
@@ -890,7 +1754,11 @@
                                 <% if (isArchivedRow && archivedAt != null) { %><br>Arkib: <%= archivedAt %><% } %>
                                 </span>
                             </td>
+<<<<<<< HEAD
+                            <td><span class="status-pill status-<%= status %>"><%= statusDisplay %></span></td>
+=======
                             <td><span class="status-pill status-<%= status %>"><%= applicationRow.get("status") %></span></td>
+>>>>>>> origin/SPPPA
                             <td><%= submittedAt != null ? submittedAt.toString() : "Belum dihantar" %></td>
                             <td>
                                 <div class="action-cell">
@@ -902,7 +1770,11 @@
                                     data-category="<%= escapeHtml(applicationRow.get("product_category") == null ? "" : String.valueOf(applicationRow.get("product_category")) ) %>"
                                     data-product="<%= escapeHtml(applicationRow.get("product_name") == null ? "" : String.valueOf(applicationRow.get("product_name")) ) %>"
                                     data-description="<%= escapeHtml(applicationRow.get("product_description") == null ? "" : String.valueOf(applicationRow.get("product_description")) ) %>"
+<<<<<<< HEAD
+                                    data-status="<%= escapeHtml(statusDisplay) %>"
+=======
                                     data-status="<%= escapeHtml(applicationRow.get("status") == null ? "" : String.valueOf(applicationRow.get("status")) ) %>"
+>>>>>>> origin/SPPPA
                                     data-submitted="<%= escapeHtml(submittedAt != null ? submittedAt.toString() : "Belum dihantar") %>"
                                     data-user="<%= escapeHtml(applicationRow.get("full_name") == null ? "" : String.valueOf(applicationRow.get("full_name")) ) %>"
                                     data-email="<%= escapeHtml(applicationRow.get("user_email") == null ? "" : String.valueOf(applicationRow.get("user_email")) ) %>"
@@ -910,6 +1782,8 @@
                                     data-attachment-pdf="<%= escapeHtml(applicationRow.get("attachment_pdf_url") == null ? "" : String.valueOf(applicationRow.get("attachment_pdf_url")) ) %>">
                                     Semak
                                 </a>
+<<<<<<< HEAD
+=======
                                 <% if (isArchivedRow || canArchiveRow) { %>
                                 <button
                                     class="btn btn-archive js-archive-btn"
@@ -924,6 +1798,7 @@
                                     <img src="<%= archiveIconPath %>" class="icon-btn" alt="Arkib">
                                 </button>
                                 <% } %>
+>>>>>>> origin/SPPPA
                                 </div>
                             </td>
                         </tr>
@@ -936,17 +1811,59 @@
                 </div>
 
                 <div class="panel kpp-action-panel">
+<<<<<<< HEAD
+                    <h3 class="section-title">Tindakan Ketua Penolong Pengarah</h3>
+=======
                     <h3 class="section-title">Tindakan KPP</h3>
+>>>>>>> origin/SPPPA
                     <div class="kpp-action-grid">
                         <div class="kpp-draft">
                             <div class="kpp-form-grid">
                                 <div>
+<<<<<<< HEAD
+                                    <label for="kppRecipientPickerBtn">Kepada &amp; Emel Penerima (Checklist KPP)</label>
+                                    <div class="kpp-picker" id="kppRecipientPicker">
+                                        <button id="kppRecipientPickerBtn" class="kpp-picker-btn" type="button">Pilih KPP (boleh pilih lebih dari satu)</button>
+                                        <div id="kppRecipientPickerMenu" class="kpp-picker-menu">
+                                            <% if (kppRecipients.isEmpty()) { %>
+                                                <p class="kpp-help">Senarai KPP tidak dijumpai. Semak fail data/Senarai KPP.csv.</p>
+                                            <% } else { %>
+                                                <% for (Map<String, String> recipient : kppRecipients) { %>
+                                                    <% String recipientName = escapeHtml(recipient.get("name")); %>
+                                                    <label class="kpp-picker-item" <%= "ADMIN".equals(recipient.get("name")) ? "data-admin=\"true\"" : "" %>>
+                                                        <input
+                                                            class="js-kpp-recipient-check"
+                                                            type="checkbox"
+                                                            value="<%= escapeHtml(recipient.get("email")) %>"
+                                                            data-name="<%= escapeHtml(recipient.get("name")) %>"
+                                                            data-title="<%= escapeHtml(recipient.get("jawatan")) %>"
+                                                            data-email="<%= escapeHtml(recipient.get("email")) %>">
+                                                        <span>
+                                                            <strong><%= recipientName %></strong><br>
+                                                            <%= escapeHtml(recipient.get("jawatan")) %><br>
+                                                            <%= escapeHtml(recipient.get("email")) %>
+                                                        </span>
+                                                    </label>
+                                                <% } %>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="kppRecipientName">Kepada (Nama Penerima)</label>
+                                    <input id="kppRecipientName" type="text" readonly placeholder="Belum pilih penerima">
+                                </div>
+                                <div>
+                                    <label for="kppEmailTo">Emel Penerima</label>
+                                    <input id="kppEmailTo" type="text" readonly placeholder="Belum pilih emel">
+=======
                                     <label for="kppRecipientName">Kepada (Nama Penerima)</label>
                                     <input id="kppRecipientName" type="text" placeholder="Contoh: KPP Bahagian Teknikal">
                                 </div>
                                 <div>
                                     <label for="kppEmailTo">Emel Penerima</label>
                                     <input id="kppEmailTo" type="email" placeholder="contoh@jans.sabah.gov.my">
+>>>>>>> origin/SPPPA
                                 </div>
                                 <div class="kpp-form-span">
                                     <label for="kppActionType">Tindakan Diperlukan</label>
@@ -956,6 +1873,37 @@
                                         <option value="KSPP_UJPPP">Isi Kedua-dua Borang (KSPP dan UJPPP)</option>
                                     </select>
                                 </div>
+<<<<<<< HEAD
+                                <div class="kpp-form-span">
+                                    <label for="kppApplicationRef">Borang Permohonan (Dihantar Pemohon)</label>
+                                    <input id="kppApplicationSearch" type="text" placeholder="Cari ikut kod borang, syarikat, atau produk">
+                                    <select id="kppApplicationRef">
+                                        <option value="">-- Pilih Borang Permohonan --</option>
+                                        <% if (applications != null) {
+                                            for (Map<String, Object> appOption : applications) {
+                                                int appIdValue = appOption.get("id") instanceof Number ? ((Number) appOption.get("id")).intValue() : 0;
+                                                int appIdDisplayValue = Math.max(0, appIdValue);
+                                                String appCode = String.format("PPP%03d", appIdDisplayValue);
+                                                String appCompany = appOption.get("company_name") == null ? "Syarikat tidak dinyatakan" : String.valueOf(appOption.get("company_name"));
+                                                String appProduct = appOption.get("product_name") == null ? "Produk tidak dinyatakan" : String.valueOf(appOption.get("product_name"));
+                                                String appLabel = appCode + " - " + appCompany + " (" + appProduct + ")";
+                                        %>
+                                        <option value="<%= escapeHtml(appCode) %>"><%= escapeHtml(appLabel) %></option>
+                                        <%  }
+                                           } %>
+                                    </select>
+                                    <div class="kpp-inline-help">Taip untuk tapis senarai borang mengikut kod, nama syarikat, atau nama produk.</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="kppEmailSubject">Subjek Email</label>
+                                <input id="kppEmailSubject" type="text" placeholder="Subjek boleh diedit sebelum hantar">
+                            </div>
+                            <div>
+                                <label for="kppEmailBody">Isi Email</label>
+                                <textarea id="kppEmailBody" placeholder="Isi email boleh diedit sebelum hantar"></textarea>
+                                <div class="kpp-inline-help">Tip: kekalkan teks [Pautan khas akan dijana semasa Hantar Email] dalam isi email untuk gantian pautan automatik.</div>
+=======
                             </div>
                             <div>
                                 <label for="kppEmailSubject">Subjek Email</label>
@@ -964,13 +1912,18 @@
                             <div>
                                 <label for="kppEmailBody">Isi Email Auto-Generate</label>
                                 <textarea id="kppEmailBody" readonly></textarea>
+>>>>>>> origin/SPPPA
                             </div>
                             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                                 <button class="btn btn-primary" type="button" id="kppEmailSendBtn">Hantar Email</button>
                             </div>
                         </div>
                         <div class="kpp-submission-box" id="kpp-submissions">
+<<<<<<< HEAD
+                            <h4 class="kpp-submission-title">Senarai Respon Ketua Penolong Pengarah</h4>
+=======
                             <h4 class="kpp-submission-title">Senarai Tindakan KPP</h4>
+>>>>>>> origin/SPPPA
                             <form class="kpp-submission-toolbar" method="get" action="${pageContext.request.contextPath}/dashboard#kpp-submissions">
                                 <div class="kpp-search-wrap">
                                     <img src="${pageContext.request.contextPath}/assets/images/kpp-search.png" alt="Carian">
@@ -993,10 +1946,18 @@
                                         boolean kppArchived = Boolean.TRUE.equals(kppSubmission.get("archived"));
                                     %>
                                     <li class="kpp-submission-item">
+<<<<<<< HEAD
+                                        <div class="kpp-submission-main">
+                                            <strong><%= escapeHtml(String.valueOf(kppSubmission.get("kpp_display"))) %> - <%= escapeHtml(String.valueOf(kppSubmission.get("form_display"))) %></strong>
+                                            <span>Tarikh Hantar: <%= submittedAt == null ? "-" : escapeHtml(String.valueOf(submittedAt)) %></span>
+                                            <span>Emel Penerima: <%= escapeHtml(String.valueOf(kppSubmission.get("recipient_email"))) %></span>
+                                            <div class="kpp-submission-actions">
+=======
                                         <strong><%= escapeHtml(String.valueOf(kppSubmission.get("kpp_display"))) %> - <%= escapeHtml(String.valueOf(kppSubmission.get("form_display"))) %></strong>
                                         <span>Tarikh Hantar: <%= submittedAt == null ? "-" : escapeHtml(String.valueOf(submittedAt)) %></span>
                                         <span>Emel Penerima: <%= escapeHtml(String.valueOf(kppSubmission.get("recipient_email"))) %></span>
                                         <div class="kpp-submission-actions">
+>>>>>>> origin/SPPPA
                                             <button
                                                     class="kpp-action-btn js-kpp-view-btn"
                                                     type="button"
@@ -1032,6 +1993,16 @@
                                                     <img src="${pageContext.request.contextPath}/assets/images/kpp-delete.png" alt="Delete">
                                                 </button>
                                             </form>
+<<<<<<< HEAD
+                                            </div>
+                                        </div>
+                                        <div class="kpp-submission-status">
+                                            <div class="kpp-status-badge-stack js-kpp-status-badge"
+                                                 data-action="<%= escapeHtml(String.valueOf(kppSubmission.get("action_type"))) %>"
+                                                 data-payload="<%= escapeHtml(String.valueOf(kppSubmission.get("form_payload"))) %>">
+                                            </div>
+=======
+>>>>>>> origin/SPPPA
                                         </div>
                                     </li>
                                     <% } %>
@@ -1041,6 +2012,8 @@
                     </div>
                 </div>
 
+<<<<<<< HEAD
+=======
                 <div class="panel">
                     <h3 class="section-title">Analitik Status Permohonan</h3>
                     <%
@@ -1079,16 +2052,85 @@
                     </div>
                 </div>
 
+>>>>>>> origin/SPPPA
             </div>
 
             <div class="right-panel">
                 <div class="panel">
+<<<<<<< HEAD
+                    <h3 class="section-title">Aktiviti Terkini</h3>
+                    <ul class="activity-list">
+                        <% if (applications != null && !applications.isEmpty()) {
+                            int activityShown = 0;
+                            for (Map<String, Object> activityRow : applications) {
+                                if (activityShown >= 5) { break; }
+                                activityShown++;
+                                Timestamp activityTime = (Timestamp) activityRow.get("submitted_at");
+                        %>
+                        <li class="activity-item">
+                            <strong><%= escapeHtml(String.valueOf(activityRow.get("full_name"))) %></strong> mengemaskini permohonan
+                            <span class="muted"><%= activityTime != null ? escapeHtml(activityTime.toString()) : "Masa tidak tersedia" %></span>
+                        </li>
+                        <%      }
+                           } else { %>
+                        <li class="activity-item">Tiada aktiviti terkini buat masa ini.</li>
+                        <% } %>
+                    </ul>
+                </div>
+
+                <div class="panel">
+                    <div class="audit-panel-header">
+                        <h3 class="section-title">Rekod Tindakan Admin</h3>
+                        <button type="button" class="audit-toggle-btn" id="toggleAuditBtnDashboard" aria-expanded="true" aria-controls="adminAuditContentDashboard" title="Sembunyi rekod tindakan admin">
+                            <img id="toggleAuditIconDashboard" src="${pageContext.request.contextPath}/icon/hide.png" alt="Sembunyikan rekod tindakan admin">
+                        </button>
+                    </div>
+                    <div id="adminAuditContentDashboard" class="audit-content">
+                    <% if (adminAuditLogs != null && !adminAuditLogs.isEmpty()) { %>
+                    <div class="audit-filter-bar">
+                        <input id="auditSearchFilterDashboard" type="text" placeholder="Cari nama admin, tindakan atau butiran" aria-label="Cari rekod tindakan admin">
+                    </div>
+                    <% } %>
+                    <ul class="audit-list">
+                        <% if (adminAuditLogs != null && !adminAuditLogs.isEmpty()) {
+                            for (Map<String, Object> auditRow : adminAuditLogs) {
+                                String actorName = auditRow.get("full_name") == null
+                                        ? String.valueOf(auditRow.get("username") == null ? "Admin" : auditRow.get("username"))
+                                        : String.valueOf(auditRow.get("full_name"));
+                                String actorDisplayId = String.valueOf(auditRow.get("display_user_id") == null ? "-" : auditRow.get("display_user_id"));
+                                String action = String.valueOf(auditRow.get("action") == null ? "-" : auditRow.get("action"));
+                                String actionDisplay = action.replace('_', ' ').replaceAll("\\s+", " ").trim();
+                                String details = String.valueOf(auditRow.get("details") == null ? "Tiada penerangan." : auditRow.get("details"));
+                                Timestamp actionAt = (Timestamp) auditRow.get("created_at");
+                                String actorFilterValue = actorName + " (" + actorDisplayId + ")";
+                                String auditSearchValue = (action + " " + details + " " + actorName + " " + actorDisplayId).toLowerCase();
+                        %>
+                        <li class="audit-item" data-audit-text="<%= escapeHtml(auditSearchValue) %>">
+                            <strong><%= escapeHtml(actorName) %> (<%= escapeHtml(actorDisplayId) %>) <%= escapeHtml(actionDisplay) %></strong>
+                            <p><%= escapeHtml(details) %></p>
+                            <div class="audit-meta">
+                                <span><%= actionAt == null ? "Masa tidak direkod" : escapeHtml(String.valueOf(actionAt)) %></span>
+                            </div>
+                        </li>
+                        <%      }
+                           } else { %>
+                        <li class="audit-item">
+                            <strong>Belum ada rekod tindakan</strong>
+                            <p>Sistem akan menyimpan tindakan pentadbir secara automatik selepas sebarang kemas kini dibuat.</p>
+                        </li>
+                        <% } %>
+                    </ul>
+                    <% if (adminAuditLogs != null && !adminAuditLogs.isEmpty()) { %>
+                    <div class="audit-filter-empty" id="auditFilterEmptyDashboard" style="display:none;">Tiada rekod sepadan dengan penapis semasa.</div>
+                    <% } %>
+=======
                     <h3 class="section-title">Quick Actions</h3>
                     <div class="quick-actions">
                         <a class="btn btn-primary" href="#announcementPanel">Tambah Pengumuman</a>
                         <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/users">Urus Pengguna</a>
                         <a class="btn btn-archive" href="${pageContext.request.contextPath}/dashboard?status=ARCHIVED">Lihat Arkib</a>
                         <button class="btn btn-accent" type="button" id="quickExportBtn">Eksport</button>
+>>>>>>> origin/SPPPA
                     </div>
                 </div>
 
@@ -1295,12 +2337,67 @@
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
+<<<<<<< HEAD
+                <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+        </div>
+    </div>
+    <div class="expand-overlay" id="expandOverlay" aria-hidden="true"></div>
+    <div class="kpp-modal" id="kppSubmissionModal" aria-hidden="true">
+        <div class="kpp-modal-card" role="dialog" aria-modal="true" aria-labelledby="kppSubmissionModalTitle">
+            <div class="kpp-modal-head">
+                <h4 id="kppSubmissionModalTitle">Borang Dihantar KPP</h4>
+                <button class="kpp-modal-close" type="button" id="kppSubmissionCloseBtn">Tutup</button>
+            </div>
+            <p class="kpp-modal-meta" id="kppSubmissionMeta"></p>
+            <div class="kpp-modal-grid" id="kppSubmissionContent"></div>
+        </div>
+    </div>
+    <div class="archive-toast" id="archiveToast" role="status" aria-live="polite">
+        <img src="${pageContext.request.contextPath}/assets/images/icon-archive.png" alt="Notifikasi arkib" id="archiveToastIcon">
+        <span id="archiveToastText">Berjaya.</span>
+    </div>
+    <div class="sent-popup" id="sentPopup" aria-hidden="true">
+        <div class="sent-popup-card" role="dialog" aria-modal="true" aria-labelledby="sentPopupTitle">
+            <img src="${pageContext.request.contextPath}/assets/images/sent-mail.gif" alt="Berjaya dihantar" class="sent-popup-icon">
+            <h4 class="sent-popup-title" id="sentPopupTitle">Berjaya Dihantar</h4>
+            <button type="button" class="sent-popup-ok" id="sentPopupOkBtn">OK</button>
+        </div>
+    </div>
+    <div class="maintenance-popup" id="maintenancePopup" aria-hidden="true">
+        <div class="maintenance-popup-card" role="dialog" aria-modal="true" aria-labelledby="maintenancePopupTitle">
+            <img src="${pageContext.request.contextPath}/icon/quiz.gif" alt="Pengesahan tindakan" class="maintenance-popup-icon">
+            <h4 class="maintenance-popup-title" id="maintenancePopupTitle">Pengesahan Penyelenggaraan</h4>
+            <p class="maintenance-popup-text" id="maintenancePopupText">Teruskan tindakan penyelenggaraan?</p>
+            <div class="maintenance-popup-actions">
+                <button type="button" class="maintenance-popup-btn maintenance-popup-btn-cancel" id="maintenancePopupCancelBtn">Batal</button>
+                <button type="button" class="maintenance-popup-btn maintenance-popup-btn-confirm" id="maintenancePopupConfirmBtn">Teruskan</button>
+            </div>
+        </div>
+    </div>
+    <div class="aduan-password-popup" id="aduanPasswordPopup" aria-hidden="true">
+        <div class="aduan-password-popup-card" role="dialog" aria-modal="true" aria-labelledby="aduanPasswordPopupTitle">
+            <img src="${pageContext.request.contextPath}/icon/password.gif" alt="Masukkan kata laluan" class="aduan-password-popup-icon">
+            <h4 class="aduan-password-popup-title" id="aduanPasswordPopupTitle">Penerimaan Borang Aduan</h4>
+            <p class="aduan-password-popup-text">Sila masukkan kata laluan admin <%= escapeHtml(aduanPasswordPromptLabel) %> untuk akses modul penerimaan aduan.</p>
+            <input type="password" id="aduanPasswordPopupInput" class="aduan-password-popup-input" autocomplete="current-password" placeholder="Masukkan kata laluan">
+            <div class="aduan-password-popup-actions">
+                <button type="button" class="aduan-password-popup-btn aduan-password-popup-btn-cancel" id="aduanPasswordPopupCancelBtn">Batal</button>
+                <button type="button" class="aduan-password-popup-btn aduan-password-popup-btn-confirm" id="aduanPasswordPopupConfirmBtn">Teruskan</button>
+            </div>
+=======
                 <h3>Hubungi JANS</h3>
                 <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
                 <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
                 <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
                 <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
                 <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+>>>>>>> origin/SPPPA
         </div>
     </div>
     <div class="expand-overlay" id="expandOverlay" aria-hidden="true"></div>
@@ -1327,7 +2424,12 @@
         
         var toolbarForm = document.querySelector('.toolbar');
         var exportButton = document.getElementById('exportDownloadBtn');
+<<<<<<< HEAD
+        var latestArchiveBtn = document.getElementById('latestArchiveBtn');
+        var latestArchiveBtnLabel = document.getElementById('latestArchiveBtnLabel');
+=======
         var quickExportButton = document.getElementById('quickExportBtn');
+>>>>>>> origin/SPPPA
         var exportOption = document.getElementById('exportOption');
         var searchInput = document.getElementById('q');
         var statusSelect = document.getElementById('status');
@@ -1353,6 +2455,23 @@
         var archiveToast = document.getElementById('archiveToast');
         var archiveToastIcon = document.getElementById('archiveToastIcon');
         var archiveToastText = document.getElementById('archiveToastText');
+<<<<<<< HEAD
+        var sentPopup = document.getElementById('sentPopup');
+        var sentPopupOkBtn = document.getElementById('sentPopupOkBtn');
+        var toastTimer = null;
+        var kppRecipientName = document.getElementById('kppRecipientName');
+        var kppEmailTo = document.getElementById('kppEmailTo');
+        var kppRecipientPicker = document.getElementById('kppRecipientPicker');
+        var kppRecipientPickerBtn = document.getElementById('kppRecipientPickerBtn');
+        var kppRecipientChecks = Array.prototype.slice.call(document.querySelectorAll('.js-kpp-recipient-check'));
+        var kppActionType = document.getElementById('kppActionType');
+        var kppApplicationSearch = document.getElementById('kppApplicationSearch');
+        var kppApplicationRef = document.getElementById('kppApplicationRef');
+        var kppEmailSubject = document.getElementById('kppEmailSubject');
+        var kppEmailBody = document.getElementById('kppEmailBody');
+        var kppEmailSendBtn = document.getElementById('kppEmailSendBtn');
+        var kppStatusBadgeBoxes = Array.prototype.slice.call(document.querySelectorAll('.js-kpp-status-badge'));
+=======
         var toastTimer = null;
         var kppRecipientName = document.getElementById('kppRecipientName');
         var kppEmailTo = document.getElementById('kppEmailTo');
@@ -1360,12 +2479,23 @@
         var kppEmailSubject = document.getElementById('kppEmailSubject');
         var kppEmailBody = document.getElementById('kppEmailBody');
         var kppEmailSendBtn = document.getElementById('kppEmailSendBtn');
+>>>>>>> origin/SPPPA
         var kppViewButtons = Array.prototype.slice.call(document.querySelectorAll('.js-kpp-view-btn'));
         var kppSubmissionModal = document.getElementById('kppSubmissionModal');
         var kppSubmissionCloseBtn = document.getElementById('kppSubmissionCloseBtn');
         var kppSubmissionMeta = document.getElementById('kppSubmissionMeta');
         var kppSubmissionContent = document.getElementById('kppSubmissionContent');
         var kppSubmissionsBox = document.getElementById('kpp-submissions');
+<<<<<<< HEAD
+        var aduanSecureForm = document.getElementById('aduanSecureForm');
+        var aduanSecureBtn = document.getElementById('aduanSecureBtn');
+        var aduanSecurePassword = document.getElementById('aduanSecurePassword');
+        var aduanPasswordPopup = document.getElementById('aduanPasswordPopup');
+        var aduanPasswordPopupInput = document.getElementById('aduanPasswordPopupInput');
+        var aduanPasswordPopupCancelBtn = document.getElementById('aduanPasswordPopupCancelBtn');
+        var aduanPasswordPopupConfirmBtn = document.getElementById('aduanPasswordPopupConfirmBtn');
+=======
+>>>>>>> origin/SPPPA
 
         var appDetailModal = document.getElementById('appDetailModal');
         var appModalCloseBtn = document.getElementById('appModalCloseBtn');
@@ -1376,11 +2506,89 @@
 
         var contextPath = '<%= request.getContextPath() %>';
 
+<<<<<<< HEAD
+        function closeAduanPasswordPopup() {
+            if (!aduanPasswordPopup) {
+                return;
+            }
+            aduanPasswordPopup.classList.remove('show');
+            aduanPasswordPopup.setAttribute('aria-hidden', 'true');
+            if (aduanPasswordPopupInput) {
+                aduanPasswordPopupInput.value = '';
+            }
+        }
+
+        if (aduanSecureForm && aduanSecureBtn && aduanSecurePassword) {
+            aduanSecureBtn.addEventListener('click', function () {
+                var isAllowed = aduanSecureBtn.getAttribute('data-allowed') === '1';
+                if (!isAllowed) {
+                    window.alert('Akses modul Aduan hanya untuk admin ID ADM001.');
+                    return;
+                }
+
+                if (!aduanPasswordPopup || !aduanPasswordPopupInput) {
+                    window.alert('Paparan kata laluan tidak tersedia. Sila muat semula halaman.');
+                    return;
+                }
+
+                aduanPasswordPopup.classList.add('show');
+                aduanPasswordPopup.setAttribute('aria-hidden', 'false');
+                aduanPasswordPopupInput.focus();
+            });
+        }
+
+        if (aduanPasswordPopupCancelBtn) {
+            aduanPasswordPopupCancelBtn.addEventListener('click', closeAduanPasswordPopup);
+        }
+
+        if (aduanPasswordPopup) {
+            aduanPasswordPopup.addEventListener('click', function (event) {
+                if (event.target === aduanPasswordPopup) {
+                    closeAduanPasswordPopup();
+                }
+            });
+        }
+
+        if (aduanPasswordPopupConfirmBtn && aduanPasswordPopupInput && aduanSecurePassword && aduanSecureForm) {
+            aduanPasswordPopupConfirmBtn.addEventListener('click', function () {
+                var passwordInput = aduanPasswordPopupInput.value || '';
+
+                if (!passwordInput.trim()) {
+                    window.alert('Kata laluan diperlukan untuk meneruskan akses modul Aduan.');
+                    aduanPasswordPopupInput.focus();
+                    return;
+                }
+
+                aduanSecurePassword.value = passwordInput;
+                closeAduanPasswordPopup();
+                aduanSecureForm.submit();
+            });
+        }
+
+        if (aduanPasswordPopupInput && aduanPasswordPopupConfirmBtn) {
+            aduanPasswordPopupInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    aduanPasswordPopupConfirmBtn.click();
+                }
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    closeAduanPasswordPopup();
+                }
+            });
+        }
+
+=======
+>>>>>>> origin/SPPPA
         function keepKppPanelOnScreen() {
             try {
                 sessionStorage.setItem('dashboardAnchor', 'kpp-submissions');
             } catch (error) {
+<<<<<<< HEAD
+                
+=======
                 // Ignore storage errors and continue normal navigation.
+>>>>>>> origin/SPPPA
             }
         }
 
@@ -1444,6 +2652,47 @@
             window.location.href = url;
         }
 
+<<<<<<< HEAD
+        function resolveLatestArchiveMode() {
+            var selectedRows = appRowChecks.filter(function(row) {
+                return row && row.checked;
+            });
+
+            if (selectedRows.length > 0) {
+                var archivedCount = selectedRows.filter(function(row) {
+                    return row.getAttribute('data-is-archived') === '1';
+                }).length;
+
+                if (archivedCount === selectedRows.length) {
+                    return 'unarchive';
+                }
+                if (archivedCount === 0) {
+                    return 'archive';
+                }
+            }
+
+            var statusValue = statusSelect ? String(statusSelect.value || '').toUpperCase() : '';
+            if (statusValue === 'DIARKIB') {
+                return 'unarchive';
+            }
+            return 'archive';
+        }
+
+        function updateLatestArchiveButtonUi() {
+            if (!latestArchiveBtn) {
+                return;
+            }
+            var mode = resolveLatestArchiveMode();
+            var label = mode === 'unarchive' ? 'Keluarkan Dari Arkib' : 'Arkib';
+            latestArchiveBtn.setAttribute('title', label);
+            latestArchiveBtn.setAttribute('aria-label', label);
+            if (latestArchiveBtnLabel) {
+                latestArchiveBtnLabel.textContent = label;
+            }
+        }
+
+=======
+>>>>>>> origin/SPPPA
         function getKppActionLabel(actionType) {
             if (actionType === 'UJPPP') {
                 return 'Borang Ulasan Jawatankuasa Pendaftaran Pembekal dan Produk Bekalan Air (UJPPP)';
@@ -1454,11 +2703,91 @@
             return 'Borang Kaji Selidik Prestasi Pembekal dan Produk Bekalan Air (KSPP)';
         }
 
+<<<<<<< HEAD
+        function getSelectedKppApplicationLabel() {
+            if (!kppApplicationRef || !kppApplicationRef.options || kppApplicationRef.selectedIndex < 0) {
+                return '';
+            }
+            var option = kppApplicationRef.options[kppApplicationRef.selectedIndex];
+            if (!option) {
+                return '';
+            }
+            var value = option.value || '';
+            if (!value) {
+                return '';
+            }
+            return (option.textContent || option.innerText || '').trim();
+        }
+
+        function syncKppApplicationOptions(filterValue) {
+            if (!kppApplicationRef) {
+                return;
+            }
+
+            var previousValue = kppApplicationRef.value || '';
+            var normalizedFilter = String(filterValue || '').toLowerCase().trim();
+            var allOptions = Array.prototype.slice.call(kppApplicationRef.querySelectorAll('option[data-kpp-app-option="1"]'));
+
+            allOptions.forEach(function(option) {
+                option.hidden = false;
+                option.disabled = false;
+            });
+
+            var emptyOption = kppApplicationRef.querySelector('option[value=""]');
+            if (emptyOption) {
+                emptyOption.textContent = '-- Pilih Borang Permohonan --';
+                emptyOption.hidden = false;
+                emptyOption.disabled = false;
+            }
+
+            var visibleCount = 0;
+            allOptions.forEach(function(option) {
+                var optionLabel = (option.textContent || option.innerText || '').toLowerCase();
+                var shouldShow = !normalizedFilter || optionLabel.indexOf(normalizedFilter) >= 0;
+                option.hidden = !shouldShow;
+                option.disabled = !shouldShow;
+                if (shouldShow) {
+                    visibleCount += 1;
+                }
+            });
+
+            if (emptyOption && normalizedFilter && visibleCount === 0) {
+                emptyOption.textContent = '-- Tiada borang dijumpai --';
+            }
+
+            var hasPreviousVisible = previousValue && allOptions.some(function(option) {
+                return option.value === previousValue && !option.hidden;
+            });
+
+            if (hasPreviousVisible) {
+                kppApplicationRef.value = previousValue;
+                return;
+            }
+
+            if (kppApplicationRef.value && kppApplicationRef.value !== '') {
+                kppApplicationRef.value = '';
+                updateKppDraft();
+            }
+        }
+
+        function buildKppSubject(actionType, applicationLabel) {
+            var base = 'Tindakan Ketua Penolong Pengarah: ' + getKppActionLabel(actionType);
+            if (applicationLabel) {
+                return base + ' | Borang: ' + applicationLabel;
+            }
+            return base;
+        }
+
+        var KPP_LINK_PLACEHOLDER = '[Pautan khas akan dijana semasa Hantar Email]';
+
+        function buildKppBody(recipientLabel, actionType, guestLinkBlock, applicationLabel) {
+=======
         function buildKppSubject(actionType) {
             return 'Tindakan KPP: ' + getKppActionLabel(actionType);
         }
 
         function buildKppBody(kppName, actionType, guestLink) {
+>>>>>>> origin/SPPPA
             var actionLine = '';
             if (actionType === 'UJPPP') {
                 actionLine = '1) Sila isi Borang Ulasan Jawatankuasa Pendaftaran Pembekal dan Produk Bekalan Air (UJPPP).';
@@ -1469,6 +2798,28 @@
                 actionLine = '1) Sila isi Borang Kaji Selidik Prestasi Pembekal dan Produk Bekalan Air (KSPP).';
             }
 
+<<<<<<< HEAD
+            var applicationLine = applicationLabel
+                ? ('Borang permohonan dirujuk: ' + applicationLabel + '\n\n')
+                : '';
+
+            return 'Assalamualaikum dan salam sejahtera ' + recipientLabel + ',\n\n'
+                + 'Admin SPPPA memaklumkan bahawa terdapat tindakan tuan/puan berkenaan proses Pendaftaran Produk Air.\n'
+                + applicationLine
+                + 'Tindakan diperlukan:\n'
+                + actionLine + '\n\n'
+                + 'Sila tekan pautan khas di bawah untuk semakan dan tindakan lanjut:\n'
+                + guestLinkBlock + '\n\n'
+                + 'Terima kasih.';
+        }
+
+        function generateKppGuestLink(emailTo, actionType, applicationRef, recipientName, recipientTitle) {
+            var url = contextPath + '/kpp/generate-link?recipient_email=' + encodeURIComponent(emailTo)
+                + '&action_type=' + encodeURIComponent(actionType || 'KSPP')
+                + '&app_ref=' + encodeURIComponent(applicationRef || '')
+                + '&recipient_name=' + encodeURIComponent(recipientName || '')
+                + '&recipient_title=' + encodeURIComponent(recipientTitle || '');
+=======
             return 'Assalamualaikum dan salam sejahtera ' + kppName + ',\n\n'
                 + 'Admin SPPA memaklumkan bahawa terdapat tindakan tuan/puan berkenaan proses Pendaftaran Produk Air.\n'
                 + 'Tindakan diperlukan:\n'
@@ -1481,6 +2832,7 @@
         function generateKppGuestLink(emailTo, actionType) {
             var url = contextPath + '/kpp/generate-link?recipient_email=' + encodeURIComponent(emailTo)
                 + '&action_type=' + encodeURIComponent(actionType || 'KSPP');
+>>>>>>> origin/SPPPA
 
             return fetch(url, {
                 method: 'GET',
@@ -1501,6 +2853,104 @@
             });
         }
 
+<<<<<<< HEAD
+        function sendKppEmails(emailRequests) {
+            return fetch(contextPath + '/dashboard', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json;charset=UTF-8',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': '${csrf_token}'
+                },
+                body: JSON.stringify({
+                    action: 'send_kpp_emails',
+                    emails: emailRequests
+                })
+            }).then(function(response) {
+                return response.json().catch(function() {
+                    return {};
+                }).then(function(data) {
+                    if (!response.ok || !data || !data.success) {
+                        throw new Error(data && data.message ? data.message : ('HTTP ' + response.status));
+                    }
+                    return data;
+                });
+            });
+        }
+
+        function openKppDraftPicker(emailRequests) {
+            if (!Array.isArray(emailRequests) || emailRequests.length === 0) {
+                return;
+            }
+
+            var popup = window.open('', '_blank');
+            if (!popup) {
+                alert('Popup disekat oleh pelayar. Sila benarkan popup untuk buka draf email KPP.');
+                return;
+            }
+
+            var itemHtml = emailRequests.map(function(item, index) {
+                var safeTo = String(item && item.to ? item.to : '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                var mailtoUrl = 'mailto:' + encodeURIComponent(item.to || '')
+                    + '?subject=' + encodeURIComponent(item.subject || '')
+                    + '&body=' + encodeURIComponent(item.body || '');
+                return '<li style="margin:10px 0;">'
+                    + '<div style="font-weight:600;color:#183244;">' + (index + 1) + ') ' + safeTo + '</div>'
+                    + '<a href="' + mailtoUrl + '" style="display:inline-block;margin-top:6px;padding:8px 12px;background:#0a7fbf;color:#fff;text-decoration:none;border-radius:6px;">Buka Draf Email</a>'
+                    + '</li>';
+            }).join('');
+
+            popup.document.open();
+            popup.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Draf Email KPP</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1"></head><body style="padding:16px;background:#f6fbff;color:#173042;">'
+                + '<h2 style="margin:0 0 10px;">Draf Email KPP</h2>'
+                + '<p style="margin:0 0 14px;">SMTP belum dikonfigurasi. Klik setiap butang di bawah untuk buka draf email khusus bagi setiap KPP.</p>'
+                + '<ol style="padding-left:20px;">' + itemHtml + '</ol>'
+                + '</body></html>');
+            popup.document.close();
+        }
+
+        function getSelectedKppRecipients() {
+            return kppRecipientChecks
+                .filter(function(input) {
+                    return !!input.checked;
+                })
+                .map(function(input) {
+                    return {
+                        name: (input.getAttribute('data-name') || '').trim(),
+                        title: (input.getAttribute('data-title') || '').trim(),
+                        email: (input.getAttribute('data-email') || '').trim()
+                    };
+                })
+                .filter(function(recipient) {
+                    return !!recipient.email;
+                });
+        }
+
+        function updateKppPickerSummary() {
+            var selected = getSelectedKppRecipients();
+            var names = selected.map(function(recipient) {
+                return recipient.name;
+            });
+            var emails = selected.map(function(recipient) {
+                return recipient.email;
+            });
+
+            if (kppRecipientName) {
+                kppRecipientName.value = names.join(', ');
+            }
+            if (kppEmailTo) {
+                kppEmailTo.value = emails.join(', ');
+            }
+            if (kppRecipientPickerBtn) {
+                kppRecipientPickerBtn.textContent = selected.length > 0
+                    ? ('Dipilih: ' + selected.length + ' KPP')
+                    : 'Pilih KPP (boleh pilih lebih dari satu)';
+            }
+        }
+
+=======
+>>>>>>> origin/SPPPA
         function updateKppDraft() {
             if (!kppEmailSubject || !kppEmailBody) {
                 return;
@@ -1510,8 +2960,193 @@
                 ? kppRecipientName.value.trim()
                 : 'tuan/puan';
             var actionType = kppActionType ? (kppActionType.value || 'KSPP') : 'KSPP';
+<<<<<<< HEAD
+            var applicationLabel = getSelectedKppApplicationLabel();
+            kppEmailSubject.value = buildKppSubject(actionType, applicationLabel);
+            kppEmailBody.value = buildKppBody(kppName, actionType, KPP_LINK_PLACEHOLDER, applicationLabel);
+        }
+
+        function escapeRegExpText(value) {
+            return String(value || '').replace(/[.*+?^$(){}|[\]\\]/g, '\\$&');
+        }
+
+        function buildEditableKppEmailDraft(subjectTemplate, bodyTemplate, recipient, guestLink, actionType, applicationLabel) {
+            var recipientName = (recipient && recipient.name ? recipient.name : '').trim() || 'tuan/puan';
+            var finalSubjectTemplate = String(subjectTemplate || '').trim();
+            var finalBodyTemplate = String(bodyTemplate || '').trim();
+
+            if (!finalSubjectTemplate) {
+                finalSubjectTemplate = buildKppSubject(actionType, applicationLabel);
+            }
+            if (!finalBodyTemplate) {
+                finalBodyTemplate = buildKppBody(recipientName, actionType, KPP_LINK_PLACEHOLDER, applicationLabel);
+            }
+
+            var finalSubject = finalSubjectTemplate
+                .replace(/\{recipient_name\}|\{\{recipient_name\}\}/gi, recipientName)
+                .replace(/\{application\}|\{\{application\}\}/gi, applicationLabel || '');
+
+            var finalBody = finalBodyTemplate
+                .replace(/\{recipient_name\}|\{\{recipient_name\}\}/gi, recipientName)
+                .replace(new RegExp(escapeRegExpText(KPP_LINK_PLACEHOLDER), 'g'), guestLink)
+                .replace(/\{link\}|\{\{link\}\}/gi, guestLink)
+                .replace(/\{application\}|\{\{application\}\}/gi, applicationLabel || '');
+
+            if (finalBody.indexOf(guestLink) < 0) {
+                finalBody += '\n\nPautan khas:\n' + guestLink;
+            }
+
+            return {
+                subject: finalSubject,
+                body: finalBody
+            };
+        }
+
+        function parseKppPayloadText(payloadText) {
+            if (!payloadText) {
+                return null;
+            }
+            try {
+                return JSON.parse(payloadText);
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function normalizeKsppDecision(value) {
+            var normalized = String(value || '').toLowerCase().trim();
+            if (!normalized) {
+                return { text: 'KSPP: -', css: 'kpp-status-neutral' };
+            }
+            if (normalized.indexOf('setuju') >= 0 && normalized.indexOf('tidak') < 0) {
+                return { text: 'KSPP: Bersetuju', css: 'kpp-status-good' };
+            }
+            return { text: 'KSPP: Tidak Bersetuju', css: 'kpp-status-bad' };
+        }
+
+        (function initAdminAuditToggleDashboard() {
+            var button = document.getElementById('toggleAuditBtnDashboard');
+            var content = document.getElementById('adminAuditContentDashboard');
+            var icon = document.getElementById('toggleAuditIconDashboard');
+            if (!button || !content || !icon) {
+                return;
+            }
+
+            function setState(hidden) {
+                content.classList.toggle('is-hidden', hidden);
+                button.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+                button.setAttribute('title', hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyi rekod tindakan admin');
+                icon.src = hidden ? '${pageContext.request.contextPath}/icon/unhide.png' : '${pageContext.request.contextPath}/icon/hide.png';
+                icon.alt = hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyikan rekod tindakan admin';
+            }
+
+            button.addEventListener('click', function() {
+                setState(!content.classList.contains('is-hidden'));
+            });
+
+            setState(false);
+        })();
+
+        (function initAdminAuditFilterDashboard() {
+            var textFilter = document.getElementById('auditSearchFilterDashboard');
+            var emptyMessage = document.getElementById('auditFilterEmptyDashboard');
+            var auditItems = Array.prototype.slice.call(document.querySelectorAll('#adminAuditContentDashboard .audit-item[data-audit-text]'));
+
+            if (!textFilter || auditItems.length === 0) {
+                return;
+            }
+
+            function applyAuditFilter() {
+                var searchKeyword = String(textFilter.value || '').toLowerCase().trim();
+                var visibleCount = 0;
+
+                auditItems.forEach(function(item) {
+                    var itemText = String(item.getAttribute('data-audit-text') || '').toLowerCase();
+                    var matchesText = !searchKeyword || itemText.indexOf(searchKeyword) >= 0;
+                    var isVisible = matchesText;
+                    item.style.display = isVisible ? '' : 'none';
+                    if (isVisible) {
+                        visibleCount++;
+                    }
+                });
+
+                if (emptyMessage) {
+                    emptyMessage.style.display = visibleCount > 0 ? 'none' : 'block';
+                }
+            }
+
+            textFilter.addEventListener('input', applyAuditFilter);
+            applyAuditFilter();
+        })();
+
+        function normalizeUjpppDecision(value) {
+            var normalized = String(value || '').toLowerCase().trim();
+            if (!normalized) {
+                return { text: 'UJPP: -', css: 'kpp-status-neutral' };
+            }
+            if (normalized.indexOf('terima') >= 0) {
+                return { text: 'UJPP: Diterima', css: 'kpp-status-good' };
+            }
+            if (normalized.indexOf('tolak') >= 0) {
+                return { text: 'UJPP: Ditolak', css: 'kpp-status-bad' };
+            }
+            if (normalized.indexOf('gantung') >= 0 || normalized.indexOf('batal') >= 0) {
+                return { text: 'UJPP: Digantung/Dibatal', css: 'kpp-status-warn' };
+            }
+            return { text: 'UJPP: ' + String(value || '-'), css: 'kpp-status-neutral' };
+        }
+
+        function createKppStatusBadge(text, cssClass) {
+            var badge = document.createElement('span');
+            badge.className = 'kpp-status-badge ' + cssClass;
+            badge.textContent = text;
+            return badge;
+        }
+
+        function pickSingleKppSubmissionStatus(actionType, ksppDecision, ujpppDecision) {
+            var action = String(actionType || '').toUpperCase();
+            var kspp = normalizeKsppDecision(ksppDecision);
+            var ujppp = normalizeUjpppDecision(ujpppDecision);
+
+            if (action === 'KSPP') {
+                return kspp;
+            }
+            if (action === 'UJPPP') {
+                return ujppp;
+            }
+            if (action === 'KSPP_UJPPP') {
+                if (ujppp.css === 'kpp-status-warn') {
+                    return ujppp;
+                }
+                if (ujppp.text !== 'UJPP: -') {
+                    return ujppp;
+                }
+                if (kspp.text !== 'KSPP: -') {
+                    return kspp;
+                }
+            }
+
+            return { text: 'Status: -', css: 'kpp-status-neutral' };
+        }
+
+        function renderKppSubmissionStatuses() {
+            kppStatusBadgeBoxes.forEach(function(box) {
+                if (!box) {
+                    return;
+                }
+                var actionType = String(box.getAttribute('data-action') || '').toUpperCase();
+                var payload = parseKppPayloadText(box.getAttribute('data-payload') || '');
+                var ksppDecision = payload ? (payload.f_kspp_review_decision || '') : '';
+                var ujpppDecision = payload ? (payload.f_ujppp_review_recommendation || '') : '';
+                var selectedStatus = pickSingleKppSubmissionStatus(actionType, ksppDecision, ujpppDecision);
+
+                box.innerHTML = '';
+                box.appendChild(createKppStatusBadge(selectedStatus.text, selectedStatus.css));
+            });
+=======
             kppEmailSubject.value = buildKppSubject(actionType);
             kppEmailBody.value = buildKppBody(kppName, actionType, '[Pautan khas akan dijana semasa Hantar Email]');
+>>>>>>> origin/SPPPA
         }
 
         function setExpandState(button, expanded) {
@@ -1556,7 +3191,11 @@
             if (actionValue === 'archive') {
                 if (statusCell) {
                     statusCell.className = 'status-pill status-archived';
+<<<<<<< HEAD
+                    statusCell.textContent = 'DIARKIB';
+=======
                     statusCell.textContent = 'ARCHIVED';
+>>>>>>> origin/SPPPA
                 }
                 if (actionInput) {
                     actionInput.value = 'unarchive';
@@ -1572,7 +3211,11 @@
             }
 
             // For unarchive, remove row from archived view (or fallback to reload if row cannot be removed safely)
+<<<<<<< HEAD
+            if (statusSelect && statusSelect.value === 'DIARKIB') {
+=======
             if (statusSelect && statusSelect.value === 'ARCHIVED') {
+>>>>>>> origin/SPPPA
                 row.remove();
                 var remainingRows = toolbarForm ? document.querySelectorAll('tbody tr').length : 0;
                 if (remainingRows === 0) {
@@ -1607,6 +3250,26 @@
             }
         }
 
+<<<<<<< HEAD
+        function showSentPopup() {
+            if (!sentPopup) {
+                alert('Berjaya Dihantar');
+                return;
+            }
+            sentPopup.classList.add('show');
+            sentPopup.setAttribute('aria-hidden', 'false');
+        }
+
+        function hideSentPopup() {
+            if (!sentPopup) {
+                return;
+            }
+            sentPopup.classList.remove('show');
+            sentPopup.setAttribute('aria-hidden', 'true');
+        }
+
+=======
+>>>>>>> origin/SPPPA
         function getValue(payload, key) {
             if (!payload || typeof payload !== 'object') {
                 return '';
@@ -1679,6 +3342,10 @@
 
         function buildRespondentSection(payload) {
             return createSection('Bahagian A: Maklumat Responden', [
+<<<<<<< HEAD
+                { label: 'Borang Permohonan Dirujuk', value: getValue(payload, 'f_application_ref') },
+=======
+>>>>>>> origin/SPPPA
                 { label: 'Nama Penuh', value: getValue(payload, 'f_respondent_name') },
                 { label: 'Cawangan / Jabatan Air Daerah', value: getValue(payload, 'f_respondent_branch') },
                 { label: 'Jawatan Hakiki & Gred', value: getValue(payload, 'f_respondent_position_grade') },
@@ -1888,6 +3555,23 @@
             });
         }
 
+<<<<<<< HEAD
+        if (sentPopupOkBtn) {
+            sentPopupOkBtn.addEventListener('click', function() {
+                hideSentPopup();
+            });
+        }
+
+        if (sentPopup) {
+            sentPopup.addEventListener('click', function(event) {
+                if (event.target === sentPopup) {
+                    hideSentPopup();
+                }
+            });
+        }
+
+=======
+>>>>>>> origin/SPPPA
         kppViewButtons.forEach(function(button) {
             button.addEventListener('click', function() {
                 openKppSubmissionModal(button);
@@ -1926,6 +3610,90 @@
             });
         }
 
+<<<<<<< HEAD
+        if (latestArchiveBtn) {
+            latestArchiveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                var selectedRows = appRowChecks.filter(function(row) {
+                    return row && row.checked;
+                });
+
+                if (selectedRows.length === 0) { return; }
+
+                var mode = resolveLatestArchiveMode();
+                var archivableRows = selectedRows.filter(function(row) {
+                    if (mode === 'unarchive') {
+                        return row.getAttribute('data-is-archived') === '1';
+                    }
+                    return row.getAttribute('data-can-archive') === '1' && row.getAttribute('data-is-archived') !== '1';
+                });
+
+                if (archivableRows.length === 0) { return; }
+
+                latestArchiveBtn.disabled = true;
+                var previousLabel = latestArchiveBtn.title;
+                latestArchiveBtn.title = mode === 'unarchive' ? 'Mengeluarkan dari arkib...' : 'Mengarkibkan...';
+
+                Promise.all(archivableRows.map(function(row) {
+                    return doArchiveRequest(
+                        row.value || '',
+                        mode === 'unarchive' ? 'unarchive' : 'archive',
+                        '${csrf_token}',
+                        contextPath
+                    );
+                }))
+                    .then(function() {
+                        window.location.reload();
+                    })
+                    .catch(function() {})
+                    .finally(function() {
+                        latestArchiveBtn.disabled = false;
+                        latestArchiveBtn.title = previousLabel;
+                        updateLatestArchiveButtonUi();
+                    });
+            });
+        }
+
+        if (statusSelect) {
+            statusSelect.addEventListener('change', function() {
+                if (toolbarForm) {
+                    toolbarForm.submit();
+                }
+            });
+            statusSelect.addEventListener('change', updateLatestArchiveButtonUi);
+        }
+
+        appRowChecks.forEach(function(row) {
+            row.addEventListener('change', updateLatestArchiveButtonUi);
+        });
+
+        updateLatestArchiveButtonUi();
+
+        if (kppRecipientPickerBtn && kppRecipientPicker) {
+            kppRecipientPickerBtn.addEventListener('click', function() {
+                var isOpen = kppRecipientPicker.classList.contains('open');
+                if (isOpen) {
+                    kppRecipientPicker.classList.remove('open');
+                } else {
+                    kppRecipientPicker.classList.add('open');
+                }
+            });
+
+            document.addEventListener('click', function(event) {
+                if (kppRecipientPicker && !kppRecipientPicker.contains(event.target)) {
+                    kppRecipientPicker.classList.remove('open');
+                }
+            });
+        }
+
+        kppRecipientChecks.forEach(function(input) {
+            input.addEventListener('change', function() {
+                updateKppPickerSummary();
+                updateKppDraft();
+            });
+        });
+=======
         if (quickExportButton) {
             quickExportButton.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1938,6 +3706,7 @@
                 updateKppDraft();
             });
         }
+>>>>>>> origin/SPPPA
 
         if (kppActionType) {
             kppActionType.addEventListener('change', function() {
@@ -1945,6 +3714,61 @@
             });
         }
 
+<<<<<<< HEAD
+        if (kppApplicationRef) {
+            kppApplicationRef.addEventListener('change', function() {
+                updateKppDraft();
+            });
+        }
+
+        if (kppApplicationSearch) {
+            kppApplicationSearch.addEventListener('input', function() {
+                syncKppApplicationOptions(kppApplicationSearch.value || '');
+            });
+        }
+
+        updateKppPickerSummary();
+        if (kppApplicationRef) {
+            Array.prototype.slice.call(kppApplicationRef.querySelectorAll('option')).forEach(function(option) {
+                if (option.value) {
+                    option.setAttribute('data-kpp-app-option', '1');
+                }
+            });
+        }
+        syncKppApplicationOptions(kppApplicationSearch ? (kppApplicationSearch.value || '') : '');
+        updateKppDraft();
+        renderKppSubmissionStatuses();
+
+        if (kppEmailSendBtn) {
+            kppEmailSendBtn.addEventListener('click', function() {
+                var selectedRecipients = getSelectedKppRecipients();
+                var actionType = kppActionType ? (kppActionType.value || 'KSPP') : 'KSPP';
+                var applicationRef = kppApplicationRef ? (kppApplicationRef.value || '') : '';
+                var applicationLabel = getSelectedKppApplicationLabel();
+                var subjectTemplate = kppEmailSubject ? String(kppEmailSubject.value || '').trim() : '';
+                var bodyTemplate = kppEmailBody ? String(kppEmailBody.value || '').trim() : '';
+                var preparedEmailRequests = [];
+
+                if (selectedRecipients.length === 0) {
+                    alert('Sila pilih sekurang-kurangnya satu KPP dahulu.');
+                    return;
+                }
+
+                if (!applicationRef) {
+                    alert('Sila pilih Borang Permohonan yang hendak diambil tindakan.');
+                    return;
+                }
+
+                if (!subjectTemplate) {
+                    alert('Sila isi Subjek Email dahulu.');
+                    return;
+                }
+
+                if (!bodyTemplate) {
+                    alert('Sila isi kandungan Isi Email dahulu.');
+                    return;
+                }
+=======
         updateKppDraft();
 
         if (kppEmailSendBtn) {
@@ -1960,11 +3784,86 @@
                 var kppName = kppRecipientName && kppRecipientName.value && kppRecipientName.value.trim()
                     ? kppRecipientName.value.trim()
                     : 'tuan/puan';
+>>>>>>> origin/SPPPA
 
                 var previousLabel = kppEmailSendBtn.textContent;
                 kppEmailSendBtn.disabled = true;
                 kppEmailSendBtn.textContent = 'Menjana Pautan...';
 
+<<<<<<< HEAD
+                Promise.all(selectedRecipients.map(function(recipient) {
+                    return generateKppGuestLink(
+                        recipient.email,
+                        actionType,
+                        applicationRef,
+                        recipient.name,
+                        recipient.title
+                    ).then(function(guestLink) {
+                        return {
+                            recipient: recipient,
+                            link: guestLink
+                        };
+                    });
+                }))
+                    .then(function(results) {
+                        var firstDraft = null;
+                        var emailRequests = results.map(function(item) {
+                            var editableDraft = buildEditableKppEmailDraft(
+                                subjectTemplate,
+                                bodyTemplate,
+                                item.recipient,
+                                item.link,
+                                actionType,
+                                applicationLabel
+                            );
+                            var subject = editableDraft.subject;
+                            var body = editableDraft.body;
+
+                            if (!firstDraft) {
+                                firstDraft = {
+                                    subject: subject,
+                                    body: body
+                                };
+                            }
+
+                            return {
+                                to: item.recipient.email,
+                                subject: subject,
+                                body: body,
+                                actionType: actionType,
+                                applicationRef: applicationRef
+                            };
+                        });
+                        preparedEmailRequests = emailRequests;
+
+                        if (firstDraft && kppEmailSubject) {
+                            kppEmailSubject.value = firstDraft.subject;
+                        }
+                        if (firstDraft && kppEmailBody) {
+                            kppEmailBody.value = firstDraft.body;
+                        }
+
+                        kppEmailSendBtn.textContent = 'Menghantar Email...';
+                        return sendKppEmails(emailRequests);
+                    })
+                    .then(function(result) {
+                        showSentPopup();
+                    })
+                    .catch(function(error) {
+                        var messageText = error && error.message ? String(error.message) : '';
+                        var normalizedMessage = messageText.toLowerCase();
+                        var isSmtpNotConfigured = normalizedMessage.indexOf('smtp belum dikonfigurasi') >= 0;
+                        var isAllSendFailed = normalizedMessage.indexOf('semua email kpp gagal dihantar') >= 0;
+                        if (isSmtpNotConfigured) {
+                            alert('SMTP belum dikonfigurasi dengan betul. Sila semak tetapan smtp di web.xml dan cuba semula.');
+                            return;
+                        }
+                        if (isAllSendFailed) {
+                            alert(messageText || 'Semua email KPP gagal dihantar.');
+                            return;
+                        }
+                        alert('Gagal menghantar email KPP. ' + (error && error.message ? error.message : ''));
+=======
                 generateKppGuestLink(to, actionType)
                     .then(function(guestLink) {
                         var subject = buildKppSubject(actionType);
@@ -1984,6 +3883,7 @@
                     })
                     .catch(function(error) {
                         alert('Gagal jana pautan khas. Sila cuba lagi. ' + (error && error.message ? error.message : ''));
+>>>>>>> origin/SPPPA
                     })
                     .finally(function() {
                         kppEmailSendBtn.disabled = false;
@@ -1993,13 +3893,22 @@
         }
     })();
 
+<<<<<<< HEAD
+    function doArchiveRequest(appId, actionValue, csrfToken, ctxPath) {
+=======
     function doArchive(appId, actionValue, confirmText, csrfToken, ctxPath) {
         if (!window.confirm(confirmText)) { return; }
+>>>>>>> origin/SPPPA
         var body = 'id=' + encodeURIComponent(appId) +
                    '&action=' + encodeURIComponent(actionValue) +
                    '&ajax=1' +
                    '&_csrf=' + encodeURIComponent(csrfToken);
+<<<<<<< HEAD
+
+        return fetch(ctxPath + '/admin/application', {
+=======
         fetch(ctxPath + '/admin/application', {
+>>>>>>> origin/SPPPA
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -2010,6 +3919,64 @@
             body: body
         }).then(function(resp) {
             if (resp.ok) {
+<<<<<<< HEAD
+                return;
+            }
+            return resp.text().then(function(t) {
+                throw new Error(resp.status + ' ' + t.substring(0, 200));
+            });
+        });
+    }
+
+    function doArchive(appId, actionValue, confirmText, csrfToken, ctxPath) {
+        if (!window.confirm(confirmText)) { return; }
+        doArchiveRequest(appId, actionValue, csrfToken, ctxPath).then(function() {
+            window.location.reload();
+        }).catch(function(err) {
+            alert('Ralat rangkaian: ' + err);
+        });
+    }
+</script>
+<script>
+    (function () {
+        var maintenanceActionForm = document.getElementById('maintenanceActionForm');
+        var maintenanceActionBtn = document.getElementById('maintenanceActionBtn');
+        var maintenancePopup = document.getElementById('maintenancePopup');
+        var maintenancePopupText = document.getElementById('maintenancePopupText');
+        var maintenancePopupCancelBtn = document.getElementById('maintenancePopupCancelBtn');
+        var maintenancePopupConfirmBtn = document.getElementById('maintenancePopupConfirmBtn');
+
+        if (!maintenanceActionForm || !maintenanceActionBtn || !maintenancePopup || !maintenancePopupText
+            || !maintenancePopupCancelBtn || !maintenancePopupConfirmBtn) {
+            return;
+        }
+
+        function closeMaintenancePopup() {
+            maintenancePopup.classList.remove('show');
+            maintenancePopup.setAttribute('aria-hidden', 'true');
+        }
+
+        maintenanceActionBtn.addEventListener('click', function () {
+            var confirmText = maintenanceActionBtn.getAttribute('data-maintenance-confirm') || 'Teruskan tindakan penyelenggaraan?';
+            maintenancePopupText.textContent = confirmText;
+            maintenancePopup.classList.add('show');
+            maintenancePopup.setAttribute('aria-hidden', 'false');
+        });
+
+        maintenancePopupCancelBtn.addEventListener('click', closeMaintenancePopup);
+        maintenancePopup.addEventListener('click', function (event) {
+            if (event.target === maintenancePopup) {
+                closeMaintenancePopup();
+            }
+        });
+
+        maintenancePopupConfirmBtn.addEventListener('click', function () {
+            closeMaintenancePopup();
+            maintenanceActionForm.submit();
+        });
+    })();
+</script>
+=======
                 window.location.reload();
             } else {
                 resp.text().then(function(t) { alert('Gagal: ' + resp.status + ' ' + t.substring(0, 200)); });
@@ -2017,5 +3984,7 @@
         }).catch(function(err) { alert('Ralat rangkaian: ' + err); });
     }
 </script>
+>>>>>>> origin/SPPPA
 </body>
 </html>
+

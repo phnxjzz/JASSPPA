@@ -33,10 +33,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Perakuan Pendaftaran - JANS</title>
     <style>
+<<<<<<< HEAD
+* { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: inherit; background: #e8e8e8; color: #111; }
+=======
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, Helvetica, sans-serif; background: #e8e8e8; color: #111; }
+>>>>>>> origin/SPPPA
 
         /* ── screen toolbar ── */
         .screen-bar {
@@ -53,7 +59,11 @@
         }
         .btn {
             border: none; border-radius: 6px; padding: 10px 24px;
+<<<<<<< HEAD
+            font-size: 14px; cursor: pointer; font-family: inherit;
+=======
             font-size: 14px; cursor: pointer; font-family: Arial, sans-serif;
+>>>>>>> origin/SPPPA
             text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
         }
         .btn-print { background: #1b2a52; color: #fff; }
@@ -99,6 +109,16 @@
         .field-table .val {
             border-bottom: 1px solid #111;
             padding-bottom: 3px;
+<<<<<<< HEAD
+        }
+        .field-table .val-multiline {
+            white-space: pre-line;
+            vertical-align: top;
+            line-height: 1.25;
+            padding-top: 4px;
+            padding-bottom: 6px;
+=======
+>>>>>>> origin/SPPPA
         }
 
         /* ── product table ── */
@@ -136,7 +156,13 @@
     String productName  = String.valueOf(certApp.get("product_name"));
     String productCat   = String.valueOf(certApp.get("product_category"));
     String stdName      = certApp.get("standard_name")       != null ? String.valueOf(certApp.get("standard_name"))       : "";
+<<<<<<< HEAD
+    String classSizeModel = certApp.get("certificate_class_size_model") != null ? String.valueOf(certApp.get("certificate_class_size_model")) : "";
+    String brandName      = certApp.get("certificate_brand") != null ? String.valueOf(certApp.get("certificate_brand")) : "";
+    String productBrief   = certApp.get("certificate_product_brief") != null ? String.valueOf(certApp.get("certificate_product_brief")) : "";
+=======
     String prodDesc     = certApp.get("product_description") != null ? String.valueOf(certApp.get("product_description")) : "";
+>>>>>>> origin/SPPPA
 
     DateTimeFormatter fmtMs = DateTimeFormatter.ofPattern("dd MMMM yyyy", new java.util.Locale("ms", "MY"));
     java.sql.Date issuedAtSql   = (java.sql.Date) certApp.get("issued_at");
@@ -148,10 +174,14 @@
 %>
 
 <div class="screen-bar">
+<<<<<<< HEAD
+    <span style="font-weight:bold;">Perakuan Pendaftaran Produk Air Jabatan Air Sabah</span>
+=======
     <span style="font-weight:bold;">&#128196; Perakuan Pendaftaran JANS</span>
+>>>>>>> origin/SPPPA
     <div>
-        <a href="javascript:history.back()">&#8592; Kembali</a>
-        <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a>
+        <a href="#" onclick="goBackOrDashboard(event)">&#8592; Kembali</a>
+        <a href="${pageContext.request.contextPath}/dashboard" title="Dashboard" aria-label="Dashboard"><img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"></a>
     </div>
 </div>
 
@@ -208,12 +238,20 @@
         <tr>
             <td class="lbl">Kelas/Saiz/Model</td>
             <td class="colon">:</td>
+<<<<<<< HEAD
+            <td class="val"><%= classSizeModel %></td>
+=======
             <td class="val">&nbsp;</td>
+>>>>>>> origin/SPPPA
         </tr>
         <tr>
             <td class="lbl">Jenama</td>
             <td class="colon">:</td>
+<<<<<<< HEAD
+            <td class="val"><%= brandName %></td>
+=======
             <td class="val">&nbsp;</td>
+>>>>>>> origin/SPPPA
         </tr>
         <tr>
             <td class="lbl">Piawaian</td>
@@ -232,8 +270,13 @@
         </tr>
         <tr>
             <td class="lbl">Perihal Produk</td>
+<<<<<<< HEAD
+            <td class="colon">:</td>    
+            <td class="val val-multiline"><%= productBrief %></td>
+=======
             <td class="colon">:</td>
             <td class="val"><%= prodDesc %></td>
+>>>>>>> origin/SPPPA
         </tr>
     </table>
 
@@ -264,5 +307,19 @@
 </div><!-- /cert-page -->
 </div><!-- /page-wrap -->
 
+<<<<<<< HEAD
+<script>
+    function goBackOrDashboard(event) {
+        event.preventDefault();
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        window.location.href = '<%= request.getContextPath() %>/dashboard';
+    }
+</script>
+
+=======
+>>>>>>> origin/SPPPA
 </body>
 </html>

@@ -1,4 +1,64 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%!
+    private String statusCssClass(String status) {
+        if (status == null) {
+            return "";
+        }
+        return status.trim().toLowerCase(java.util.Locale.ROOT).replace(' ', '_');
+    }
+
+    private String displayStatusLabel(String status) {
+        if (status == null) {
+            return "";
+        }
+        String normalized = status.trim().toUpperCase(java.util.Locale.ROOT);
+        if ("APPROVED".equals(normalized) || "DILULUSKAN".equals(normalized)) {
+            return "DILULUSKAN";
+        }
+        if ("REJECTED".equals(normalized) || "DITOLAK".equals(normalized)) {
+            return "DITOLAK";
+        }
+        if ("SUSPENDED".equals(normalized) || "DIGANTUNG".equals(normalized)) {
+            return "DIGANTUNG";
+        }
+        if ("DRAFT".equals(normalized) || "DRAF".equals(normalized)) {
+            return "NEW";
+        }
+        if ("ARCHIVED".equals(normalized) || "DIARKIB".equals(normalized)) {
+            return "DIARKIB";
+        }
+        if ("UNDER_REVIEW".equals(normalized) || "DALAM_SEMAKAN".equals(normalized) || "DALAM SEMAKAN".equals(normalized)) {
+            return "DALAM SEMAKAN";
+        }
+        if ("IN_PROGRESS".equals(normalized) || "DALAM_PROSES".equals(normalized) || "DALAM PROSES".equals(normalized)) {
+            return "DALAM PROSES";
+        }
+        return status;
+    }
+
+    private String formatCertificateNumber(Object value) {
+        if (value == null) {
+            return "-";
+        }
+        String raw = String.valueOf(value).trim();
+        if (raw.isEmpty() || "null".equalsIgnoreCase(raw) || "-".equals(raw)) {
+            return "-";
+        }
+
+        String compact = raw.replaceAll("\\s+", "").toUpperCase(java.util.Locale.ROOT);
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("^JANS([A-Z0-9]+)$", java.util.regex.Pattern.CASE_INSENSITIVE)
+                .matcher(compact);
+        if (matcher.find()) {
+            String token = matcher.group(1).toUpperCase(java.util.Locale.ROOT);
+            if (token.matches("\\d+") && token.length() < 6) {
+                token = String.format("%06d", Integer.parseInt(token));
+            }
+            return "JANS" + token;
+        }
+        return compact;
+    }
+%>
 <%
     response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     response.setHeader("Pragma", "no-cache");
@@ -9,9 +69,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Pemohon - SPPA</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
+    <title>Dashboard Pemohon - SPPPA</title>
     <style>
-        :root {
+:root {
             --brand-blue: #2A9D8F;
             --brand-navy: #0F6BAE;
             --brand-green: #6DBE45;
@@ -26,7 +87,7 @@
         * { box-sizing: border-box; }
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: inherit;
             color: var(--text);
             background:
                 linear-gradient(rgba(247, 252, 255, 0.76), rgba(238, 246, 251, 0.82)),
@@ -216,7 +277,7 @@
             transform: translateY(-8px);
             box-shadow: 0 28px 50px rgba(7, 62, 92, 0.36);
         }
-        .feature-card h4 { margin: 0 0 8px; font-size: 28px; line-height: 1.15; letter-spacing: 0.01em; }
+        .feature-card h4 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; letter-spacing: 0.01em; }
         .feature-card p { margin: 0; max-width: 650px; font-size: 15px; line-height: 1.62; color: rgba(255,255,255,0.92); }
         .feature-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
         .feature-badge {
@@ -353,6 +414,50 @@
         }
         .app-table td { padding: 9px 10px; border-bottom: 1px solid #e5f0f8; vertical-align: top; }
         .app-table tr:last-child td { border-bottom: none; }
+        .cert-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #0d6fa7;
+            background: #0d6fa7;
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .cert-action-btn:hover { background: #0b5f90; border-color: #0b5f90; }
+        .cert-action-btn:disabled {
+            background: #cbd5e1;
+            border-color: #cbd5e1;
+            color: #475569;
+            cursor: not-allowed;
+        }
+        .certificate-view-panel {
+            width: min(1100px, 100%);
+            height: min(88vh, 900px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 0;
+        }
+        .certificate-view-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid #dbe7f1;
+            background: #f7fbff;
+        }
+        .certificate-view-head h4 { margin: 0; font-size: 17px; color: #0d4b71; }
+        .certificate-frame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #ffffff;
+            flex: 1;
+        }
         .status-badge {
             display: inline-block;
             padding: 3px 9px;
@@ -361,10 +466,27 @@
             font-weight: 700;
             text-transform: uppercase;
         }
-        .status-badge.PENDING { background: #fff3cd; color: #856404; }
-        .status-badge.APPROVED { background: #d1e7dd; color: #0a5a3c; }
-        .status-badge.REJECTED { background: #f8d7da; color: #842029; }
-        .status-badge.UNDER_REVIEW { background: #cfe2ff; color: #084298; }
+        .status-badge.pending { background: #fff3cd; color: #856404; }
+        .status-badge.approved { background: #d1e7dd; color: #0a5a3c; }
+        .status-badge.rejected { background: #f8d7da; color: #842029; }
+        .status-badge.under_review { background: #cfe2ff; color: #084298; }
+        .status-badge.in_progress { background: #fde68a; color: #92400e; }
+        .status-badge.new { background: #dbeafe; color: #1e40af; }
+        .status-badge.draft { background: #e5e7eb; color: #374151; }
+        .important-alert {
+            margin-bottom: 16px;
+            border: 1px solid #fbbf24;
+            background: #fff7d6;
+            color: #7c2d12;
+            border-radius: 12px;
+            padding: 12px 14px;
+            box-shadow: 0 8px 18px rgba(124, 45, 18, 0.08);
+        }
+        .important-alert strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
         .history-group { margin-bottom: 16px; border: 1px solid #d6e6f1; border-radius: 10px; overflow: hidden; }
         .history-group-head { background: #eef6fc; padding: 8px 12px; font-size: 13px; font-weight: 700; color: #0d4b71; }
         .history-row { display: flex; gap: 10px; padding: 8px 12px; border-top: 1px solid #e5f0f8; font-size: 13px; align-items: flex-start; }
@@ -389,6 +511,18 @@
             .arrow-left { left: calc(50% - 56px); }
             .arrow-right { right: calc(50% - 56px); }
             .page-indicator { margin-top: 62px; }
+            .app-floating-actions {
+                right: 10px;
+                bottom: 12px;
+            }
+            .app-floating-link {
+                width: 50px;
+                height: 50px;
+            }
+            .app-floating-link img {
+                width: 22px;
+                height: 22px;
+            }
         }
         .success-popup {
             position: fixed;
@@ -408,7 +542,7 @@
             background: #ffffff;
             color: #166534;
             font-size: 16px;
-            line-height: 1.35;
+            line-height: 1.6;
             box-shadow: 0 16px 32px rgba(10, 64, 38, 0.2);
             transform: translate(-50%, -58%) scale(0.97);
             opacity: 0;
@@ -447,12 +581,96 @@
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.06); }
         }
-        .jans-contact-section { background: linear-gradient(135deg,rgba(240,248,255,0.5) 0%,rgba(220,240,255,0.35) 100%); border: 1px solid rgba(42,157,143,0.24); border-radius: 16px; padding: 24px 28px; margin-top: 28px; }
-        .jans-contact-section h3 { color: #0F6BAE; font-size: 16px; font-weight: 700; margin: 0 0 14px; letter-spacing: 0.3px; }
-        .contact-line { display: flex; align-items: flex-start; gap: 10px; margin: 8px 0; font-size: 14px; color: #334155; }
-        .contact-icon { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
-        .contact-address-link { color: #0F6BAE; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+        .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
+        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; display: inline-flex; align-items: center; gap: 8px; }
+        .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; font-size: 13px; color: #4e6a7c; line-height: 1.45; }
+        .contact-icon { width: 13px; height: 13px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
+        .contact-address-link { color: #0f6bae; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+        .jans-contact-section .contact-line span { line-height: 1.45; }
+        .contact-line-hanging { margin-left: 21px; }
         .contact-address-link:hover { color: #0d4f77; }
+
+        .presentation-popup {
+            position: fixed;
+            inset: 0;
+            z-index: 1400;
+            background: rgba(2, 6, 23, 0.62);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .presentation-popup.show { display: flex; }
+        .presentation-popup-card {
+            width: min(760px, 100%);
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #cfe2f1;
+            box-shadow: 0 24px 58px rgba(15, 23, 42, 0.34);
+            padding: 18px;
+        }
+        .presentation-popup-card h3 {
+            margin: 0 0 10px;
+            color: #0f6bae;
+            font-size: 20px;
+        }
+        .presentation-popup-message {
+            color: #334155;
+            line-height: 1.6;
+            font-size: 14px;
+            white-space: pre-wrap;
+            margin-bottom: 14px;
+        }
+        .presentation-popup-schedule {
+            margin: 8px 0 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .presentation-popup-schedule div {
+            color: #15803d;
+            font-weight: 700;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .presentation-popup-actions { display: flex; justify-content: flex-end; }
+
+        .app-floating-actions {
+            position: fixed;
+            right: 16px;
+            bottom: 18px;
+            z-index: 920;
+            display: block;
+        }
+        .app-floating-link {
+            width: 56px;
+            height: 56px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #d8e7f2;
+            background: #ffffff;
+            color: #0f5f96;
+            text-decoration: none;
+            box-shadow: 0 14px 28px rgba(6, 52, 79, 0.22);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .app-floating-link img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            filter: drop-shadow(0 1px 2px rgba(15, 95, 150, 0.22));
+        }
+        .app-floating-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 32px rgba(6, 52, 79, 0.28);
+        }
+        .app-floating-link span {
+            display: none;
+        }
 
         
     </style>
@@ -468,13 +686,55 @@
             unreadCount = 0;
         }
     }
+
+        java.util.Map<String, Object> presentationPopup =
+            (java.util.Map<String, Object>) request.getAttribute("presentation_popup");
+        String presentationPopupMessage = presentationPopup == null || presentationPopup.get("message") == null
+            ? null
+            : String.valueOf(presentationPopup.get("message"));
+        String presentationMainText = presentationPopupMessage;
+        java.util.List<String> presentationScheduleLines = new java.util.ArrayList<>();
+        if (presentationPopupMessage != null) {
+            String[] popupLines = presentationPopupMessage.split("\\r?\\n");
+            StringBuilder mainBuilder = new StringBuilder();
+            for (String rawLine : popupLines) {
+                String line = rawLine == null ? "" : rawLine.trim();
+                if (line.isEmpty()) {
+                    continue;
+                }
+                String upper = line.toUpperCase(java.util.Locale.ROOT);
+                if (upper.startsWith("TARIKH:") || upper.startsWith("MASA:") || upper.startsWith("TEMPAT:")) {
+                    presentationScheduleLines.add(line);
+                } else if (upper.startsWith("NOTA PENTADBIR:")) {
+                    continue;
+                } else {
+                    if (mainBuilder.length() > 0) {
+                        mainBuilder.append(' ');
+                    }
+                    mainBuilder.append(line);
+                }
+            }
+            presentationMainText = mainBuilder.toString();
+        }
+
+    java.util.List<java.util.Map<String, Object>> userApplications =
+            (java.util.List<java.util.Map<String, Object>>) request.getAttribute("applications");
+    int inProgressCount = 0;
+    if (userApplications != null) {
+        for (java.util.Map<String, Object> app : userApplications) {
+            String appStatus = app.get("status") == null ? "" : String.valueOf(app.get("status"));
+            if ("IN_PROGRESS".equals(appStatus)) {
+                inProgressCount++;
+            }
+        }
+    }
 %>
 <div class="navbar">
     <div class="brand">
         <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo JANS">
         <div>
             <h1>Dashboard Pemohon</h1>
-            <p>Sistem Pendaftaran Produk Air - Jabatan Air Negeri Sabah</p>
+            <p>Sistem Pendaftaran Pembekal dan Produk Air - Jabatan Air Negeri Sabah</p>
         </div>
     </div>
     <div class="top-actions">
@@ -495,6 +755,16 @@
 </div>
 
 <div class="container">
+    <% if (inProgressCount > 0) { %>
+    <div class="important-alert" role="alert" aria-live="polite">
+        <strong>&#9888; Perhatian: Tindakan Susulan Permohonan</strong>
+        Sila bawa semua dokumen sokongan asal/lengkap dan hadir untuk sesi pembentangan produk yang ingin didaftarkan mengikut arahan Jabatan Air Negeri Sabah.
+        <% if (inProgressCount > 1) { %>
+        <div style="margin-top:4px;">Jumlah permohonan dalam status ini: <strong><%= inProgressCount %></strong></div>
+        <% } %>
+    </div>
+    <% } %>
+
     <div class="stat-grid">
         <div class="stat-card">
             <h3>Jumlah Permohonan</h3>
@@ -574,14 +844,16 @@
 
                 <div class="feature-page">
                     <div class="feature-card" style="animation-delay:1.2s; --card-bg: url('${pageContext.request.contextPath}/assets/images/user.webp')">
-                        <h4>Profil Pemohon</h4>
-                        <p>Kemaskini butiran akaun, maklumat peribadi, serta semak status profil semasa.</p>
+                        <h4>Profil &amp; Sijil</h4>
+                        <p>Kemaskini butiran akaun, maklumat peribadi, dan semak semua sijil pendaftaran produk air yang telah diluluskan.</p>
                         <div class="feature-badges">
                             <span class="feature-badge">Akaun: <%= request.getAttribute("account_status") == null ? "ACTIVE" : request.getAttribute("account_status") %></span>
                             <span class="feature-badge">Pengguna: <%= request.getAttribute("username") == null ? session.getAttribute("username") : request.getAttribute("username") %></span>
+                            <span class="feature-badge">Sijil: <%= request.getAttribute("approved_certificate_count") == null ? "0" : request.getAttribute("approved_certificate_count") %></span>
                         </div>
                         <div class="feature-actions">
                             <a class="cta cta-primary" href="${pageContext.request.contextPath}/profile">Kemaskini Profil</a>
+                            <a class="cta cta-secondary" href="#" id="openCertificateListBtn">Lihat Sijil</a>
                         </div>
                     </div>
                 </div>
@@ -605,9 +877,7 @@
             <button class="notif-close" type="button" id="appListClose" aria-label="Tutup">x</button>
         </div>
         <%
-            java.util.List<java.util.Map<String, Object>> apps =
-                (java.util.List<java.util.Map<String, Object>>) request.getAttribute("applications");
-            if (apps == null || apps.isEmpty()) {
+            if (userApplications == null || userApplications.isEmpty()) {
         %>
             <div class="notif-item">Tiada permohonan ditemui.</div>
         <% } else { %>
@@ -623,21 +893,99 @@
                     </tr>
                 </thead>
                 <tbody>
-                <%  for (java.util.Map<String, Object> app : apps) {
+                <%  for (java.util.Map<String, Object> app : userApplications) {
                         String appStatus = app.get("status") == null ? "" : String.valueOf(app.get("status"));
                 %>
                     <tr>
                         <td><%= String.format("PPP%03d", ((Number)app.get("id")).intValue()) %></td>
                         <td><%= app.get("product_name") == null ? "-" : app.get("product_name") %></td>
                         <td><%= app.get("company_name") == null ? "-" : app.get("company_name") %></td>
-                        <td><span class="status-badge <%= appStatus %>"><%= appStatus %></span></td>
+                        <td><span class="status-badge <%= statusCssClass(appStatus) %>"><%= displayStatusLabel(appStatus) %></span></td>
                         <td><%= app.get("submitted_at") == null ? "-" : app.get("submitted_at") %></td>
-                        <td><a href="${pageContext.request.contextPath}/applications/<%= app.get("id") %>" style="color:#0d6fa7;font-weight:700;text-decoration:none;">Lihat</a></td>
+                        <td>
+                            <a href="${pageContext.request.contextPath}/applications/<%= app.get("id") %>" style="color:#0d6fa7;font-weight:700;text-decoration:none;">Lihat</a>
+                            <% if ("APPROVED".equalsIgnoreCase(appStatus)) { %>
+                                <span style="color:#8aa0b2; margin: 0 6px;">|</span>
+                                <a href="${pageContext.request.contextPath}/applications/new?renewFrom=<%= app.get("id") %>" style="color:#15803d;font-weight:700;text-decoration:none;">Pembaharuan</a>
+                            <% } %>
+                        </td>
                     </tr>
                 <%  } %>
                 </tbody>
             </table>
         <% } %>
+    </div>
+</div>
+
+<div class="app-modal" id="certificateListModal" aria-hidden="true">
+    <div class="app-panel" role="dialog" aria-modal="true" aria-label="Senarai Sijil">
+        <div class="app-panel-head">
+            <h4>Senarai Sijil Produk Diluluskan</h4>
+            <button class="notif-close" type="button" id="certificateListClose" aria-label="Tutup">x</button>
+        </div>
+        <%
+            boolean hasApprovedCertificates = false;
+            if (userApplications != null) {
+                for (java.util.Map<String, Object> app : userApplications) {
+                    String appStatus = app.get("status") == null ? "" : String.valueOf(app.get("status"));
+                    if ("APPROVED".equalsIgnoreCase(appStatus)) {
+                        hasApprovedCertificates = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasApprovedCertificates) {
+        %>
+            <div class="notif-item">Tiada sijil untuk dipaparkan kerana tiada permohonan diluluskan.</div>
+        <% } else { %>
+            <table class="app-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>No Sijil</th>
+                        <th>Nama Produk</th>
+                        <th>Syarikat</th>
+                        <th>Status</th>
+                        <th>Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <%  for (java.util.Map<String, Object> app : userApplications) {
+                        String appStatus = app.get("status") == null ? "" : String.valueOf(app.get("status"));
+                        String certNo = formatCertificateNumber(app.get("certificate_number"));
+                        if (!"APPROVED".equalsIgnoreCase(appStatus)) {
+                            continue;
+                        }
+                %>
+                    <tr>
+                        <td><%= String.format("PPP%03d", ((Number)app.get("id")).intValue()) %></td>
+                        <td><%= certNo %></td>
+                        <td><%= app.get("product_name") == null ? "-" : app.get("product_name") %></td>
+                        <td><%= app.get("company_name") == null ? "-" : app.get("company_name") %></td>
+                        <td><span class="status-badge <%= statusCssClass(appStatus) %>"><%= displayStatusLabel(appStatus) %></span></td>
+                        <td>
+                            <button
+                                type="button"
+                                class="cert-action-btn open-certificate-btn"
+                                data-certificate-url="${pageContext.request.contextPath}/certificate?id=<%= app.get("id") %>">
+                                Lihat
+                            </button>
+                        </td>
+                    </tr>
+                <%  } %>
+                </tbody>
+            </table>
+        <% } %>
+    </div>
+</div>
+
+<div class="app-modal" id="certificateViewModal" aria-hidden="true">
+    <div class="app-panel certificate-view-panel" role="dialog" aria-modal="true" aria-label="Paparan Sijil">
+        <div class="certificate-view-head">
+            <h4>Sijil Pendaftaran Produk Air</h4>
+            <button class="notif-close" type="button" id="certificateViewClose" aria-label="Tutup">x</button>
+        </div>
+        <iframe id="certificateFrame" class="certificate-frame" src="about:blank" title="Paparan Sijil"></iframe>
     </div>
 </div>
 
@@ -662,9 +1010,9 @@
                 <% for (java.util.Map<String, Object> h : entry.getValue()) { %>
                 <div class="history-row">
                     <div style="flex:1">
-                        <span class="status-badge <%= h.get("old_status") == null ? "" : h.get("old_status") %>"><%= h.get("old_status") == null ? "BARU" : h.get("old_status") %></span>
-                        <span class="history-arrow">→</span>
-                        <span class="status-badge <%= h.get("new_status") == null ? "" : h.get("new_status") %>"><%= h.get("new_status") %></span>
+                        <span class="status-badge <%= h.get("old_status") == null ? "" : statusCssClass(String.valueOf(h.get("old_status"))) %>"><%= h.get("old_status") == null ? "BARU" : displayStatusLabel(String.valueOf(h.get("old_status"))) %></span>
+                        <span class="history-arrow">?</span>
+                        <span class="status-badge <%= h.get("new_status") == null ? "" : statusCssClass(String.valueOf(h.get("new_status"))) %>"><%= displayStatusLabel(String.valueOf(h.get("new_status"))) %></span>
                     </div>
                     <div style="flex:1;color:var(--muted);font-size:12px;">
                         <%= h.get("changed_by_name") == null ? "Sistem" : h.get("changed_by_name") %> &bull;
@@ -682,25 +1030,40 @@
 
 <div class="container" style="padding-top:0;">
     <div class="jans-contact-section">
-        <h3>&#128222; Hubungi JANS</h3>
-        <p class="contact-line">
-            <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/address.png" alt="Alamat">
-            <a class="contact-address-link" href="https://www.bing.com/maps/directions?FORM=HDRSC6&style=r&rtp=%7Epos.5.981967926025391_116.12310028076172_Kota%2520Kinabalu%252C%2520Sabah%252088825_Kota%2520Kinabalu%252C%2520Sabah%252088825_&cp=5.981892%7E116.123260&lvl=20.8" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT / JABATAN AIR SABAH, Jalan Penampang, 88200 Kota Kinabalu, Sabah</a>
-        </p>
-        <p class="contact-line">
-            <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/phone.png" alt="Telefon">
-            <span>+60-88-232364 (HQ)</span>
-        </p>
-        <p class="contact-line">
-            <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/fax.png" alt="Faks">
-            <span>+60-88-232396</span>
-        </p>
-        <p class="contact-line">
-            <img class="contact-icon" src="${pageContext.request.contextPath}/assets/images/email.png" alt="E-mel">
-            <span>jans.hq@sabah.gov.my</span>
-        </p>
+        <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+</div>
+
+<div class="app-floating-actions" aria-label="Sidebar Cara Guna Sistem">
+    <a class="app-floating-link" href="${pageContext.request.contextPath}/user-portal-guide.html" title="Cara Guna Sistem" aria-label="Cara Guna Sistem" target="_blank" rel="noopener">
+        <img src="${pageContext.request.contextPath}/icon/panduan.png" alt="Cara Guna Sistem">
+        <span>Cara Guna Sistem</span>
+    </a>
+</div>
+
+<% if (presentationPopupMessage != null && !presentationPopupMessage.isBlank()) { %>
+<div class="presentation-popup show" id="presentationPopup" aria-hidden="false">
+    <div class="presentation-popup-card" role="dialog" aria-modal="true" aria-label="MAKLUMAN: TINDAKAN SUSULAN PERMOHONAN">
+        <h3>MAKLUMAN: TINDAKAN SUSULAN PERMOHONAN</h3>
+        <div class="presentation-popup-message"><%= presentationMainText == null ? "" : presentationMainText %></div>
+        <% if (presentationScheduleLines != null && !presentationScheduleLines.isEmpty()) { %>
+        <div class="presentation-popup-schedule">
+            <% for (String scheduleLine : presentationScheduleLines) { %>
+            <div><%= scheduleLine %></div>
+            <% } %>
+        </div>
+        <% } %>
+        <div class="presentation-popup-actions">
+            <button type="button" class="success-ok" id="closePresentationPopup">OK</button>
+        </div>
     </div>
 </div>
+<% } %>
 
 <div class="notif-modal" id="notifModal" aria-hidden="true">
     <div class="notif-panel" role="dialog" aria-modal="true" aria-label="Senarai Pemberitahuan">
@@ -737,6 +1100,17 @@
         var notifShortcut = document.getElementById('notifShortcut');
         var notifModal = document.getElementById('notifModal');
         var notifClose = document.getElementById('notifClose');
+<<<<<<< HEAD
+        var openCertificateListBtn = document.getElementById('openCertificateListBtn');
+        var certificateListModal = document.getElementById('certificateListModal');
+        var certificateListClose = document.getElementById('certificateListClose');
+        var certificateViewModal = document.getElementById('certificateViewModal');
+        var certificateViewClose = document.getElementById('certificateViewClose');
+        var certificateFrame = document.getElementById('certificateFrame');
+        var presentationPopup = document.getElementById('presentationPopup');
+        var closePresentationPopup = document.getElementById('closePresentationPopup');
+=======
+>>>>>>> origin/SPPPA
         var total = pages.length;
         var index = 0;
 
@@ -795,6 +1169,9 @@
         function makeModalHandlers(modalId, closeId, extraBtnId) {
             var modal = document.getElementById(modalId);
             var closeBtn = document.getElementById(closeId);
+            if (!modal) {
+                return function () {};
+            }
             function open(e) { e.preventDefault(); modal.classList.add('active'); modal.setAttribute('aria-hidden', 'false'); }
             function close() { modal.classList.remove('active'); modal.setAttribute('aria-hidden', 'true'); }
             if (extraBtnId) { var btn = document.getElementById(extraBtnId); if (btn) btn.addEventListener('click', open); }
@@ -803,7 +1180,42 @@
             return close;
         }
         var closeAppList = makeModalHandlers('appListModal', 'appListClose', 'openAppListBtn');
+        var closeCertificateList = makeModalHandlers('certificateListModal', 'certificateListClose', 'openCertificateListBtn');
         var closeHistory = makeModalHandlers('historyModal', 'historyClose', 'openHistoryBtn');
+
+        function closeCertificateView() {
+            certificateViewModal.classList.remove('active');
+            certificateViewModal.setAttribute('aria-hidden', 'true');
+            certificateFrame.setAttribute('src', 'about:blank');
+        }
+
+        if (certificateViewClose) {
+            certificateViewClose.addEventListener('click', closeCertificateView);
+        }
+        if (certificateViewModal) {
+            certificateViewModal.addEventListener('click', function (e) {
+                if (e.target === certificateViewModal) {
+                    closeCertificateView();
+                }
+            });
+        }
+
+        if (certificateListModal) {
+            certificateListModal.addEventListener('click', function (e) {
+                var openBtn = e.target.closest('.open-certificate-btn');
+                if (!openBtn) {
+                    return;
+                }
+                e.preventDefault();
+                var certificateUrl = openBtn.getAttribute('data-certificate-url');
+                if (!certificateUrl || !certificateViewModal || !certificateFrame) {
+                    return;
+                }
+                certificateFrame.setAttribute('src', certificateUrl);
+                certificateViewModal.classList.add('active');
+                certificateViewModal.setAttribute('aria-hidden', 'false');
+            });
+        }
 
         notifClose.addEventListener('click', function () {
             notifModal.classList.remove('active');
@@ -817,6 +1229,24 @@
             }
         });
 
+        function closePresentationNotice() {
+            if (!presentationPopup) return;
+            presentationPopup.classList.remove('show');
+            presentationPopup.setAttribute('aria-hidden', 'true');
+        }
+
+        if (closePresentationPopup) {
+            closePresentationPopup.addEventListener('click', closePresentationNotice);
+        }
+
+        if (presentationPopup) {
+            presentationPopup.addEventListener('click', function (e) {
+                if (e.target === presentationPopup) {
+                    closePresentationNotice();
+                }
+            });
+        }
+
         document.addEventListener('keydown', function (e) {
             if (e.key === 'ArrowLeft') {
                 index = (index - 1 + total) % total;
@@ -829,7 +1259,10 @@
             if (e.key === 'Escape') {
                 notifModal.classList.remove('active');
                 notifModal.setAttribute('aria-hidden', 'true');
+                closePresentationNotice();
                 closeAppList();
+                closeCertificateList();
+                closeCertificateView();
                 closeHistory();
             }
         });
@@ -841,3 +1274,7 @@
 </script>
 </body>
 </html>
+
+
+
+

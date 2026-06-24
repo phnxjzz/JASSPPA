@@ -1,12 +1,18 @@
 package com.sistemppa.servlet;
 
 import com.sistemppa.config.DatabaseConfig;
+import com.sistemppa.service.DashboardDataService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -15,17 +21,27 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.mindrot.jbcrypt.BCrypt;
 import com.sistemppa.util.ValidationUtil;
+<<<<<<< HEAD
+import com.sistemppa.util.UserDisplayIdUtil;
+=======
+>>>>>>> origin/SPPPA
 
 public class AdminUserServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(AdminUserServlet.class.getName());
     private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9+()\\-\\s]{8,20}$");
+<<<<<<< HEAD
+    private static final Path KPP_CSV_PATH = Paths.get("P:/ProjectLI/data/Senarai KPP.csv");
+=======
+>>>>>>> origin/SPPPA
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -39,8 +55,15 @@ public class AdminUserServlet extends HttpServlet {
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             ensureUsersPhoneNumberColumn(conn);
+<<<<<<< HEAD
+            ensureUsersRoleSupportsStaff(conn);
+            syncKppContactsFromCsv(conn);
+
+            String sql = "SELECT id, username, email, phone_number, full_name, role, role_seq, status, created_at " +
+=======
 
             String sql = "SELECT id, username, email, phone_number, full_name, role, status, created_at " +
+>>>>>>> origin/SPPPA
                          "FROM users " +
                          (search != null && !search.isEmpty()
                              ? "WHERE username LIKE ? OR email LIKE ? OR full_name LIKE ? "
@@ -63,12 +86,20 @@ public class AdminUserServlet extends HttpServlet {
                         row.put("phone_number", rs.getString("phone_number"));
                         row.put("full_name", rs.getString("full_name"));
                         row.put("role", rs.getString("role"));
+                        row.put("display_id", UserDisplayIdUtil.format(
+                            rs.getInt("id"),
+                            rs.getString("role"),
+                            rs.getObject("role_seq", Integer.class)));
                         row.put("status", rs.getString("status"));
                         row.put("created_at", rs.getTimestamp("created_at"));
                         users.add(row);
                     }
                 }
             }
+
+            request.setAttribute("admin_audit_logs",
+                    DashboardDataService.loadRecentAdminAuditLogs(conn, 20));
+            request.setAttribute("kpp_contacts", DashboardDataService.loadKppContacts(conn));
         } catch (SQLException e) {
             LOGGER.severe("Failed to load users list: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Gagal memuatkan senarai pengguna");
@@ -86,9 +117,27 @@ public class AdminUserServlet extends HttpServlet {
         if (!isAdmin(request, response)) return;
 
         String action = request.getParameter("action");
-        String userIdParam = request.getParameter("userId");
+        if (action == null || action.isBlank()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Permintaan tidak sah");
+            return;
+        }
 
-        if (action == null || userIdParam == null || userIdParam.isBlank()) {
+        HttpSession session = request.getSession(false);
+        Object sessionUserId = session != null ? session.getAttribute("user_id") : null;
+        int currentAdminId = sessionUserId != null ? Integer.parseInt(sessionUserId.toString()) : -1;
+
+        if ("add_kpp_contact".equals(action)) {
+            handleAddKppContact(request, response, currentAdminId);
+            return;
+        }
+
+        if ("delete_kpp_contact".equals(action)) {
+            handleDeleteKppContact(request, response, currentAdminId);
+            return;
+        }
+
+        String userIdParam = request.getParameter("userId");
+        if (userIdParam == null || userIdParam.isBlank()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Permintaan tidak sah");
             return;
         }
@@ -101,16 +150,22 @@ public class AdminUserServlet extends HttpServlet {
             return;
         }
 
-        HttpSession session = request.getSession(false);
-        // Use 'user_id' (consistent with LoginServlet and all other servlets)
-        Object sessionUserId = session != null ? session.getAttribute("user_id") : null;
-        int currentAdminId = sessionUserId != null ? Integer.parseInt(sessionUserId.toString()) : -1;
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            ensureUsersRoleSupportsStaff(conn);
+        } catch (SQLException e) {
+            LOGGER.severe("Failed to ensure users.role supports STAFF: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=db_error");
+            return;
+        }
 
         switch (action) {
             case "delete":
                 handleDelete(request, response, targetUserId, currentAdminId);
                 break;
             case "toggle_status":
+                handleToggleStatus(request, response, targetUserId, currentAdminId);
+                break;
+            case "set_status":
                 handleToggleStatus(request, response, targetUserId, currentAdminId);
                 break;
             case "reset_password":
@@ -130,6 +185,92 @@ public class AdminUserServlet extends HttpServlet {
         }
     }
 
+<<<<<<< HEAD
+    private void handleAddKppContact(HttpServletRequest request, HttpServletResponse response,
+            int currentAdminId) throws IOException {
+        String name = request.getParameter("kpp_name");
+        String branch = request.getParameter("kpp_branch");
+        String email = request.getParameter("kpp_email");
+
+        String normalizedName = name == null ? "" : name.trim();
+        String normalizedBranch = branch == null ? "" : branch.trim();
+        String normalizedEmail = email == null ? "" : email.trim();
+
+        if (normalizedName.isBlank() || normalizedBranch.isBlank() || normalizedEmail.isBlank()) {
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=kpp_invalid");
+            return;
+        }
+
+        if (!ValidationUtil.isValidEmail(normalizedEmail)) {
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=kpp_invalid_email");
+            return;
+        }
+
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            DashboardDataService.addKppContact(conn, normalizedName, normalizedBranch, normalizedEmail);
+            appendKppContactToCsv(normalizedName, normalizedBranch, normalizedEmail);
+                insertAdminAuditLog(conn, currentAdminId, "ADD KPP CONTACT",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
+                            + " tambah rekod KPP: " + normalizedName + " (" + normalizedBranch + ") - " + normalizedEmail,
+                    request.getRemoteAddr());
+        } catch (SQLException e) {
+            LOGGER.severe("Failed to add KPP contact: " + e.getMessage());
+            if (e.getMessage() != null && e.getMessage().toLowerCase(Locale.ROOT).contains("duplicate")) {
+                response.sendRedirect(request.getContextPath() + "/admin/users?error=kpp_email_exists");
+                return;
+            }
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=db_error");
+            return;
+        }
+
+        response.sendRedirect(request.getContextPath() + "/admin/users?kpp_added=1");
+    }
+
+    private void handleDeleteKppContact(HttpServletRequest request, HttpServletResponse response,
+            int currentAdminId) throws IOException {
+        String kppIdParam = request.getParameter("kpp_id");
+        long kppId;
+        try {
+            kppId = Long.parseLong(kppIdParam);
+        } catch (Exception e) {
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=kpp_invalid");
+            return;
+        }
+
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            List<Map<String, Object>> contacts = DashboardDataService.loadKppContacts(conn);
+            String deletedEmail = null;
+            for (Map<String, Object> c : contacts) {
+                String idValue = String.valueOf(c.get("id"));
+                if (idValue != null && idValue.equals(String.valueOf(kppId))) {
+                    deletedEmail = c.get("email") == null ? null : String.valueOf(c.get("email")).trim();
+                    break;
+                }
+            }
+
+            int deleted = DashboardDataService.deleteKppContact(conn, kppId);
+            if (deleted <= 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/users?error=kpp_not_found");
+                return;
+            }
+            if (deletedEmail != null && !deletedEmail.isBlank()) {
+                removeKppContactFromCsv(deletedEmail);
+            }
+                insertAdminAuditLog(conn, currentAdminId, "DELETE KPP CONTACT",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
+                            + " padam rekod KPP ID " + kppId,
+                    request.getRemoteAddr());
+        } catch (SQLException e) {
+            LOGGER.severe("Failed to delete KPP contact: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=db_error");
+            return;
+        }
+
+        response.sendRedirect(request.getContextPath() + "/admin/users?kpp_deleted=1");
+    }
+
+=======
+>>>>>>> origin/SPPPA
     private void handleUpdateEmail(HttpServletRequest request, HttpServletResponse response,
             int targetUserId, int currentAdminId) throws IOException {
         String email = request.getParameter("email");
@@ -170,8 +311,14 @@ public class AdminUserServlet extends HttpServlet {
                 update.executeUpdate();
             }
 
+<<<<<<< HEAD
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE USER EMAIL",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
+                        + " kemaskini e-mel pengguna " + resolveDisplayUserId(conn, targetUserId),
+=======
             insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_EMAIL",
                     "Admin #" + currentAdminId + " kemaskini e-mel pengguna #" + targetUserId,
+>>>>>>> origin/SPPPA
                     request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to update user email: " + e.getMessage());
@@ -212,8 +359,14 @@ public class AdminUserServlet extends HttpServlet {
                 update.executeUpdate();
             }
 
+<<<<<<< HEAD
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE USER PHONE",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
+                        + " kemaskini nombor telefon pengguna " + resolveDisplayUserId(conn, targetUserId),
+=======
             insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_PHONE",
                     "Admin #" + currentAdminId + " kemaskini nombor telefon pengguna #" + targetUserId,
+>>>>>>> origin/SPPPA
                     request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to update user phone number: " + e.getMessage());
@@ -233,7 +386,11 @@ public class AdminUserServlet extends HttpServlet {
         }
 
         String newRole = roleParam.trim().toUpperCase(Locale.ROOT);
+<<<<<<< HEAD
+        if (!"ADMIN".equals(newRole) && !"USER".equals(newRole) && !"STAFF".equals(newRole)) {
+=======
         if (!"ADMIN".equals(newRole) && !"USER".equals(newRole)) {
+>>>>>>> origin/SPPPA
             response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_role");
             return;
         }
@@ -264,7 +421,11 @@ public class AdminUserServlet extends HttpServlet {
                 return;
             }
 
+<<<<<<< HEAD
+            if ("ADMIN".equals(existingRole) && !"ADMIN".equals(newRole)) {
+=======
             if ("ADMIN".equals(existingRole) && "USER".equals(newRole)) {
+>>>>>>> origin/SPPPA
                 try (PreparedStatement ps = conn.prepareStatement(
                         "SELECT COUNT(*) FROM users WHERE role = 'ADMIN'")) {
                     try (ResultSet rs = ps.executeQuery()) {
@@ -283,8 +444,14 @@ public class AdminUserServlet extends HttpServlet {
                 update.executeUpdate();
             }
 
+<<<<<<< HEAD
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE USER ROLE",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
+                        + " tukar peranan pengguna " + resolveDisplayUserId(conn, targetUserId)
+=======
             insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_ROLE",
                     "Admin #" + currentAdminId + " tukar peranan pengguna #" + targetUserId
+>>>>>>> origin/SPPPA
                             + " daripada " + existingRole + " kepada " + newRole,
                     request.getRemoteAddr());
         } catch (SQLException e) {
@@ -329,8 +496,9 @@ public class AdminUserServlet extends HttpServlet {
                 ps.setInt(1, targetUserId);
                 ps.executeUpdate();
             }
-            insertAdminAuditLog(conn, currentAdminId, "DELETE_USER",
-                    "Admin #" + currentAdminId + " memadam pengguna #" + targetUserId,
+            insertAdminAuditLog(conn, currentAdminId, "DELETE USER",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
+                        + " memadam pengguna " + resolveDisplayUserId(conn, targetUserId),
                     request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to delete user: " + e.getMessage());
@@ -346,6 +514,15 @@ public class AdminUserServlet extends HttpServlet {
         if (currentAdminId == targetUserId) {
             response.sendRedirect(request.getContextPath() + "/admin/users?error=cannot_suspend_self");
             return;
+        }
+
+        String requestedStatus = request.getParameter("status");
+        if (requestedStatus != null) {
+            requestedStatus = requestedStatus.trim().toUpperCase(Locale.ROOT);
+            if (!"ACTIVE".equals(requestedStatus) && !"SUSPENDED".equals(requestedStatus)) {
+                response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_action");
+                return;
+            }
         }
 
         try (Connection conn = DatabaseConfig.getConnection()) {
@@ -375,13 +552,26 @@ public class AdminUserServlet extends HttpServlet {
                 }
             }
 
+            String targetStatus = requestedStatus;
+            if (targetStatus == null || targetStatus.isBlank()) {
+                targetStatus = "ACTIVE".equals(currentStatus) ? "SUSPENDED" : "ACTIVE";
+            }
+
+            if (targetStatus.equals(currentStatus)) {
+                response.sendRedirect(request.getContextPath() + "/admin/users?toggled=1");
+                return;
+            }
+
             try (PreparedStatement ps = conn.prepareStatement(
-                    "UPDATE users SET status = CASE WHEN status = 'ACTIVE' THEN 'SUSPENDED' ELSE 'ACTIVE' END WHERE id = ?")) {
-                ps.setInt(1, targetUserId);
+                    "UPDATE users SET status = ? WHERE id = ?")) {
+                ps.setString(1, targetStatus);
+                ps.setInt(2, targetUserId);
                 ps.executeUpdate();
             }
-            insertAdminAuditLog(conn, currentAdminId, "TOGGLE_USER_STATUS",
-                    "Admin #" + currentAdminId + " tukar status pengguna #" + targetUserId,
+            insertAdminAuditLog(conn, currentAdminId, "TOGGLE USER STATUS",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
+                        + " set status pengguna " + resolveDisplayUserId(conn, targetUserId)
+                        + " kepada " + targetStatus,
                     request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to toggle user status: " + e.getMessage());
@@ -404,8 +594,9 @@ public class AdminUserServlet extends HttpServlet {
                 ps.setInt(2, targetUserId);
                 ps.executeUpdate();
             }
-            insertAdminAuditLog(conn, currentAdminId, "RESET_PASSWORD",
-                    "Admin #" + currentAdminId + " reset kata laluan pengguna #" + targetUserId,
+            insertAdminAuditLog(conn, currentAdminId, "RESET PASSWORD",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
+                        + " reset kata laluan pengguna " + resolveDisplayUserId(conn, targetUserId),
                     request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to reset password: " + e.getMessage());
@@ -439,6 +630,7 @@ public class AdminUserServlet extends HttpServlet {
     private void insertAdminAuditLog(Connection conn, int adminId, String action,
             String details, String ip) {
         try {
+            DashboardDataService.ensureAuditLogTable(conn);
             String sql = "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, adminId);
@@ -463,4 +655,202 @@ public class AdminUserServlet extends HttpServlet {
             stmt.executeUpdate();
         }
     }
+<<<<<<< HEAD
+
+    private void ensureUsersRoleSupportsStaff(Connection conn) throws SQLException {
+        String sql = "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS "
+                + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'role'";
+        String columnType = null;
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                columnType = rs.getString("COLUMN_TYPE");
+            }
+        }
+
+        if (columnType == null) {
+            return;
+        }
+
+        if (!columnType.toUpperCase(Locale.ROOT).contains("'STAFF'")) {
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "ALTER TABLE users MODIFY COLUMN role ENUM('ADMIN', 'USER', 'STAFF') NOT NULL DEFAULT 'USER'")) {
+                stmt.executeUpdate();
+            }
+        }
+    }
+
+    private String resolveDisplayUserId(Connection conn, int userId) {
+        String role = null;
+        Integer roleSeq = null;
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT role, role_seq FROM users WHERE id = ?")) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    role = rs.getString("role");
+                    roleSeq = rs.getObject("role_seq", Integer.class);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.warning("Failed to resolve role for display user id: " + e.getMessage());
+        }
+        return UserDisplayIdUtil.format(userId, role, roleSeq);
+    }
+
+    private void syncKppContactsFromCsv(Connection conn) {
+        try {
+            if (!Files.exists(KPP_CSV_PATH)) {
+                return;
+            }
+
+            List<Map<String, Object>> existingContacts = DashboardDataService.loadKppContacts(conn);
+            Set<String> existingEmails = new HashSet<>();
+            for (Map<String, Object> contact : existingContacts) {
+                String email = contact.get("email") == null ? "" : String.valueOf(contact.get("email")).trim();
+                if (!email.isBlank()) {
+                    existingEmails.add(email.toLowerCase(Locale.ROOT));
+                }
+            }
+
+            List<String> lines = Files.readAllLines(KPP_CSV_PATH, StandardCharsets.UTF_8);
+            for (int i = 1; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line == null || line.isBlank()) {
+                    continue;
+                }
+
+                List<String> parts = parseCsvLine(line);
+                if (parts.size() < 3) {
+                    continue;
+                }
+
+                String name = parts.get(0).trim();
+                String branch = parts.get(1).trim();
+                String email = parts.get(2).trim();
+                if (name.isBlank() || email.isBlank()) {
+                    continue;
+                }
+
+                String emailKey = email.toLowerCase(Locale.ROOT);
+                if (existingEmails.contains(emailKey)) {
+                    continue;
+                }
+
+                DashboardDataService.addKppContact(conn, name, branch, email);
+                existingEmails.add(emailKey);
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Failed to sync KPP contacts from CSV: " + e.getMessage());
+        }
+    }
+
+    private void appendKppContactToCsv(String name, String branch, String email) {
+        try {
+            if (KPP_CSV_PATH.getParent() != null) {
+                Files.createDirectories(KPP_CSV_PATH.getParent());
+            }
+
+            List<String> existing = Files.exists(KPP_CSV_PATH)
+                    ? Files.readAllLines(KPP_CSV_PATH, StandardCharsets.UTF_8)
+                    : new ArrayList<>();
+
+            if (existing.isEmpty()) {
+                existing.add("Nama KPP,Cawangan,E-mel");
+            }
+
+            for (int i = 1; i < existing.size(); i++) {
+                List<String> row = parseCsvLine(existing.get(i));
+                if (row.size() >= 3) {
+                    String existingEmail = row.get(2) == null ? "" : row.get(2).trim();
+                    if (existingEmail.equalsIgnoreCase(email)) {
+                        return;
+                    }
+                }
+            }
+
+            String csvRow = csvEscape(name) + "," + csvEscape(branch) + "," + csvEscape(email);
+            Files.write(KPP_CSV_PATH, List.of(csvRow), StandardCharsets.UTF_8,
+                    StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+        } catch (Exception e) {
+            LOGGER.warning("Failed to append KPP contact to CSV: " + e.getMessage());
+        }
+    }
+
+    private void removeKppContactFromCsv(String email) {
+        try {
+            if (!Files.exists(KPP_CSV_PATH)) {
+                return;
+            }
+
+            List<String> lines = Files.readAllLines(KPP_CSV_PATH, StandardCharsets.UTF_8);
+            if (lines.isEmpty()) {
+                return;
+            }
+
+            List<String> updated = new ArrayList<>();
+            updated.add(lines.get(0));
+            for (int i = 1; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line == null || line.isBlank()) {
+                    continue;
+                }
+                List<String> parts = parseCsvLine(line);
+                if (parts.size() < 3) {
+                    updated.add(line);
+                    continue;
+                }
+                String rowEmail = parts.get(2) == null ? "" : parts.get(2).trim();
+                if (!rowEmail.equalsIgnoreCase(email)) {
+                    updated.add(line);
+                }
+            }
+
+            Files.write(KPP_CSV_PATH, updated, StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (Exception e) {
+            LOGGER.warning("Failed to remove KPP contact from CSV: " + e.getMessage());
+        }
+    }
+
+    private List<String> parseCsvLine(String line) {
+        List<String> values = new ArrayList<>();
+        if (line == null) {
+            return values;
+        }
+
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    current.append('"');
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+                continue;
+            }
+            if (c == ',' && !inQuotes) {
+                values.add(current.toString());
+                current.setLength(0);
+                continue;
+            }
+            current.append(c);
+        }
+        values.add(current.toString());
+        return values;
+    }
+
+    private String csvEscape(String value) {
+        String safe = value == null ? "" : value;
+        String escaped = safe.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n") || escaped.contains("\r")) {
+            return "\"" + escaped + "\"";
+        }
+        return escaped;
+    }
+=======
+>>>>>>> origin/SPPPA
 }

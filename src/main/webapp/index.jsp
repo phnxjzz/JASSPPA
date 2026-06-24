@@ -105,6 +105,7 @@
 %>
 <%
     List<Map<String, Object>> homepageAnnouncements = Collections.emptyList();
+    boolean maintenanceMode = Boolean.TRUE.equals(application.getAttribute("maintenanceMode"));
     try (Connection conn = DatabaseConfig.getConnection()) {
         homepageAnnouncements = DashboardDataService.loadActiveAnnouncements(conn, 5);
     } catch (Exception ignored) {
@@ -116,12 +117,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Pendaftaran Produk Air (SPPA)</title>
-    <meta name="description" content="Portal rasmi SPPA Jabatan Air Negeri Sabah untuk pendaftaran produk air, pengumuman, dan semakan status permohonan.">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
+    <title>Sistem Pendaftaran Pembekal dan Produk Air (SPPPA)</title>
+    <meta name="description" content="Portal rasmi Sistem Pendaftaran Pembekal dan Produk Air Jabatan Air Negeri Sabah untuk pendaftaran produk air, pengumuman, dan semakan status permohonan.">
     <style>
+<<<<<<< HEAD
+:root {
+=======
         @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
 
         :root {
+>>>>>>> origin/SPPPA
             --brand-blue: #1e88e5;
             --brand-navy: #0F6BAE;
             --brand-sky: #edf4fb;
@@ -135,7 +141,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif;
+            font-family: inherit;
             line-height: 1.6;
             color: var(--text);
             background: #eef5fb;
@@ -181,12 +187,21 @@
         .hero {
             position: relative;
             height: auto;
+<<<<<<< HEAD
+            min-height: clamp(420px, 58vh, 680px);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            padding: 96px 34px 150px 22px;
+            background: #1579cc url('${pageContext.request.contextPath}/icon/Hero.jpg?v=20260616hero2') center/cover no-repeat;
+=======
             min-height: 260px;
             overflow: hidden;
             display: flex;
             align-items: center;
             padding: 72px 28px 72px 12px;
             background: #1579cc;
+>>>>>>> origin/SPPPA
             color: white;
             border-bottom-left-radius: 28px;
             border-bottom-right-radius: 28px;
@@ -217,6 +232,8 @@
             background: #1e88e5;
             top: 0;
             right: -150px;
+<<<<<<< HEAD
+=======
         }
         .hero-circle {
             position: absolute;
@@ -242,6 +259,7 @@
             z-index: 0;
             padding: 44px;
             filter: brightness(1.12);
+>>>>>>> origin/SPPPA
         }
         .hero-inner {
             max-width: 1020px;
@@ -254,7 +272,12 @@
         .hero h1 {
             position: relative;
             z-index: 11;
+<<<<<<< HEAD
+            font-size: clamp(36px, 4.8vw, 64px);
+            color: #ffffff;
+=======
             font-size: clamp(30px, 4vw, 52px);
+>>>>>>> origin/SPPPA
             line-height: 1.14;
             margin-bottom: 14px;
             max-width: 760px;
@@ -286,13 +309,17 @@
             transition: transform 0.18s ease, background-color 0.2s ease;
             box-shadow: 0 12px 22px rgba(6, 47, 72, 0.2);
         }
+        .hero .welcome-title {
+            font-size: clamp(42px, 5.4vw, 68px) !important;
+            line-height: 1.08 !important;
+        }
         .hero-btn:hover, .hero-btn:focus { transform: translateY(-1px); background: rgba(255, 255, 255, 0.22); }
         .hero-btn.accent { background: #ffffff; color: #0a5f8b; border-color: #ffffff; }
         .hero-btn.accent:hover, .hero-btn.accent:focus { background: #f0f9ff; }
 
         .role-choice-wrap {
             max-width: 1020px;
-            margin: -28px auto 26px;
+            margin: -66px auto 20px;
             padding: 0 20px;
             position: relative;
             z-index: 2;
@@ -301,6 +328,14 @@
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 16px;
+        }
+        .role-choice-secondary {
+            margin-top: 14px;
+            display: flex;
+            justify-content: center;
+        }
+        .staff-access-card {
+            width: min(500px, 100%);
         }
         .role-card {
             background: rgba(255, 255, 255, 0.76);
@@ -411,6 +446,53 @@
             box-shadow: 0 14px 30px rgba(6, 47, 72, 0.08);
             overflow: hidden;
         }
+        .maintenance-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(5, 29, 45, 0.35);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 14px 12px;
+            z-index: 1300;
+            pointer-events: none;
+        }
+        .maintenance-banner {
+            width: min(980px, calc(100vw - 24px));
+            margin: 0;
+            padding: 12px 16px;
+            border: 1px solid #f2c18b;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 10px 24px rgba(93, 60, 7, 0.14);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: auto;
+        }
+        .admin-access-card { position: relative; z-index: 1310; }
+        .admin-access-card .role-login-btn { position: relative; z-index: 1311; }
+        .maintenance-banner img {
+            width: 88px;
+            height: 60px;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+        .maintenance-banner strong {
+            display: block;
+            margin-bottom: 3px;
+            color: #7b3f00;
+            font-size: 18px;
+        }
+        .maintenance-banner p {
+            margin: 0;
+            color: #7a4e1f;
+            font-size: 14px;
+            line-height: 1.45;
+        }
         .announcement-header {
             display: flex;
             align-items: center;
@@ -461,6 +543,32 @@
         .contact-line {
             display: flex;
             align-items: flex-start;
+<<<<<<< HEAD
+            gap: 8px;
+        }
+        .jans-contact-section h3 {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .jans-contact-section h3 .contact-icon {
+            width: 14px;
+            height: 14px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .contact-line .contact-icon {
+            width: 12px;
+            height: 12px;
+            object-fit: contain;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .hero-contact .contact-line span { line-height: 1.45; }
+        .contact-line-hanging {
+            margin-left: 20px;
+            display: block;
+=======
             gap: 8px;
         }
         .contact-line .contact-icon {
@@ -471,6 +579,7 @@
             border-radius: 2px;
             flex-shrink: 0;
             margin-top: 2px;
+>>>>>>> origin/SPPPA
         }
         .hero-contact .contact-line span { line-height: 1.45; }
 
@@ -530,12 +639,27 @@
             .nav-actions { width: 100%; }
             .nav-link { flex: 1; text-align: center; }
             .role-choice-grid { grid-template-columns: 1fr; }
+<<<<<<< HEAD
+            .role-choice-wrap { margin-top: -38px; }
+=======
             .role-choice-wrap { margin-top: -18px; }
+>>>>>>> origin/SPPPA
             .role-card-icon { width: 42px; height: 42px; flex-basis: 42px; }
         }
         </style>
 </head>
 <body>
+    <% if (maintenanceMode) { %>
+    <div class="maintenance-overlay" aria-hidden="true">
+        <div class="maintenance-banner" role="status" aria-live="polite" aria-atomic="true">
+            <img src="${pageContext.request.contextPath}/icon/under-maintenance.gif" alt="Sistem dalam penyelenggaraan">
+            <div>
+                <strong>Sistem Sedang Dalam Penyelenggaraan</strong>
+                <p>Sila cuba semula selepas penyelenggaraan selesai.</p>
+            </div>
+        </div>
+    </div>
+    <% } %>
     <div class="navbar">
         <div class="brand">
             <div class="brand-logos">
@@ -543,7 +667,7 @@
                 <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             </div>
             <div class="brand-text">
-                <strong>SPPA</strong>
+                <strong>Sistem Pendaftaran Pembekal dan Produk Air</strong>
                 <span>Jabatan Air Negeri Sabah</span>
             </div>
         </div>
@@ -552,8 +676,12 @@
             <a class="nav-link primary" href="${pageContext.request.contextPath}/register">Daftar Pemohon</a>
         </div>
     </div>
-
     <div class="hero">
+<<<<<<< HEAD
+        <div class="hero-inner">
+            <div>
+                <h1 class="welcome-title">Selamat Datang ke Sistem Pendaftaran Pembekal dan Produk Air</h1>
+=======
         <img src="${pageContext.request.contextPath}/assets/images/Logo JAS.png" class="hero-watermark" alt="" aria-hidden="true">
         <div class="hero-circle small  hero-circle1" aria-hidden="true"></div>
         <div class="hero-circle medium hero-circle2" aria-hidden="true"></div>
@@ -561,18 +689,27 @@
         <div class="hero-inner">
             <div>
                 <h1>Selamat Datang ke Sistem Pendaftaran Produk Air Negeri Sabah</h1>
+>>>>>>> origin/SPPPA
             </div>
         </div>
     </div>
 
     <section class="role-choice-wrap" aria-label="Pilih peranan log masuk">
         <div class="role-choice-grid">
+<<<<<<< HEAD
+            <article class="role-card admin-access-card">
+=======
             <article class="role-card">
+>>>>>>> origin/SPPPA
                 <div class="role-card-head">
                     <img class="role-card-icon" src="${pageContext.request.contextPath}/assets/images/admin.png" alt="Ikon portal pentadbir">
                     <div>
                         <h3>Portal Pentadbir</h3>
+<<<<<<< HEAD
+                        <p>Untuk pengurusan aplikasi, semakan pengguna, dan pemantauan Sistem Pendaftaran Pembekal dan Produk Air.</p>
+=======
                         <p>Untuk pengurusan aplikasi, semakan pengguna, dan pemantauan sistem SPPA.</p>
+>>>>>>> origin/SPPPA
                     </div>
                 </div>
                 <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=ADMIN">Log Masuk Sebagai Admin</a>
@@ -586,6 +723,18 @@
                     </div>
                 </div>
                 <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=USER">Log Masuk Sebagai Pemohon</a>
+            </article>
+        </div>
+        <div class="role-choice-secondary">
+            <article class="role-card staff-access-card">
+                <div class="role-card-head">
+                    <img class="role-card-icon" src="${pageContext.request.contextPath}/icon/Staff.png" alt="Ikon portal staf">
+                    <div>
+                        <h3>Portal Staff</h3>
+                        <p>Untuk kegunaan dalaman organisasi bagi akses modul Borang Aduan dalaman.</p>
+                    </div>
+                </div>
+                <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=STAFF">Log Masuk Sebagai Staff</a>
             </article>
         </div>
         <div class="first-signin-wrap">
@@ -621,18 +770,28 @@
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
+<<<<<<< HEAD
+                <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+=======
                 <h3>Hubungi JANS</h3>
                 <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
                 <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
                 <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
                 <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
                 <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+>>>>>>> origin/SPPPA
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2026 Sistem Pendaftaran Produk Air (SPPA). Semua hak terpelihara.</p>
-        <p>Jabatan Air Negeri Sabah</p>
+        <p>&copy; 2026 Sistem Pendaftaran Pembekal dan Produk Air (SPPPA). Semua hak terpelihara.</p>
+        <p>Jabatan Air  Sabah</p>
         <p class="footer-links">
             <a href="${pageContext.request.contextPath}/privacy-policy">Dasar Privasi</a>
             |
@@ -658,3 +817,5 @@
 </script>
 </body>
 </html>
+
+

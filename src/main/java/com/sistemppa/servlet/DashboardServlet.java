@@ -2,6 +2,11 @@ package com.sistemppa.servlet;
 
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.DashboardDataService;
+<<<<<<< HEAD
+import com.sistemppa.service.KppReminderService;
+import com.sistemppa.util.EmailUtil;
+=======
+>>>>>>> origin/SPPPA
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -32,14 +37,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+<<<<<<< HEAD
+import java.sql.Timestamp;
+=======
+>>>>>>> origin/SPPPA
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.mindrot.jbcrypt.BCrypt;
 
 @MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 12 * 1024 * 1024)
 public class DashboardServlet extends HttpServlet {
@@ -85,15 +101,63 @@ public class DashboardServlet extends HttpServlet {
 
         Integer userId = (Integer) session.getAttribute("user_id");
         String role = (String) session.getAttribute("role");
+        String email = session.getAttribute("email") == null
+                ? ""
+                : String.valueOf(session.getAttribute("email"));
+        String portalRole = session.getAttribute("portal_role") == null
+                ? ""
+                : String.valueOf(session.getAttribute("portal_role")).trim().toUpperCase(java.util.Locale.ROOT);
+        boolean adminViewingUserPortal = "ADMIN".equals(role) && "USER".equals(portalRole);
+        boolean viewingStaffPortal = "STAFF".equals(portalRole);
 
         try (Connection conn = DatabaseConfig.getConnection()) {
+<<<<<<< HEAD
+            if (viewingStaffPortal) {
+                boolean staffPortalRoleAllowed = "ADMIN".equals(role) || "STAFF".equals(role);
+                if (staffPortalRoleAllowed && isGovernmentEmail(email)) {
+                    request.getRequestDispatcher("/staff-dashboard.jsp").forward(request, response);
+                    return;
+                }
+                session.setAttribute("portal_role", role);
+                response.sendRedirect(request.getContextPath() + "/dashboard");
+                return;
+            }
+
+            if ("ADMIN".equals(role) && !adminViewingUserPortal) {
+=======
             if ("ADMIN".equals(role)) {
+>>>>>>> origin/SPPPA
                 Long downloadId = parseLong(request.getParameter("kpp_download_id"));
                 if (downloadId != null) {
                     handleKppSubmissionDownload(conn, downloadId, response);
                     return;
                 }
 
+<<<<<<< HEAD
+                if ("1".equals(request.getParameter("aduan_view"))) {
+                    String adminDisplayId = DashboardDataService.resolveDisplayUserId(conn, userId, "ADMIN");
+                    if (!"ADM001".equals(adminDisplayId)) {
+                        response.sendRedirect(request.getContextPath() + "/dashboard?aduan_access=denied");
+                        return;
+                    }
+                    loadAdminComplaintCenter(conn, request);
+                    request.getRequestDispatcher("/admin-complaints.jsp").forward(request, response);
+                    return;
+                }
+
+                String aduanAccessStatus = trim(request.getParameter("aduan_access"));
+                if ("denied".equalsIgnoreCase(aduanAccessStatus)) {
+                    request.setAttribute("aduan_access_notice", "Akses Modul Aduan ditolak. Hanya admin ADM001 dibenarkan.");
+                } else if ("password_required".equalsIgnoreCase(aduanAccessStatus)) {
+                    request.setAttribute("aduan_access_notice", "Kata laluan diperlukan untuk akses Modul Aduan.");
+                } else if ("invalid_password".equalsIgnoreCase(aduanAccessStatus)) {
+                    request.setAttribute("aduan_access_notice", "Kata laluan tidak sah untuk akses Modul Aduan.");
+                } else if ("invalid_action".equalsIgnoreCase(aduanAccessStatus)) {
+                    request.setAttribute("aduan_access_notice", "Permintaan akses Modul Aduan tidak sah.");
+                }
+
+=======
+>>>>>>> origin/SPPPA
                 if ("1".equals(request.getParameter("announcement_saved"))) {
                     request.setAttribute("announcement_success", "Pengumuman berjaya disimpan.");
                 }
@@ -105,12 +169,25 @@ public class DashboardServlet extends HttpServlet {
                 return;
             }
 
+            if ("STAFF".equals(role)) {
+                request.getRequestDispatcher("/staff-dashboard.jsp").forward(request, response);
+                return;
+            }
+
             loadUserDashboard(conn, userId, request);
             request.getRequestDispatcher("/user-dashboard.jsp").forward(request, response);
         } catch (SQLException e) {
             LOGGER.severe("Database error: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Database error");
         }
+    }
+
+    private boolean isGovernmentEmail(String email) {
+        if (email == null) {
+            return false;
+        }
+        String normalizedEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
+        return normalizedEmail.endsWith(".gov.my");
     }
 
     @Override
@@ -122,8 +199,26 @@ public class DashboardServlet extends HttpServlet {
             return;
         }
 
+<<<<<<< HEAD
+        String requestContentType = request.getContentType();
+        if (requestContentType != null
+                && requestContentType.toLowerCase(java.util.Locale.ROOT).contains("application/json")) {
+            JsonObject requestBody = parseJsonRequestBody(request);
+            if ("send_kpp_emails".equalsIgnoreCase(getJsonString(requestBody, "action"))) {
+                handleKppEmailSend(request, response, requestBody);
+                return;
+            }
+        }
+
         String action = trim(request.getParameter("announcement_action"));
         String kppAction = trim(request.getParameter("kpp_submission_action"));
+        String maintenanceAction = trim(request.getParameter("maintenance_action"));
+        String secureAction = trim(request.getParameter("secure_action"));
+        String staffComplaintAction = trim(request.getParameter("staff_complaint_action"));
+=======
+        String action = trim(request.getParameter("announcement_action"));
+        String kppAction = trim(request.getParameter("kpp_submission_action"));
+>>>>>>> origin/SPPPA
         Integer userId = (Integer) session.getAttribute("user_id");
 
         String title = trim(request.getParameter("announcement_title"));
@@ -131,7 +226,68 @@ public class DashboardServlet extends HttpServlet {
         String existingImageUrl = trim(request.getParameter("announcement_existing_image_url"));
         boolean isActive = "on".equalsIgnoreCase(request.getParameter("announcement_active"));
 
+        if (maintenanceAction != null && !maintenanceAction.isBlank()) {
+            boolean maintenanceEnabled;
+            if ("enable".equalsIgnoreCase(maintenanceAction)) {
+                maintenanceEnabled = true;
+            } else if ("disable".equalsIgnoreCase(maintenanceAction)) {
+                maintenanceEnabled = false;
+            } else {
+                response.sendRedirect(request.getContextPath() + "/dashboard?maintenance=unchanged");
+                return;
+            }
+
+            request.getServletContext().setAttribute("maintenanceMode", maintenanceEnabled);
+            String maintenanceQuery = maintenanceEnabled ? "enabled" : "disabled";
+            response.sendRedirect(request.getContextPath() + "/dashboard?maintenance=" + maintenanceQuery);
+            return;
+        }
+
         try (Connection conn = DatabaseConfig.getConnection()) {
+<<<<<<< HEAD
+            String adminDisplayId = DashboardDataService.resolveDisplayUserId(conn, userId, "ADMIN");
+            if (secureAction != null && !secureAction.isBlank()) {
+                if (!"access_aduan".equalsIgnoreCase(secureAction)) {
+                    response.sendRedirect(request.getContextPath() + "/dashboard?aduan_access=invalid_action");
+                    return;
+                }
+
+                if (!"ADM001".equals(adminDisplayId)) {
+                    response.sendRedirect(request.getContextPath() + "/dashboard?aduan_access=denied");
+                    return;
+                }
+
+                String securePassword = trim(request.getParameter("secure_password"));
+                if (securePassword == null || securePassword.isBlank()) {
+                    response.sendRedirect(request.getContextPath() + "/dashboard?aduan_access=password_required");
+                    return;
+                }
+
+                if (!validateUserPassword(conn, userId, securePassword)) {
+                    response.sendRedirect(request.getContextPath() + "/dashboard?aduan_access=invalid_password");
+                    return;
+                }
+
+                response.sendRedirect(request.getContextPath() + "/dashboard?aduan_view=1");
+                return;
+            }
+
+            if (staffComplaintAction != null && !staffComplaintAction.isBlank()) {
+                Long complaintId = parseLong(request.getParameter("staff_complaint_id"));
+                String nextStatus = trim(request.getParameter("next_status")).toUpperCase(java.util.Locale.ROOT);
+                if (complaintId == null || !isStaffComplaintStatusAllowed(nextStatus)) {
+                    response.sendRedirect(request.getContextPath() + "/dashboard?aduan_view=1");
+                    return;
+                }
+
+                ensureStaffComplaintTable(conn);
+                updateStaffComplaintStatus(conn, complaintId, nextStatus);
+                response.sendRedirect(request.getContextPath() + "/dashboard?aduan_view=1");
+                return;
+            }
+
+=======
+>>>>>>> origin/SPPPA
             if (kppAction != null && !kppAction.isBlank()) {
                 Long submissionId = parseLong(request.getParameter("kpp_submission_id"));
                 String kppSearch = trim(request.getParameter("kpp_q"));
@@ -157,16 +313,34 @@ public class DashboardServlet extends HttpServlet {
 
                 if ("archive".equalsIgnoreCase(kppAction)) {
                     DashboardDataService.archiveKppGuestSubmission(conn, submissionId);
+<<<<<<< HEAD
+                        insertAdminAuditLog(conn, userId, "ARCHIVE KPP SUBMISSION",
+                            "Admin " + adminDisplayId + " arkib borang KPP ID " + submissionId,
+                            request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                     response.sendRedirect(redirectBase + redirectQuery + "#kpp-submissions");
                     return;
                 }
                 if ("unarchive".equalsIgnoreCase(kppAction)) {
                     DashboardDataService.unarchiveKppGuestSubmission(conn, submissionId);
+<<<<<<< HEAD
+                        insertAdminAuditLog(conn, userId, "UNARCHIVE KPP SUBMISSION",
+                            "Admin " + adminDisplayId + " keluarkan arkib borang KPP ID " + submissionId,
+                            request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                     response.sendRedirect(redirectBase + redirectQuery + "#kpp-submissions");
                     return;
                 }
                 if ("delete".equalsIgnoreCase(kppAction)) {
                     DashboardDataService.deleteKppGuestSubmission(conn, submissionId);
+<<<<<<< HEAD
+                        insertAdminAuditLog(conn, userId, "DELETE KPP SUBMISSION",
+                            "Admin " + adminDisplayId + " padam borang KPP ID " + submissionId,
+                            request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                     response.sendRedirect(redirectBase + redirectQuery + "#kpp-submissions");
                     return;
                 }
@@ -207,6 +381,12 @@ public class DashboardServlet extends HttpServlet {
                     return;
                 }
                 DashboardDataService.createAnnouncement(conn, title, content, imageUrl, isActive, userId);
+<<<<<<< HEAD
+                insertAdminAuditLog(conn, userId, "CREATE ANNOUNCEMENT",
+                    "Admin " + adminDisplayId + " cipta pengumuman: " + title,
+                    request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                 response.sendRedirect(request.getContextPath() + "/dashboard?announcement_saved=1#announcementPanel");
                 return;
             }
@@ -248,6 +428,12 @@ public class DashboardServlet extends HttpServlet {
                     return;
                 }
                 DashboardDataService.updateAnnouncement(conn, announcementId, title, content, imageUrl, isActive, userId);
+<<<<<<< HEAD
+                insertAdminAuditLog(conn, userId, "UPDATE ANNOUNCEMENT",
+                    "Admin " + adminDisplayId + " kemas kini pengumuman #" + announcementId + ": " + title,
+                    request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                 response.sendRedirect(request.getContextPath() + "/dashboard?announcement_saved=1#announcementPanel");
                 return;
             }
@@ -261,6 +447,12 @@ public class DashboardServlet extends HttpServlet {
                     return;
                 }
                 DashboardDataService.deleteAnnouncement(conn, announcementId);
+<<<<<<< HEAD
+                insertAdminAuditLog(conn, userId, "DELETE ANNOUNCEMENT",
+                    "Admin " + adminDisplayId + " padam pengumuman #" + announcementId,
+                    request.getRemoteAddr());
+=======
+>>>>>>> origin/SPPPA
                 response.sendRedirect(request.getContextPath() + "/dashboard?announcement_deleted=1#announcementPanel");
                 return;
             }
@@ -276,11 +468,18 @@ public class DashboardServlet extends HttpServlet {
 
     private void loadAdminDashboard(Connection conn, HttpServletRequest request) throws SQLException {
         String search = trim(request.getParameter("q"));
-        String status = trim(request.getParameter("status"));
+        String status = toStatusOptionValue(trim(request.getParameter("status")));
         String dateFrom = trim(request.getParameter("date_from"));
         String dateTo = trim(request.getParameter("date_to"));
         String kppSearch = trim(request.getParameter("kpp_q"));
         boolean includeArchivedKpp = "1".equals(request.getParameter("kpp_show_archived"));
+<<<<<<< HEAD
+        HttpSession session = request.getSession(false);
+        Integer currentAdminUserId = session == null ? null : (Integer) session.getAttribute("user_id");
+        request.setAttribute("current_admin_display_id",
+                DashboardDataService.resolveDisplayUserId(conn, currentAdminUserId, "ADMIN"));
+=======
+>>>>>>> origin/SPPPA
 
         Map<String, Integer> stats = DashboardDataService.loadAdminStats(conn);
         for (Map.Entry<String, Integer> entry : stats.entrySet()) {
@@ -305,6 +504,16 @@ public class DashboardServlet extends HttpServlet {
         request.setAttribute("kpp_show_archived", includeArchivedKpp);
         request.setAttribute("kpp_guest_submissions",
             DashboardDataService.loadKppGuestSubmissions(conn, 50, kppSearch, includeArchivedKpp));
+<<<<<<< HEAD
+        request.setAttribute("kpp_contacts", DashboardDataService.loadKppContacts(conn));
+        List<Map<String, Object>> adminAuditLogs = DashboardDataService.loadRecentAdminAuditLogs(conn, 0);
+        request.setAttribute("admin_audit_logs", filterSensitiveAduanAuditLogs(adminAuditLogs));
+
+        ensureStaffComplaintTable(conn);
+        request.setAttribute("staff_complaint_new_count", countStaffComplaintsByStatus(conn, "NEW"));
+        request.setAttribute("staff_complaints", loadStaffComplaints(conn, 30));
+=======
+>>>>>>> origin/SPPPA
 
         List<Map<String, Object>> announcements = DashboardDataService.loadAllAnnouncements(conn, DASHBOARD_ANNOUNCEMENT_LIMIT);
         request.setAttribute("announcements", announcements);
@@ -329,6 +538,114 @@ public class DashboardServlet extends HttpServlet {
         if (request.getAttribute("announcement_form_image_url") == null) {
             request.setAttribute("announcement_form_image_url", "");
         }
+    }
+
+    private void loadAdminComplaintCenter(Connection conn, HttpServletRequest request) throws SQLException {
+        ensureStaffComplaintTable(conn);
+        request.setAttribute("staff_complaint_new_count", countStaffComplaintsByStatus(conn, "NEW"));
+        request.setAttribute("staff_complaints", loadStaffComplaints(conn, 60));
+    }
+
+    private boolean isStaffComplaintStatusAllowed(String status) {
+        return "NEW".equals(status)
+                || "UNDER_REVIEW".equals(status)
+                || "IN_PROGRESS".equals(status)
+                || "RESOLVED".equals(status);
+    }
+
+    private void ensureStaffComplaintTable(Connection conn) throws SQLException {
+        String ddl = "CREATE TABLE IF NOT EXISTS staff_complaints ("
+                + "id INT AUTO_INCREMENT PRIMARY KEY, "
+                + "staff_user_id INT NOT NULL, "
+                + "staff_username VARCHAR(100) NOT NULL, "
+                + "staff_email VARCHAR(255) NOT NULL, "
+                + "department VARCHAR(150) NOT NULL, "
+                + "complaint_category VARCHAR(100) NOT NULL, "
+                + "complaint_title VARCHAR(200) NOT NULL, "
+                + "complaint_details TEXT NOT NULL, "
+                + "incident_date DATE NULL, "
+                + "incident_location VARCHAR(255) NULL, "
+                + "urgency VARCHAR(30) NOT NULL, "
+                + "preferred_contact VARCHAR(120) NULL, "
+                + "status VARCHAR(20) NOT NULL DEFAULT 'NEW', "
+                + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+                + "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+                + ")";
+        try (PreparedStatement stmt = conn.prepareStatement(ddl)) {
+            stmt.execute();
+        }
+    }
+
+    private int countStaffComplaintsByStatus(Connection conn, String status) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM staff_complaints WHERE UPPER(status) = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    private List<Map<String, Object>> loadStaffComplaints(Connection conn, int limit) throws SQLException {
+        List<Map<String, Object>> results = new ArrayList<>();
+        String sql = "SELECT id, staff_username, staff_email, department, complaint_category, complaint_title, "
+            + "complaint_details, urgency, status, created_at "
+                + "FROM staff_complaints "
+            + "ORDER BY created_at DESC, id DESC "
+                + "LIMIT ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, Math.max(1, limit));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("staff_username", rs.getString("staff_username"));
+                    row.put("staff_email", rs.getString("staff_email"));
+                    row.put("department", rs.getString("department"));
+                    row.put("complaint_category", rs.getString("complaint_category"));
+                    row.put("complaint_title", rs.getString("complaint_title"));
+                    row.put("complaint_details", rs.getString("complaint_details"));
+                    row.put("urgency", rs.getString("urgency"));
+                    row.put("status", rs.getString("status"));
+                    Timestamp createdAt = rs.getTimestamp("created_at");
+                    row.put("created_at", createdAt);
+                    results.add(row);
+                }
+            }
+        }
+        return results;
+    }
+
+    private void updateStaffComplaintStatus(Connection conn, Long complaintId, String status) throws SQLException {
+        String sql = "UPDATE staff_complaints SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            stmt.setLong(2, complaintId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private List<Map<String, Object>> filterSensitiveAduanAuditLogs(List<Map<String, Object>> logs) {
+        List<Map<String, Object>> filtered = new ArrayList<>();
+        if (logs == null || logs.isEmpty()) {
+            return filtered;
+        }
+        for (Map<String, Object> log : logs) {
+            String action = String.valueOf(log.get("action") == null ? "" : log.get("action"));
+            String details = String.valueOf(log.get("details") == null ? "" : log.get("details"));
+            String combined = (action + " " + details).toLowerCase(java.util.Locale.ROOT);
+            if (combined.contains("aduan")
+                    || combined.contains("staff_complaint")
+                    || combined.contains("access_aduan")
+                    || combined.contains("update_staff_complaint_status")) {
+                continue;
+            }
+            filtered.add(log);
+        }
+        return filtered;
     }
 
     private void loadUserDashboard(Connection conn, Integer userId, HttpServletRequest request) throws SQLException {
@@ -371,8 +688,325 @@ public class DashboardServlet extends HttpServlet {
             DashboardDataService.loadUserApplicationStatusHistory(conn, userId));
     }
 
+    private void handleKppEmailSend(HttpServletRequest request, HttpServletResponse response, JsonObject requestBody)
+            throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+
+        JsonArray emails = requestBody != null && requestBody.has("emails") && requestBody.get("emails").isJsonArray()
+                ? requestBody.getAsJsonArray("emails")
+                : new JsonArray();
+        if (emails.isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(jsonMessage(false, "Tiada email KPP untuk dihantar.", 0, 0));
+            return;
+        }
+
+        String smtpHost = getContextParam(request, "smtp.host", "");
+        if (smtpHost.isBlank()) {
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response.getWriter().write(jsonMessage(false, "SMTP belum dikonfigurasi. Sila isi tetapan smtp.host dan butiran berkaitan dalam web.xml.", 0, emails.size()));
+            return;
+        }
+
+        int smtpPort = Integer.parseInt(getContextParam(request, "smtp.port", "587"));
+        boolean smtpAuth = Boolean.parseBoolean(getContextParam(request, "smtp.auth", "true"));
+        boolean smtpTls = Boolean.parseBoolean(getContextParam(request, "smtp.tls", "true"));
+        String smtpUser = getContextParam(request, "smtp.username", "");
+        String smtpPass = getContextParam(request, "smtp.password", "");
+        String smtpFrom = getContextParam(request, "smtp.from", smtpUser);
+
+        if (isPlaceholderSmtp(smtpHost, smtpUser, smtpPass, smtpFrom)
+            || (smtpAuth && (smtpUser.isBlank() || smtpPass.isBlank()))) {
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response.getWriter().write(jsonMessage(false,
+                "SMTP belum dikonfigurasi dengan betul. Sila semak smtp.host/smtp.username/smtp.password/smtp.from dalam web.xml.",
+                0,
+                emails.size()));
+            return;
+        }
+
+        EmailUtil emailUtil = new EmailUtil(smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, smtpAuth, smtpTls);
+        int sentCount = 0;
+        int failedCount = 0;
+        List<SentKppReminderMetadata> sentReminderMetadata = new ArrayList<>();
+
+        for (JsonElement emailElement : emails) {
+            if (emailElement == null || !emailElement.isJsonObject()) {
+                failedCount++;
+                continue;
+            }
+
+            JsonObject emailObject = emailElement.getAsJsonObject();
+            String to = getJsonString(emailObject, "to");
+            String subject = getJsonString(emailObject, "subject");
+            String body = getJsonString(emailObject, "body");
+            String actionType = getJsonString(emailObject, "actionType");
+            String applicationRef = getJsonString(emailObject, "applicationRef");
+            String guestLink = extractFirstUrl(body);
+
+            if (to.isBlank() || subject.isBlank() || body.isBlank()) {
+                failedCount++;
+                continue;
+            }
+
+            boolean sent = emailUtil.sendHtml(to, subject, toHtmlEmailBody(body));
+            if (sent) {
+                sentCount++;
+                sentReminderMetadata.add(new SentKppReminderMetadata(to, actionType, applicationRef, guestLink, subject));
+            } else {
+                failedCount++;
+            }
+        }
+
+        boolean success = sentCount > 0 && failedCount == 0;
+        if (sentCount == 0) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            String failureMessage = "Semua email KPP gagal dihantar.";
+            if (smtpHost.toLowerCase(java.util.Locale.ROOT).contains("office365")
+                    || smtpHost.toLowerCase(java.util.Locale.ROOT).contains("outlook")) {
+                failureMessage = "Semua email KPP gagal dihantar. Untuk Outlook/Microsoft 365, pastikan SMTP AUTH diaktifkan pada mailbox dan kelayakan smtp.username/smtp.password adalah betul.";
+            }
+            response.getWriter().write(jsonMessage(false, failureMessage, sentCount, failedCount));
+            return;
+        }
+
+        String message = failedCount == 0
+                ? ("Berjaya menghantar " + sentCount + " email KPP.")
+                : ("Berjaya menghantar " + sentCount + " email KPP. " + failedCount + " email gagal dihantar.");
+
+        HttpSession session = request.getSession(false);
+        Integer adminId = session == null ? null : (Integer) session.getAttribute("user_id");
+        try (Connection conn = DatabaseConfig.getConnection()) {
+                KppReminderService.ensureReminderTable(conn);
+                int scheduledCount = 0;
+                for (SentKppReminderMetadata metadata : sentReminderMetadata) {
+                    scheduledCount += KppReminderService.scheduleReminderSeries(
+                            conn,
+                            metadata.recipientEmail(),
+                            metadata.actionType(),
+                            metadata.applicationRef(),
+                            metadata.guestLink(),
+                            metadata.subject()
+                    );
+                }
+                insertAdminAuditLog(conn, adminId, "SEND KPP EMAIL",
+                    "Admin " + DashboardDataService.resolveDisplayUserId(conn, adminId, "ADMIN")
+                            + " hantar email KPP. Berjaya: " + sentCount + ", gagal: " + failedCount
+                            + ", reminder dijadualkan: " + scheduledCount,
+                    request.getRemoteAddr());
+        } catch (SQLException e) {
+            LOGGER.warning("Failed to write SEND KPP EMAIL audit log: " + e.getMessage());
+        }
+
+        response.getWriter().write(jsonMessage(success, message, sentCount, failedCount));
+    }
+
+    private void insertAdminAuditLog(Connection conn, Integer adminId, String action,
+            String details, String ip) {
+        if (adminId == null) {
+            return;
+        }
+        try {
+            DashboardDataService.ensureAuditLogTable(conn);
+            String sql = "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, adminId);
+                ps.setString(2, action);
+                ps.setString(3, details);
+                ps.setString(4, ip);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            LOGGER.warning("Failed to write audit log [" + action + "]: " + e.getMessage());
+        }
+    }
+
     private String trim(String value) {
         return value == null ? null : value.trim();
+    }
+
+    private boolean validateUserPassword(Connection conn, Integer userId, String inputPassword) throws SQLException {
+        if (conn == null || userId == null || inputPassword == null || inputPassword.isBlank()) {
+            return false;
+        }
+
+        String sql = "SELECT password_hash FROM users WHERE id = ? LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return false;
+                }
+                String storedPassword = rs.getString("password_hash");
+                return passwordMatches(inputPassword, storedPassword);
+            }
+        }
+    }
+
+    private boolean passwordMatches(String inputPassword, String storedPassword) {
+        if (storedPassword == null || storedPassword.isBlank()) {
+            return false;
+        }
+        if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$")) {
+            String normalizedHash = storedPassword.replaceFirst("^\\$2[by]\\$", "\\$2a\\$");
+            try {
+                return BCrypt.checkpw(inputPassword, normalizedHash);
+            } catch (IllegalArgumentException e) {
+                LOGGER.warning("BCrypt check failed (invalid hash format): " + e.getMessage());
+                return false;
+            }
+        }
+
+        String hashedInput = sha256Hex(inputPassword);
+        return storedPassword.equalsIgnoreCase(hashedInput) || storedPassword.equals(inputPassword);
+    }
+
+    private String sha256Hex(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte b : hash) {
+                String part = Integer.toHexString(0xff & b);
+                if (part.length() == 1) {
+                    hex.append('0');
+                }
+                hex.append(part);
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
+    }
+
+    private JsonObject parseJsonRequestBody(HttpServletRequest request) throws IOException {
+        String body = request.getReader().lines().collect(java.util.stream.Collectors.joining());
+        if (body == null || body.isBlank()) {
+            return new JsonObject();
+        }
+
+        try {
+            JsonElement root = JsonParser.parseString(body);
+            if (root != null && root.isJsonObject()) {
+                return root.getAsJsonObject();
+            }
+        } catch (Exception ignored) {
+            // Fall through to empty object.
+        }
+        return new JsonObject();
+    }
+
+    private String getJsonString(JsonObject object, String key) {
+        if (object == null || key == null || key.isBlank() || !object.has(key)) {
+            return "";
+        }
+
+        JsonElement element = object.get(key);
+        if (element == null || element.isJsonNull()) {
+            return "";
+        }
+
+        String value = element.isJsonPrimitive() ? element.getAsString() : element.toString();
+        return value == null ? "" : value.trim();
+    }
+
+    private String toHtmlEmailBody(String plainText) {
+        String normalized = plainText == null ? "" : plainText;
+        normalized = normalized.replace("\r\n", "\n").replace("\r", "\n");
+
+        Pattern urlPattern = Pattern.compile("(https?://\\S+)", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = urlPattern.matcher(normalized);
+        Map<String, String> links = new LinkedHashMap<>();
+        StringBuffer marked = new StringBuffer();
+        int index = 0;
+        while (matcher.find()) {
+            String rawUrl = matcher.group(1);
+            String cleanedUrl = trimTrailingUrlPunctuation(rawUrl);
+            String suffix = rawUrl.substring(cleanedUrl.length());
+            String key = "__SPPA_LINK_" + index++ + "__";
+            links.put(key, cleanedUrl);
+            matcher.appendReplacement(marked, Matcher.quoteReplacement(key + suffix));
+        }
+        matcher.appendTail(marked);
+
+        String safe = escapeHtml(marked.toString()).replace("\n", "<br>");
+        for (Map.Entry<String, String> entry : links.entrySet()) {
+            String url = entry.getValue();
+            String escapedUrl = escapeHtml(url);
+            String anchor = "<a href=\"" + escapedUrl + "\" target=\"_blank\" rel=\"noopener noreferrer\">"
+                    + escapedUrl
+                    + "</a>";
+            safe = safe.replace(entry.getKey(), anchor);
+        }
+
+        return "<div style=\"font-family:Segoe UI,Tahoma,Arial,sans-serif;font-size:14px;line-height:1.6;color:#183244;\">"
+                + safe
+                + "</div>";
+    }
+
+    private String trimTrailingUrlPunctuation(String url) {
+        if (url == null) {
+            return "";
+        }
+        int end = url.length();
+        while (end > 0) {
+            char c = url.charAt(end - 1);
+            if (c == '.' || c == ',' || c == ';' || c == ')' || c == ']' || c == '!' || c == '?') {
+                end--;
+                continue;
+            }
+            break;
+        }
+        return end <= 0 ? url : url.substring(0, end);
+    }
+
+    private String extractFirstUrl(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        Pattern urlPattern = Pattern.compile("(https?://\\S+)", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = urlPattern.matcher(text);
+        if (!matcher.find()) {
+            return "";
+        }
+        return trimTrailingUrlPunctuation(matcher.group(1));
+    }
+
+    private String jsonMessage(boolean success, String message, int sentCount, int failedCount) {
+        JsonObject result = new JsonObject();
+        result.addProperty("success", success);
+        result.addProperty("message", message == null ? "" : message);
+        result.addProperty("sentCount", sentCount);
+        result.addProperty("failedCount", failedCount);
+        return result.toString();
+    }
+
+    private String getContextParam(HttpServletRequest request, String name, String defaultValue) {
+        String value = request.getServletContext().getInitParameter(name);
+        return (value == null || value.isBlank()) ? defaultValue : value.trim();
+    }
+
+    private String escapeHtml(String text) {
+        if (text == null) {
+            return "";
+        }
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
+    }
+
+    private boolean isPlaceholderSmtp(String smtpHost, String smtpUser, String smtpPass, String smtpFrom) {
+        String host = smtpHost == null ? "" : smtpHost.trim().toLowerCase(java.util.Locale.ROOT);
+        String user = smtpUser == null ? "" : smtpUser.trim().toLowerCase(java.util.Locale.ROOT);
+        String pass = smtpPass == null ? "" : smtpPass.trim().toLowerCase(java.util.Locale.ROOT);
+        String from = smtpFrom == null ? "" : smtpFrom.trim().toLowerCase(java.util.Locale.ROOT);
+
+        return host.contains("example")
+                || user.contains("your-email")
+                || pass.contains("your-app-password")
+            || pass.contains("change_me")
+                || from.contains("your-email");
     }
 
     private Integer parseInteger(String value) {
@@ -397,6 +1031,44 @@ public class DashboardServlet extends HttpServlet {
         }
     }
 
+<<<<<<< HEAD
+    private String toStatusOptionValue(String status) {
+        if (status == null || status.isBlank()) {
+            return "";
+        }
+        String normalized = status.trim().toUpperCase(java.util.Locale.ROOT).replace(' ', '_');
+        if ("APPROVED".equals(normalized) || "DILULUSKAN".equals(normalized)) {
+            return "DILULUSKAN";
+        }
+        if ("REJECTED".equals(normalized) || "DITOLAK".equals(normalized)) {
+            return "DITOLAK";
+        }
+        if ("SUSPENDED".equals(normalized) || "DIGANTUNG".equals(normalized)) {
+            return "DIGANTUNG";
+        }
+        if ("ARCHIVED".equals(normalized) || "DIARKIB".equals(normalized)) {
+            return "DIARKIB";
+        }
+        if ("UNDER_REVIEW".equals(normalized) || "DALAM_SEMAKAN".equals(normalized)) {
+            return "DALAM_SEMAKAN";
+        }
+        if ("IN_PROGRESS".equals(normalized) || "DALAM_PROSES".equals(normalized)) {
+            return "DALAM_PROSES";
+        }
+        return normalized;
+    }
+
+    private record SentKppReminderMetadata(
+            String recipientEmail,
+            String actionType,
+            String applicationRef,
+            String guestLink,
+            String subject
+    ) {
+    }
+
+=======
+>>>>>>> origin/SPPPA
     private void handleKppSubmissionDownload(Connection conn, long submissionId, HttpServletResponse response)
             throws SQLException, IOException {
         Map<String, Object> row = DashboardDataService.loadKppGuestSubmissionById(conn, submissionId);

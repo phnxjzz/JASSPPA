@@ -1,15 +1,26 @@
+<<<<<<< HEAD
+﻿# Sistem Pendaftaran Produk Air (SPPPA)
+
+Sistem ini ialah aplikasi web untuk pengurusan permohonan pendaftaran produk air di Jabatan Air Sabah.
+=======
 # Sistem Permohonan Pendaftaran Produk Air Jabatan Air Sabah_
 
 ### Penerangan Sistem
 SPPPA ialah platform web untuk urus pendaftaran dan pengesahan produk air di Sabah. Sistem ini membolehkan pentadbir semak permohonan dan pengguna awam hantar permohonan pendaftaran produk.
+>>>>>>> origin/SPPPA
 
-## Developer Onboarding (Quick Link)
+## Ringkasan
 
-- Rujuk panduan setup lengkap: [DEVELOPER_SETUP_GUIDE.md](DEVELOPER_SETUP_GUIDE.md)
-- Repo ini boleh dikongsi sebagai pakej penuh termasuk skrip operasi, runtime Tomcat, dan tools yang dibundel untuk setup developer pada Windows.
+SPPPA digunakan untuk:
 
----
+- Pendaftaran permohonan produk air oleh pemohon
+- Semakan dan keputusan permohonan oleh pentadbir
+- Pengurusan data produk berdaftar
+- Jejak audit aktiviti sistem
 
+<<<<<<< HEAD
+## Teknologi
+=======
 ##  Struktur
 
 ```text
@@ -41,12 +52,25 @@ ProjectLI/
 |   +-- water_products.csv
 +-- SistemPPA.py # Python scraper for data import
 ```
+>>>>>>> origin/SPPPA
 
----
+- Java (WAR web application)
+- Jakarta Servlet
+- MySQL
+- HikariCP
+- Maven
+- Apache Tomcat
 
-##  Ciri-ciri Sistem
+## Ciri Utama
 
 ### Pentadbir
+<<<<<<< HEAD
+
+- Semak permohonan
+- Lulus/tolak permohonan
+- Urus akaun pengguna
+- Lihat statistik dan log audit
+=======
 - Melihat dan menyemak permohonan
 - Meluluskan atau menolak permohonan
 - Menggantung akaun pengguna
@@ -60,13 +84,51 @@ ProjectLI/
 - Mengemas kini maklumat akaun
 - Tukar kata laluan
 - Akses senarai produk berdaftar
+>>>>>>> origin/SPPPA
 
----
+### Pemohon
 
-##  Pangkalan Data
+- Hantar permohonan baharu
+- Lihat status permohonan
+- Kemas kini profil akaun
 
-### Jadual Utama
+## Struktur Projek
 
+<<<<<<< HEAD
+```text
+src/main/java         Kod backend (servlet, config, util)
+src/main/webapp       JSP, aset frontend, WEB-INF
+database/schema.sql   Struktur pangkalan data
+data/                 Data produk air (CSV/JSON)
+ops-scripts/          Skrip operasi (startup, shutdown, deploy, smoke test)
+runtime/              Runtime Tomcat
+```
+
+## Prasyarat
+
+- Java JDK
+- Maven
+- MySQL
+- Windows PowerShell
+
+## Setup Pangkalan Data
+
+```powershell
+mysql -u root -p < database/schema.sql
+```
+
+Kemudian tetapkan sambungan DB dalam konfigurasi aplikasi:
+
+- src/main/java/com/sistemppa/config/DatabaseConfig.java
+
+## Build
+
+```powershell
+mvn clean package
+```
+
+Artefak hasil build ialah fail WAR bernama sistemppa.war.
+=======
 #### `users`
 Menyimpan maklumat pengguna dan pentadbir.
 
@@ -152,9 +214,19 @@ config.setPassword("your_password");
 mvn clean package
 # Kemudian salin sistemppa.war ke tomcat/webapps/
 ```
+>>>>>>> origin/SPPPA
 
-Akses di: `http://localhost:8080/sistemppa`
+## Jalankan Sistem
 
+<<<<<<< HEAD
+Cara paling mudah:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\startup-system.ps1" -NoBrowser
+```
+
+Akses aplikasi:
+=======
 ### Langkah 4: Import Data Produk Air (Pilihan)
 
 ```bash
@@ -171,23 +243,25 @@ python SistemPPA.py
 # Dari mana-mana direktori (tidak perlu Administrator)
 powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\startup-system.ps1" -NoBrowser
 ```
+>>>>>>> origin/SPPPA
 
-**Apa yang dilakukan automatik:**
-- Pastikan MySQL 8.0 berjalan
-- Auto-kesan JAVA_HOME jika tidak ditetapkan
-- Jalankan Tomcat
-- Sahkan endpoint HTTP 200
+- http://localhost:8081/sistemppa/
 
-### Akses Sistem
-- **Lokal (Komputer Server)**: `http://localhost:8081/sistemppa/`
-- **Jaringan LAN**: `http://192.168.1.52:8081/sistemppa/`
+## Deploy dan Ujian Asas
 
----
+Untuk build + deploy:
 
-## Sistem Sentiasa Berjalan (Always-On)
+```powershell
+powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\build-and-deploy.ps1"
+```
 
-### Arahan Pantas
+Untuk semakan ringkas selepas deploy:
 
+<<<<<<< HEAD
+```powershell
+powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\smoke-test.ps1"
+```
+=======
 | Tujuan | Perintah |
 |--------|----------|
 | Mulakan sistem | `powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\startup-system.ps1" -NoBrowser` |
@@ -199,9 +273,15 @@ powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\startup-syste
 | Henti watchdog manual | `Stop-ScheduledTask -TaskName SPPPA-AlwaysRun` |
 | Buang autostart | `powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\register-autostart.ps1" -Unregister` |
 | Tutup sistem | `powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\shutdown-system.ps1"` |
+>>>>>>> origin/SPPPA
 
-### Cara Daftarkan Autostart (Satu Kali Sahaja)
+## Henti Sistem
 
+<<<<<<< HEAD
+```powershell
+powershell -ExecutionPolicy Bypass -File "p:\ProjectLI\ops-scripts\shutdown-system.ps1"
+```
+=======
 Jalankan **sekali** sebagai Administrator untuk daftarkan Windows Task Scheduler:
 
 ```powershell
@@ -475,3 +555,4 @@ Semua hak terpelihara (c) 2026.
 **Versi**: 1.0.0
 **Tarikh**: 29 Jun 2026
 **Status**: Beta (Dalam pembangunan)
+>>>>>>> origin/SPPPA

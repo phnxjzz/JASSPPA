@@ -15,10 +15,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Senarai Pengguna &ndash; SPPA Admin</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
+    <title>Senarai Pengguna &ndash; SPPPA Admin</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
-        :root {
+:root {
             --brand-blue: #2A9D8F;
             --brand-navy: #0F6BAE;
             --brand-green: #6DBE45;
@@ -31,7 +31,7 @@
             --muted: #5d7484;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: var(--text); }
+        body { margin: 0; font-family: inherit; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%); border-bottom: 3px solid var(--brand-gold); color: white; padding: 14px 26px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 12px 28px rgba(8, 51, 77, 0.2); }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 52px; height: 52px; object-fit: contain; }
@@ -48,6 +48,50 @@
         .page-header h2 { margin: 0 0 4px; font-size: 26px; color: var(--brand-navy); }
         .page-header p { margin: 0; color: var(--muted); }
         .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 26px rgba(9, 53, 79, 0.07); padding: 22px; }
+        .users-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .search-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f6fbff;
+            border: 1px solid #d4e1ec;
+            border-radius: 12px;
+            padding: 6px;
+        }
+        .search-form-icon {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            opacity: 0.9;
+            margin-left: 4px;
+        }
+        .search-form input[type="text"] {
+            min-width: 280px;
+            border: 1px solid #d0deea;
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text);
+            background: #ffffff;
+        }
+        .search-form input[type="text"]:focus {
+            outline: none;
+            border-color: #8fb6d2;
+            box-shadow: 0 0 0 2px rgba(15, 107, 174, 0.12);
+        }
+        .search-form .btn {
+            padding: 9px 12px;
+            border-radius: 8px;
+            box-shadow: none;
+        }
         .btn { padding: 10px 16px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 14px; transition: transform 0.15s ease, box-shadow 0.15s ease; text-decoration: none; }
         .btn:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(9,53,79,0.15); }
         .btn-primary { background: linear-gradient(180deg, var(--brand-navy) 0%, var(--brand-blue) 55%, var(--brand-green) 100%); color: white; }
@@ -60,6 +104,7 @@
         .role-pill { display: inline-block; padding: 4px 11px; border-radius: 999px; font-weight: 700; font-size: 12px; }
         .role-admin { background: #fef3c7; color: #92400e; }
         .role-user { background: #dbeafe; color: #1e40af; }
+        .role-staff { background: #dcfce7; color: #166534; }
         .status-pill { display: inline-block; padding: 4px 11px; border-radius: 999px; font-weight: 700; font-size: 12px; }
         .status-active { background: #dcfce7; color: #166534; }
         .status-inactive { background: #e2e8f0; color: #334155; }
@@ -87,7 +132,7 @@
             background: #ffffff;
             color: #166534;
             font-size: 16px;
-            line-height: 1.35;
+            line-height: 1.6;
             box-shadow: 0 16px 32px rgba(10, 64, 38, 0.2);
             transform: translate(-50%, -58%) scale(0.97);
             opacity: 0;
@@ -127,6 +172,32 @@
             50% { transform: scale(1.06); }
         }
         .user-count { font-size: 13px; color: var(--muted); float: right; margin-top: 4px; }
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #d9e5ef;
+            border-radius: 12px;
+            background: #fff;
+        }
+        .table-wrap table {
+            min-width: 1050px;
+            margin: 0;
+            border-collapse: collapse;
+        }
+        .table-wrap th,
+        .table-wrap td {
+            white-space: nowrap;
+        }
+        .table-wrap td:nth-child(3),
+        .table-wrap td:nth-child(4),
+        .table-wrap td:nth-child(5) {
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        .table-wrap td:nth-child(10) {
+            white-space: nowrap;
+        }
         /* Modal */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(8,51,77,0.45); z-index: 1000; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
@@ -181,7 +252,34 @@
         .action-item-danger { color: #b91c1c; }
         .action-item-danger:hover { background: #fff1f2; }
         @media (max-width: 768px) { .navbar { flex-direction: column; align-items: flex-start; } .navbar a { margin-left: 0; margin-right: 10px; } }
-        .temp-pw-box { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; font-family: monospace; font-size: 18px; text-align: center; letter-spacing: 2px; color: #0f172a; margin: 12px 0; word-break: break-all; }
+        @media (max-width: 768px) {
+            .search-form { width: 100%; }
+            .search-form input[type="text"] { min-width: 0; width: 100%; }
+            .user-count { float: none; width: 100%; text-align: right; }
+            .panel { padding: 16px; }
+        }
+        .temp-pw-box { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; font-family: inherit; font-size: 18px; text-align: center; letter-spacing: 2px; color: #0f172a; margin: 12px 0; word-break: break-all; }
+        .audit-panel { margin-top: 18px; }
+        .audit-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+        .audit-item { border: 1px solid #d8e5ef; border-radius: 10px; background: #f8fbff; padding: 10px 12px; }
+        .audit-item strong { display: block; color: #0f3f61; font-size: 13px; margin-bottom: 3px; }
+        .audit-item p { margin: 0; color: #486376; font-size: 12px; }
+        .audit-meta { margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; color: #708798; font-size: 11px; }
+        .audit-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+        .audit-toggle-btn { width: 34px; height: 34px; border: 1px solid #c9dcea; border-radius: 8px; background: #f7fbff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+        .audit-toggle-btn img { width: 18px; height: 18px; object-fit: contain; }
+        .audit-content.is-hidden { display: none; }
+        .kpp-panel { margin-top: 18px; }
+        .kpp-form { display: grid; grid-template-columns: 1.1fr 1fr 1fr auto; gap: 10px; margin-bottom: 12px; align-items: end; }
+        .kpp-field label { display: block; font-size: 12px; font-weight: 700; color: #4b6477; margin-bottom: 6px; }
+        .kpp-field input { width: 100%; border: 1px solid #cbd8e4; border-radius: 10px; padding: 10px 11px; font-family: inherit; font-size: 13px; }
+        .kpp-table-wrap { border: 1px solid #d9e5ef; border-radius: 12px; overflow: auto; }
+        .kpp-table th, .kpp-table td { padding: 10px 11px; border-bottom: 1px solid #e6edf4; }
+        .kpp-table th { background: #f4f8fc; font-size: 12px; color: #5a7488; text-transform: uppercase; letter-spacing: 0.04em; }
+        .kpp-empty { text-align: center; color: #6e8394; padding: 16px 10px; }
+        @media (max-width: 980px) {
+            .kpp-form { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -197,8 +295,7 @@
     </div>
     <div>
         <span>Selamat datang, <%= session.getAttribute("username") %></span>
-        <a href="${pageContext.request.contextPath}/dashboard" data-i18n="nav.dashboard">Dashboard</a>
-        <a href="${pageContext.request.contextPath}/products" data-i18n="nav.products_list">Senarai Produk</a>
+        <a class="icon-link" href="${pageContext.request.contextPath}/dashboard" title="Dashboard" aria-label="Dashboard"><img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard"></a>
         <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
         <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
     </div>
@@ -208,7 +305,7 @@
 
     <div class="page-header">
         <h2><img src="${pageContext.request.contextPath}/assets/images/User.png" style="width:28px;height:28px;object-fit:contain;vertical-align:middle;margin-right:8px;"> Senarai Pengguna</h2>
-        <p>Urus akaun pengguna yang berdaftar dalam sistem SPPA.</p>
+        <p>Urus akaun pengguna yang berdaftar dalam sistem SPPPA.</p>
     </div>
 
     <%
@@ -218,6 +315,11 @@
         String roleUpdated = request.getParameter("role_updated");
         String phoneUpdated = request.getParameter("phone_updated");
         String emailUpdated = request.getParameter("email_updated");
+<<<<<<< HEAD
+        String kppAdded = request.getParameter("kpp_added");
+        String kppDeleted = request.getParameter("kpp_deleted");
+=======
+>>>>>>> origin/SPPPA
         String tempPw  = request.getParameter("tempPw");
         String error   = request.getParameter("error");
     %>
@@ -266,6 +368,27 @@
                 <button type="button" class="success-ok" data-close-success-popup>OK</button>
             </div>
         </div>
+<<<<<<< HEAD
+    <% } else if ("1".equals(kppAdded)) { %>
+        <div id="successPopup" class="success-popup show" role="dialog" aria-live="polite" aria-label="Notifikasi berjaya">
+            <img class="success-gif" src="${pageContext.request.contextPath}/assets/images/success.png" alt="Berjaya">
+            <div class="success-popup-content">
+                <div class="success-title">BERJAYA!</div>
+                <div class="success-text"></div>
+                <button type="button" class="success-ok" data-close-success-popup>OK</button>
+            </div>
+        </div>
+    <% } else if ("1".equals(kppDeleted)) { %>
+        <div id="successPopup" class="success-popup show" role="dialog" aria-live="polite" aria-label="Notifikasi berjaya">
+            <img class="success-gif" src="${pageContext.request.contextPath}/assets/images/success.png" alt="Berjaya">
+            <div class="success-popup-content">
+                <div class="success-title">BERJAYA!</div>
+                <div class="success-text"></div>
+                <button type="button" class="success-ok" data-close-success-popup>OK</button>
+            </div>
+        </div>
+=======
+>>>>>>> origin/SPPPA
     <% } else if ("cannot_delete_self".equals(error)) { %>
         <div class="alert alert-error">&#10007; Anda tidak boleh memadam akaun anda sendiri.</div>
     <% } else if ("cannot_suspend_self".equals(error)) { %>
@@ -286,6 +409,17 @@
         <div class="alert alert-error">&#10007; Format e-mel tidak sah.</div>
     <% } else if ("email_exists".equals(error)) { %>
         <div class="alert alert-error">&#10007; E-mel sudah digunakan oleh pengguna lain.</div>
+<<<<<<< HEAD
+    <% } else if ("kpp_invalid".equals(error)) { %>
+        <div class="alert alert-error">&#10007; Maklumat KPP tidak lengkap atau tidak sah.</div>
+    <% } else if ("kpp_invalid_email".equals(error)) { %>
+        <div class="alert alert-error">&#10007; E-mel KPP tidak sah.</div>
+    <% } else if ("kpp_email_exists".equals(error)) { %>
+        <div class="alert alert-error">&#10007; E-mel KPP sudah wujud dalam senarai.</div>
+    <% } else if ("kpp_not_found".equals(error)) { %>
+        <div class="alert alert-error">&#10007; Rekod KPP tidak ditemui.</div>
+=======
+>>>>>>> origin/SPPPA
     <% } else if ("db_error".equals(error)) { %>
         <div class="alert alert-error">&#10007; Ralat semasa memproses permintaan. Sila cuba lagi.</div>
     <% } %>
@@ -309,14 +443,28 @@
         <%
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> users = (List<Map<String, Object>>) request.getAttribute("users");
+            List<Map<String, Object>> adminAuditLogs = (List<Map<String, Object>>) request.getAttribute("admin_audit_logs");
+            String searchQuery = String.valueOf(request.getAttribute("search") == null ? "" : request.getAttribute("search"));
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         %>
-        <span class="user-count">Jumlah: <%= users != null ? users.size() : 0 %> pengguna</span>
+        <div class="users-toolbar">
+            <form class="search-form" method="get" action="${pageContext.request.contextPath}/admin/users">
+                <img class="search-form-icon" src="${pageContext.request.contextPath}/icon/search.png" alt="Cari pengguna">
+                <input type="text" name="search" value="<%= esc(searchQuery) %>" placeholder="Cari nama, username atau e-mel">
+                <button type="submit" class="btn btn-secondary">Cari</button>
+                <% if (searchQuery != null && !searchQuery.isBlank()) { %>
+                    <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/users">Reset</a>
+                <% } %>
+            </form>
+            <span class="user-count">Jumlah: <%= users != null ? users.size() : 0 %> pengguna</span>
+        </div>
 
+        <div class="table-wrap">
         <table>
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>ID Pengguna</th>
                     <th>Nama Penuh</th>
                     <th>Nama Pengguna</th>
                     <th>E-mel</th>
@@ -329,11 +477,16 @@
             </thead>
             <tbody>
             <% if (users == null || users.isEmpty()) { %>
+<<<<<<< HEAD
+                <tr><td colspan="10" class="empty">Tiada pengguna dijumpai.</td></tr>
+=======
                 <tr><td colspan="9" class="empty">Tiada pengguna dijumpai.</td></tr>
+>>>>>>> origin/SPPPA
             <% } else {
                 int idx = 1;
                 for (Map<String, Object> u : users) {
                     String userId    = String.valueOf(u.get("id"));
+                    String displayId = esc(String.valueOf(u.get("display_id") == null ? "-" : u.get("display_id")));
                     String fullName  = esc(String.valueOf(u.get("full_name")));
                     String username  = esc(String.valueOf(u.get("username")));
                     String email     = esc(String.valueOf(u.get("email")));
@@ -342,14 +495,16 @@
                     String status    = String.valueOf(u.get("status"));
                     Timestamp createdAt = (Timestamp) u.get("created_at");
                     String dateStr   = createdAt != null ? sdf.format(createdAt) : "-";
-                    String roleClass = "ADMIN".equals(role) ? "role-admin" : "role-user";
+                        String roleClass = "ADMIN".equals(role) ? "role-admin"
+                            : "STAFF".equals(role) ? "role-staff"
+                            : "role-user";
                     String statClass = "ACTIVE".equals(status) ? "status-active"
                                      : "SUSPENDED".equals(status) ? "status-suspended" : "status-inactive";
-                    String toggleLabel = "SUSPENDED".equals(status) ? "Aktifkan" : "Gantung";
-                    String toggleBtnClass = "SUSPENDED".equals(status) ? "btn btn-success" : "btn btn-warning";
+                    boolean isActive = "ACTIVE".equals(status);
             %>
                 <tr>
                     <td><%= idx++ %></td>
+                    <td><strong><%= displayId %></strong></td>
                     <td><strong><%= fullName %></strong></td>
                     <td><%= username %></td>
                     <td><%= email %></td>
@@ -379,9 +534,23 @@
                                 </button>
                                 <form method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
                                     <input type="hidden" name="_csrf" value="${csrf_token}">
+<<<<<<< HEAD
+                                    <input type="hidden" name="action" value="set_status">
+                                    <input type="hidden" name="status" value="ACTIVE">
+                                    <input type="hidden" name="userId" value="<%= userId %>">
+                                    <button type="submit" class="action-item" <%= isActive ? "disabled" : "" %>>Aktifkan</button>
+                                </form>
+                                <form method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
+                                    <input type="hidden" name="_csrf" value="${csrf_token}">
+                                    <input type="hidden" name="action" value="set_status">
+                                    <input type="hidden" name="status" value="SUSPENDED">
+                                    <input type="hidden" name="userId" value="<%= userId %>">
+                                    <button type="submit" class="action-item" <%= !isActive ? "disabled" : "" %>>Nyahaktifkan</button>
+=======
                                     <input type="hidden" name="action" value="toggle_status">
                                     <input type="hidden" name="userId" value="<%= userId %>">
                                     <button type="submit" class="action-item"><%= toggleLabel %></button>
+>>>>>>> origin/SPPPA
                                 </form>
                                 <button type="button" class="action-item action-item-danger"
                                         onclick="confirmDelete('<%= userId %>', '<%= username %>')">
@@ -394,6 +563,111 @@
             <% } } %>
             </tbody>
         </table>
+        </div>
+    </div>
+
+    <div class="panel kpp-panel">
+        <h3 style="margin:0 0 10px;color:#0f6bae;">Urus Senarai KPP (Tindakan Ketua Penolong Pengarah)</h3>
+        <p style="margin:0 0 12px;color:#5b7384;font-size:13px;">Tambah atau buang nama KPP, e-mel dan cawangan. Senarai ini akan digunakan pada panel Tindakan Ketua Penolong Pengarah.</p>
+        <form class="kpp-form" method="post" action="${pageContext.request.contextPath}/admin/users">
+            <input type="hidden" name="_csrf" value="${csrf_token}">
+            <input type="hidden" name="action" value="add_kpp_contact">
+            <div class="kpp-field">
+                <label for="kppNameInput">Nama KPP</label>
+                <input id="kppNameInput" name="kpp_name" type="text" placeholder="Contoh: Ahmad bin Ali" required>
+            </div>
+            <div class="kpp-field">
+                <label for="kppBranchInput">Cawangan</label>
+                <input id="kppBranchInput" name="kpp_branch" type="text" placeholder="Contoh: Cawangan Kota Kinabalu" required>
+            </div>
+            <div class="kpp-field">
+                <label for="kppEmailInput">E-mel</label>
+                <input id="kppEmailInput" name="kpp_email" type="email" placeholder="contoh@domain.com" required>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">Tambah KPP</button>
+            </div>
+        </form>
+
+        <%
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> kppContacts = (List<Map<String, Object>>) request.getAttribute("kpp_contacts");
+        %>
+        <div class="kpp-table-wrap">
+            <table class="kpp-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px;">ID</th>
+                        <th>Nama KPP</th>
+                        <th>Cawangan</th>
+                        <th>E-mel</th>
+                        <th style="width:130px;">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <% if (kppContacts == null || kppContacts.isEmpty()) { %>
+                    <tr><td colspan="5" class="kpp-empty">Belum ada senarai KPP. Tambah rekod pertama menggunakan borang di atas.</td></tr>
+                <% } else {
+                    for (Map<String, Object> kpp : kppContacts) {
+                        String kppId = String.valueOf(kpp.get("id"));
+                %>
+                    <tr>
+                        <td><strong><%= esc(kppId) %></strong></td>
+                        <td><strong><%= esc(String.valueOf(kpp.get("name"))) %></strong></td>
+                        <td><%= esc(String.valueOf(kpp.get("branch"))) %></td>
+                        <td><%= esc(String.valueOf(kpp.get("email"))) %></td>
+                        <td>
+                            <form method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;" onsubmit="return confirm('Padam rekod KPP ini?');">
+                                <input type="hidden" name="_csrf" value="${csrf_token}">
+                                <input type="hidden" name="action" value="delete_kpp_contact">
+                                <input type="hidden" name="kpp_id" value="<%= esc(kppId) %>">
+                                <button type="submit" class="btn btn-danger">Padam</button>
+                            </form>
+                        </td>
+                    </tr>
+                <%  }
+                   } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel audit-panel">
+        <div class="audit-panel-header">
+            <h3 style="margin:0;color:#0f6bae;">Notes: Rekod Tindakan Admin</h3>
+            <button type="button" class="audit-toggle-btn" id="toggleAuditBtnUsers" aria-expanded="true" aria-controls="adminAuditContentUsers" title="Sembunyi rekod tindakan admin">
+                <img id="toggleAuditIconUsers" src="${pageContext.request.contextPath}/icon/hide.png" alt="Sembunyikan rekod tindakan admin">
+            </button>
+        </div>
+        <div id="adminAuditContentUsers" class="audit-content">
+        <ul class="audit-list">
+            <% if (adminAuditLogs != null && !adminAuditLogs.isEmpty()) {
+                for (Map<String, Object> auditRow : adminAuditLogs) {
+                    String actorName = auditRow.get("full_name") == null
+                            ? String.valueOf(auditRow.get("username") == null ? "Admin" : auditRow.get("username"))
+                            : String.valueOf(auditRow.get("full_name"));
+                    String actorDisplayId = String.valueOf(auditRow.get("display_user_id") == null ? "-" : auditRow.get("display_user_id"));
+                    String action = String.valueOf(auditRow.get("action") == null ? "-" : auditRow.get("action"));
+                    String actionDisplay = action.replace('_', ' ').replaceAll("\\s+", " ").trim();
+                    String details = String.valueOf(auditRow.get("details") == null ? "Tiada perincian." : auditRow.get("details"));
+                    Timestamp actionAt = (Timestamp) auditRow.get("created_at");
+            %>
+            <li class="audit-item">
+                <strong><%= esc(actorName) %> (<%= esc(actorDisplayId) %>) · <%= esc(actionDisplay) %></strong>
+                <p><%= esc(details) %></p>
+                <div class="audit-meta">
+                    <span><%= actionAt != null ? sdf.format(actionAt) : "Masa tidak direkod" %></span>
+                </div>
+            </li>
+            <%      }
+               } else { %>
+            <li class="audit-item">
+                <strong>Belum ada rekod tindakan</strong>
+                <p>Log tindakan admin akan muncul di sini secara automatik.</p>
+            </li>
+            <% } %>
+        </ul>
+        </div>
     </div>
 </div>
 
@@ -444,6 +718,10 @@
                 <label for="roleSelect" style="display:block;font-weight:700;margin-bottom:8px;color:#334155;">Peranan</label>
                 <select id="roleSelect" name="role" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;">
                     <option value="USER">USER (Pengguna)</option>
+<<<<<<< HEAD
+                    <option value="STAFF">STAFF (Staf Dalaman)</option>
+=======
+>>>>>>> origin/SPPPA
                     <option value="ADMIN">ADMIN (Pentadbir)</option>
                 </select>
             </div>
@@ -534,7 +812,12 @@
         document.getElementById('roleUserId').value = userId;
         document.getElementById('roleModalMsg').textContent =
             'Pilih peranan baharu untuk pengguna "' + username + '".';
+<<<<<<< HEAD
+        document.getElementById('roleSelect').value =
+            currentRole === 'ADMIN' ? 'ADMIN' : (currentRole === 'STAFF' ? 'STAFF' : 'USER');
+=======
         document.getElementById('roleSelect').value = currentRole === 'ADMIN' ? 'ADMIN' : 'USER';
+>>>>>>> origin/SPPPA
         document.getElementById('roleModal').classList.add('active');
     }
     function confirmPhone(userId, username, currentPhone) {
@@ -582,6 +865,27 @@
     }
     var closeBtn = popup.querySelector('[data-close-success-popup]');
     if (closeBtn) closeBtn.addEventListener('click', closePopup);
+})();
+
+(function initAdminAuditToggleUsers() {
+    var button = document.getElementById('toggleAuditBtnUsers');
+    var content = document.getElementById('adminAuditContentUsers');
+    var icon = document.getElementById('toggleAuditIconUsers');
+    if (!button || !content || !icon) return;
+
+    function setState(hidden) {
+        content.classList.toggle('is-hidden', hidden);
+        button.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+        button.setAttribute('title', hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyi rekod tindakan admin');
+        icon.src = hidden ? '${pageContext.request.contextPath}/icon/unhide.png' : '${pageContext.request.contextPath}/icon/hide.png';
+        icon.alt = hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyikan rekod tindakan admin';
+    }
+
+    button.addEventListener('click', function() {
+        setState(!content.classList.contains('is-hidden'));
+    });
+
+    setState(false);
 })();
 </script>
 
