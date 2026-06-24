@@ -122,7 +122,7 @@
             return "DIGANTUNG";
         }
         if ("DRAFT".equals(normalized) || "DRAF".equals(normalized)) {
-            return "DRAF";
+            return "NEW";
         }
         if ("ARCHIVED".equals(normalized) || "DIARKIB".equals(normalized)) {
             return "DIARKIB";
@@ -141,9 +141,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Dashboard Pentadbir - SPPPA</title>
     <style>
-        /* ── Design tokens ───────────────────────────── */
+/*A��─ Design tokensA��──────────────────────────── */
         :root {
             --brand-blue: #0097d9;
             --brand-navy: #06344f;
@@ -156,7 +157,7 @@
             --tr: 0.2s ease;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
+        body { margin: 0; font-family: inherit; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 76%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 52px; height: 52px; border-radius: 14px; object-fit: contain; padding: 4px; }
@@ -200,6 +201,47 @@
         .stats .stat-card:nth-child(6) h3, .stats .stat-card:nth-child(6) .number { color: #5b2491; }
         .layout { display: grid; grid-template-columns: 1.9fr 1fr; gap: 20px; }
         .toolbar { display: grid; grid-template-columns: minmax(220px, 1.6fr) repeat(3, minmax(140px, 1fr)); gap: 12px; align-items: end; margin-bottom: 16px; }
+        .status-filter-compact .status-filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+        .status-filter-compact .status-filter-controls select {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .btn-archive-main {
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            position: relative;
+        }
+        .archive-hover-label {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: #163b56;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+            padding: 7px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+            box-shadow: 0 10px 20px rgba(9, 36, 56, 0.24);
+            z-index: 40;
+            pointer-events: none;
+        }
+        .btn-archive-main:hover .archive-hover-label,
+        .btn-archive-main:focus-visible .archive-hover-label {
+            display: inline-flex;
+        }
         .export-control { min-width: 0; }
         .export-help { margin-top: 6px; font-size: 12px; color: var(--muted); }
         .field { min-width: 0; }
@@ -258,6 +300,7 @@
         .status-new { background: #dbeafe; color: #1e40af; }
         .status-under_review { background: #e0f2fe; color: #0369a1; }
         .status-in_progress { background: #ede9fe; color: #7c3aed; }
+        .status-resolved { background: #dcfce7; color: #166534; }
         .status-approved { background: #dff5e7; color: #156b3c; }
         .status-rejected { background: #ffe1e4; color: #9f1f2b; }
         .status-suspended { background: #ececf2; color: #4a4a60; }
@@ -433,6 +476,86 @@
         .maintenance-popup-btn-cancel:hover {
             background: #d8e7f3;
         }
+        .aduan-password-popup {
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 25, 40, 0.52);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1680;
+            padding: 16px;
+        }
+        .aduan-password-popup.show {
+            display: flex;
+        }
+        .aduan-password-popup-card {
+            width: min(420px, 100%);
+            background: #ffffff;
+            border: 1px solid #d8e5ef;
+            border-radius: 16px;
+            box-shadow: 0 24px 54px rgba(3, 30, 54, 0.28);
+            padding: 20px 18px 16px;
+            text-align: center;
+        }
+        .aduan-password-popup-icon {
+            width: 84px;
+            height: 84px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        .aduan-password-popup-title {
+            margin: 0;
+            font-size: 21px;
+            font-weight: 800;
+            color: #0f3f61;
+        }
+        .aduan-password-popup-text {
+            margin: 8px 0 12px;
+            color: #3f6278;
+            font-size: 14px;
+        }
+        .aduan-password-popup-input {
+            width: 100%;
+            border: 1px solid #cfe1ee;
+            border-radius: 10px;
+            background: #f9fcff;
+            color: #214e69;
+            padding: 10px 12px;
+            font: inherit;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .aduan-password-popup-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .aduan-password-popup-btn {
+            min-width: 120px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 10px 14px;
+            cursor: pointer;
+        }
+        .aduan-password-popup-btn-confirm {
+            background: #0a7fbf;
+            color: #fff;
+        }
+        .aduan-password-popup-btn-confirm:hover {
+            background: #086da5;
+        }
+        .aduan-password-popup-btn-cancel {
+            background: #e8f1f8;
+            color: #24506e;
+        }
+        .aduan-password-popup-btn-cancel:hover {
+            background: #d8e7f3;
+        }
         @keyframes toastPulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.16); }
@@ -486,6 +609,30 @@
         .quick-btn-purple { background: #eadcff; color: #5b2491; border-color: #cdb0f5; }
         .quick-btn-red { background: #ffd9d9; color: #8f1d1d; border-color: #f0a9a9; }
         .quick-btn-brown { background: #ead7c4; color: #6f4a2a; border-color: #cfb08f; }
+        .quick-btn-aduan { background: #ef4444; color: #ffffff; border-color: #d02f2f; }
+        .quick-btn-aduan.is-locked { background: #f9c7c7; color: #8f1d1d; border-color: #eaa3a3; }
+        .quick-btn-aduan.has-unread { position: relative; overflow: visible; }
+        .quick-btn-aduan .unread-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff1b1b;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+        }
+        .staff-complaint-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+        .staff-complaint-item { border: 1px solid #dbe7ef; border-radius: 12px; background: #f9fcff; padding: 10px; }
+        .staff-complaint-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .staff-complaint-title { margin: 0; color: #0d4f80; font-size: 14px; }
+        .staff-complaint-meta { margin-top: 4px; color: #577082; font-size: 12px; line-height: 1.45; }
+        .staff-complaint-actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+        .staff-complaint-actions form { margin: 0; }
+        .staff-complaint-actions .btn { padding: 7px 10px; border-radius: 8px; font-size: 12px; }
+        .staff-complaint-empty { color: #637d8d; font-size: 13px; margin: 0; }
+        .staff-new-count { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 999px; padding: 0 7px; background: #ffe4e4; color: #b91c1c; font-size: 12px; font-weight: 800; }
         .quick-actions form { margin: 0; }
         .quick-actions form .btn {
             cursor: pointer;
@@ -502,7 +649,22 @@
         .notification-item, .activity-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: #f9fcff; }
         .notification-item strong, .activity-item strong { display: block; margin-bottom: 4px; font-size: 13px; color: #0d4f80; }
         .notification-item span, .activity-item span { color: #577082; font-size: 12px; }
-        .audit-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+        .audit-content {
+            max-height: 420px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .audit-list {
+            list-style: none;
+            margin: 0;
+            padding: 0 4px 0 0;
+            display: grid;
+            gap: 8px;
+            overflow-y: auto;
+            min-height: 0;
+            scrollbar-gutter: stable;
+        }
         .audit-item { border: 1px solid #dbe7ef; border-radius: 10px; background: #fbfdff; padding: 10px; }
         .audit-item strong { display: block; color: #123f5a; font-size: 12px; margin-bottom: 3px; }
         .audit-item p { margin: 0; color: #486375; font-size: 12px; line-height: 1.4; }
@@ -544,12 +706,35 @@
         .legend-dot.rejected { background: #cf4e4e; }
         .legend-dot.new { background: #3b82f6; }
         .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
-        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; }
+        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; display: inline-flex; align-items: center; gap: 8px; }
         .contact-line { display: flex; gap: 8px; align-items: flex-start; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; }
-        .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .contact-icon { width: 13px; height: 13px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
         .jans-contact-section .contact-line span { line-height: 1.45; }
+        .contact-line-hanging { margin-left: 21px; }
         .contact-address-link { color: #0f6bae; text-decoration: none; }
         .contact-address-link:hover { text-decoration: underline; }
+        body.popup-open {
+            overflow: hidden;
+        }
+        body.popup-open .expand-overlay {
+            display: block;
+            background: rgba(4, 23, 39, 0.52);
+            backdrop-filter: blur(1.5px);
+        }
+        body.popup-open .table-card.popup-active,
+        body.popup-open #announcementPanel.popup-active {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(1220px, calc(100vw - 34px));
+            max-height: calc(100vh - 40px);
+            overflow: auto;
+            z-index: 1101;
+            margin: 0;
+            box-shadow: 0 26px 52px rgba(3, 22, 38, 0.35);
+            border-radius: 16px;
+        }
 
         @media (max-width: 1200px) {
             .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -582,9 +767,10 @@
                 max-height: calc(100vh - 12px);
                 border-radius: 12px;
             }
+            .audit-content { max-height: 340px; }
         }
 
-        /* ── Misc ────────────────────────────────────── */
+        /*A��─ MiscA��───────────────────────────────────── */
         .announce-with-gif { display: flex; align-items: center; gap: 10px; }
         .announce-title  { font-weight: 700; color: var(--brand-navy); }
         .announce-content { color: var(--muted); margin-top: 4px; white-space: pre-wrap; }
@@ -1082,27 +1268,12 @@
         }
         .expand-overlay {
             position: fixed;
-            inset: 0;
-            background: rgba(3, 18, 32, 0.62);
-            backdrop-filter: blur(2px);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1099;
             display: none;
-            z-index: 1200;
-        }
-        body.popup-open { overflow: hidden; }
-        body.popup-open .expand-overlay { display: block; }
-        body.popup-open .table-card.popup-active,
-        body.popup-open #announcementPanel.popup-active {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: min(1120px, calc(100vw - 24px));
-            max-height: calc(100vh - 38px);
-            overflow: auto;
-            z-index: 1210;
-            border-radius: 18px;
-            box-shadow: 0 30px 90px rgba(2, 24, 43, 0.44);
-            margin: 0;
         }
         .panel-expand-btn[aria-expanded="true"] img { transform: rotate(180deg); }
         .panel-expand-btn img { transition: transform var(--tr); }
@@ -1111,12 +1282,20 @@
 <body>
     <%
         boolean maintenanceMode = Boolean.TRUE.equals(application.getAttribute("maintenanceMode"));
-    String maintenanceConfirmText = maintenanceMode
-        ? "Tutup mod penyelenggaraan dan teruskan sistem?"
-        : "Aktifkan mod penyelenggaraan sekarang?";
-    String maintenanceButtonText = maintenanceMode
-        ? "Matikan Penyelenggaraan"
-        : "Aktifkan Penyelenggaraan";
+        String maintenanceConfirmText = maintenanceMode
+            ? "Nyahaktifkan mod penyelenggaraan dan teruskan sistem?"
+            : "Aktifkan mod penyelenggaraan sekarang?";
+        String maintenanceButtonText = maintenanceMode
+            ? "Nyahaktifkan mod Penyelenggaraan"
+            : "Aktifkan mod Penyelenggaraan";
+        String currentAdminDisplayId = request.getAttribute("current_admin_display_id") == null
+            ? "-"
+            : String.valueOf(request.getAttribute("current_admin_display_id"));
+        String currentAdminUsername = session.getAttribute("username") == null ? "admin" : String.valueOf(session.getAttribute("username"));
+        String aduanPasswordPromptLabel = currentAdminUsername + " (" + currentAdminDisplayId + ")";
+        boolean canAccessSecureAduan = "ADMIN".equals(String.valueOf(session.getAttribute("role"))) && "ADM001".equals(currentAdminDisplayId);
+        int staffComplaintNewCount = request.getAttribute("staff_complaint_new_count") instanceof Number
+            ? ((Number) request.getAttribute("staff_complaint_new_count")).intValue() : 0;
     %>
     <div class="quick-actions-sidebar" aria-label="Tindakan Pantas">
         <div class="quick-actions">
@@ -1140,6 +1319,21 @@
             </form>
             <a class="btn quick-btn-red" href="${pageContext.request.contextPath}/admin-portal-guide.html" title="Panduan Admin Portal" aria-label="Panduan Admin Portal" target="_blank" rel="noopener"><img src="${pageContext.request.contextPath}/icon/panduan.png" class="quick-action-icon" alt="Panduan Admin Portal"></a>
             <a class="btn quick-btn-brown" href="${pageContext.request.contextPath}/dashboard?status=DIARKIB" title="Lihat Arkib" aria-label="Lihat Arkib"><img src="${pageContext.request.contextPath}/icon/lihat-arkib.png" class="quick-action-icon" alt="Lihat Arkib"></a>
+            <form id="aduanSecureForm" method="post" action="${pageContext.request.contextPath}/dashboard">
+                <input type="hidden" name="_csrf" value="${csrf_token}">
+                <input type="hidden" name="secure_action" value="access_aduan">
+                <input type="hidden" name="secure_password" id="aduanSecurePassword">
+                <button
+                    id="aduanSecureBtn"
+                    class="btn quick-btn-aduan<%= canAccessSecureAduan ? "" : " is-locked" %><%= staffComplaintNewCount > 0 ? " has-unread" : "" %>"
+                    type="button"
+                    title="Aduan"
+                    aria-label="Aduan"
+                    data-allowed="<%= canAccessSecureAduan ? "1" : "0" %>">
+                    <img src="${pageContext.request.contextPath}/icon/Aduan.png" class="quick-action-icon" alt="Aduan">
+                    <% if (staffComplaintNewCount > 0) { %><span class="unread-dot" aria-hidden="true"></span><% } %>
+                </button>
+            </form>
         </div>
     </div>
 
@@ -1295,19 +1489,20 @@
                         <label for="q"><img src="${pageContext.request.contextPath}/assets/images/icon-search.png" class="icon-inline" alt="Ikon carian"> Carian</label>
                         <input id="q" name="q" type="text" value="<%= request.getAttribute("search_query") %>" placeholder="Cari syarikat, produk, pemohon atau email">
                     </div>
-                    <div class="field">
+                    <div class="field status-filter-compact">
                         <label for="status">Status</label>
-                        <select id="status" name="status">
-                            <option value="">Semua status</option>
-                            <option value="NEW" <%= "NEW".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>NEW</option>
-                            <option value="DALAM_SEMAKAN" <%= "DALAM_SEMAKAN".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DALAM SEMAKAN</option>
-                            <option value="DALAM_PROSES" <%= "DALAM_PROSES".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DALAM PROSES</option>
-                            <option value="DILULUSKAN" <%= "DILULUSKAN".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DILULUSKAN</option>
-                            <option value="DITOLAK" <%= "DITOLAK".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DITOLAK</option>
-                            <option value="DIGANTUNG" <%= "DIGANTUNG".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DIGANTUNG</option>
-                            <option value="DRAF" <%= "DRAF".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DRAF</option>
-                            <option value="DIARKIB" <%= "DIARKIB".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DIARKIB</option>
-                        </select>
+                        <div class="status-filter-controls">
+                            <select id="status" name="status">
+                                <option value="">Semua status</option>
+                                <option value="NEW" <%= "NEW".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>NEW</option>
+                                <option value="DALAM_SEMAKAN" <%= "DALAM_SEMAKAN".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DALAM SEMAKAN</option>
+                                <option value="DALAM_PROSES" <%= "DALAM_PROSES".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DALAM PROSES</option>
+                                <option value="DILULUSKAN" <%= "DILULUSKAN".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DILULUSKAN</option>
+                                <option value="DITOLAK" <%= "DITOLAK".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DITOLAK</option>
+                                <option value="DIGANTUNG" <%= "DIGANTUNG".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DIGANTUNG</option>
+                                <option value="DIARKIB" <%= "DIARKIB".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DIARKIB</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="field">
                         <label for="date_from">Tarikh Dari</label>
@@ -1317,7 +1512,6 @@
                         <label for="date_to">Tarikh Hingga</label>
                         <input id="date_to" name="date_to" type="date" value="<%= request.getAttribute("date_to") != null ? request.getAttribute("date_to") : "" %>">
                     </div>
-                    <button class="btn btn-primary" type="submit">Tapis</button>
                     <div class="field export-control">
                         <label for="exportOption">Eksport</label>
                         <select id="exportOption" name="exportOption">
@@ -1333,7 +1527,8 @@
                             </optgroup>
                         </select>
                     </div>
-                    <button class="btn btn-secondary" type="button" id="exportDownloadBtn" aria-label="Turun" title="Turun"><img src="${pageContext.request.contextPath}/assets/images/icon-download.png" class="icon-inline" alt="Ikon turun"></button>
+                    <button class="btn btn-secondary" type="button" id="exportDownloadBtn" aria-label="Muat Turun" title="Muat Turun"><img src="${pageContext.request.contextPath}/assets/images/icon-download.png" class="icon-inline" alt="Ikon turun"></button>
+                    <button class="btn btn-secondary btn-archive-main" type="button" id="latestArchiveBtn" aria-label="Arkib" title="Arkib"><img src="${pageContext.request.contextPath}/icon/archive.png" class="icon-inline" alt="Ikon arkib" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/icon-archive.png';"><span id="latestArchiveBtnLabel" class="archive-hover-label">Arkib</span></button>
                     </form>
 
                     <% if (isAdminRole) { %>
@@ -1342,7 +1537,7 @@
                         <input type="hidden" id="bulkSelectedIds" name="selected_ids" value="">
                         <input type="hidden" id="bulkFirstId" name="id" value="">
                         <div class="bulk-toolbar">
-                            <button class="btn btn-primary" id="bulkApproveBtn" type="button">Approve Selected</button>
+                            <button class="btn btn-primary" id="bulkApproveBtn" type="button">Approve Selected</button> 
                             <button class="btn btn-secondary" id="bulkRejectBtn" type="button">Reject Selected</button>
                             <button class="btn btn-accent" id="bulkExportBtn" type="button">Export Selected</button>
                             <span class="bulk-count" id="bulkSelectedCount">0 dipilih</span>
@@ -1380,23 +1575,12 @@
                                 int appIdNumeric = applicationRow.get("id") instanceof Number ? ((Number) applicationRow.get("id")).intValue() : 0;
                                 int appIdDisplayNumeric = Math.max(0, appIdNumeric);
                                 String appIdDisplay = String.format("PPP%03d", appIdDisplayNumeric);
-                                boolean isArchivedRow = "archived".equals(status) || "diarkib".equals(status);
-                                boolean canArchiveRow = "approved".equals(status)
-                                    || "rejected".equals(status)
-                                    || "suspended".equals(status)
-                                    || "diluluskan".equals(status)
-                                    || "ditolak".equals(status)
-                                    || "digantung".equals(status);
-                                String archiveConfirmText = isArchivedRow ? "Buka semula arkib permohonan ini?" : "Arkibkan permohonan ini?";
-                                String archiveButtonText = isArchivedRow ? "Buka Arkib" : "Arkib";
-                                String archiveActionValue = isArchivedRow ? "unarchive" : "archive";
-                                String archiveIconPath = isArchivedRow
-                                    ? (request.getContextPath() + "/assets/images/icon-unarchive.png")
-                                    : (request.getContextPath() + "/assets/images/icon-archive.png");
+                                boolean isArchivedRow = archivedAt != null;
+                                boolean canArchiveRow = !isArchivedRow;
                         %>
                         <tr>
                             <% if (isAdminRole) { %>
-                            <td><input type="checkbox" class="app-row-check table-check" value="<%= applicationRow.get("id") %>" aria-label="Pilih permohonan"></td>
+                            <td><input type="checkbox" class="app-row-check table-check" value="<%= applicationRow.get("id") %>" data-can-archive="<%= canArchiveRow ? "1" : "0" %>" data-is-archived="<%= isArchivedRow ? "1" : "0" %>" aria-label="Pilih permohonan"></td>
                             <% } %>
                             <td><strong><%= appIdDisplay %></strong></td>
                             <td>
@@ -1425,20 +1609,6 @@
                                     data-attachment-pdf="<%= escapeHtml(applicationRow.get("attachment_pdf_url") == null ? "" : String.valueOf(applicationRow.get("attachment_pdf_url")) ) %>">
                                     Semak
                                 </a>
-                                <% if (isArchivedRow || canArchiveRow) { %>
-                                <button
-                                    class="btn btn-archive js-archive-btn"
-                                    type="button"
-                                    title="<%= archiveButtonText %>"
-                                    aria-label="<%= archiveButtonText %>"
-                                    data-app-id="<%= escapeHtml(String.valueOf(applicationRow.get("id"))) %>"
-                                    data-action="<%= escapeHtml(archiveActionValue) %>"
-                                    data-confirm="<%= escapeHtml(archiveConfirmText) %>"
-                                    data-csrf="${csrf_token}"
-                                    data-ctx="${pageContext.request.contextPath}">
-                                    <img src="<%= archiveIconPath %>" class="icon-btn" alt="Arkib">
-                                </button>
-                                <% } %>
                                 </div>
                             </td>
                         </tr>
@@ -1523,11 +1693,12 @@
                             </div>
                             <div>
                                 <label for="kppEmailSubject">Subjek Email</label>
-                                <input id="kppEmailSubject" type="text" readonly>
+                                <input id="kppEmailSubject" type="text" placeholder="Subjek boleh diedit sebelum hantar">
                             </div>
                             <div>
                                 <label for="kppEmailBody">Isi Email</label>
-                                <textarea id="kppEmailBody" readonly></textarea>
+                                <textarea id="kppEmailBody" placeholder="Isi email boleh diedit sebelum hantar"></textarea>
+                                <div class="kpp-inline-help">Tip: kekalkan teks [Pautan khas akan dijana semasa Hantar Email] dalam isi email untuk gantian pautan automatik.</div>
                             </div>
                             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                                 <button class="btn btn-primary" type="button" id="kppEmailSendBtn">Hantar Email</button>
@@ -1613,73 +1784,9 @@
                     </div>
                 </div>
 
-                <div class="panel">
-                    <h3 class="section-title">Analitik Status Permohonan</h3>
-                    <%
-                        int approvedChart = request.getAttribute("approved_count") instanceof Number ? ((Number) request.getAttribute("approved_count")).intValue() : 0;
-                        int rejectedChart = request.getAttribute("rejected_count") instanceof Number ? ((Number) request.getAttribute("rejected_count")).intValue() : 0;
-                        int pendingChart = request.getAttribute("pending_count") instanceof Number ? ((Number) request.getAttribute("pending_count")).intValue() : 0;
-                        int totalChart = Math.max(1, approvedChart + rejectedChart + pendingChart);
-                        int approvedDeg = (int) Math.round((approvedChart * 360.0) / totalChart);
-                        int rejectedDeg = (int) Math.round((rejectedChart * 360.0) / totalChart);
-                        int pendingDeg = 360 - approvedDeg - rejectedDeg; // Pastikan total 360 darjah
-                        int approvedEnd = approvedDeg;
-                        int rejectedEnd = approvedDeg + rejectedDeg;
-                        String pieGradient = "conic-gradient(#1b8f55 0deg " + approvedEnd + "deg, #cf4e4e " + approvedEnd + "deg " + rejectedEnd + "deg, #df8f1f " + rejectedEnd + "deg 360deg)";
-                    %>
-                    <div class="analytics-chart" aria-label="Carta status permohonan">
-                        <div class="pie-chart" data-gradient="<%= pieGradient %>">
-                            <div class="pie-center">
-                                <small>Total</small>
-                                <strong><%= approvedChart + rejectedChart + pendingChart %></strong>
-                            </div>
-                        </div>
-                        <ul class="analytics-legend">
-                            <li>
-                                <span class="legend-label"><span class="legend-dot approved"></span>Diluluskan</span>
-                                <span class="legend-value"><%= approvedChart %></span>
-                            </li>
-                            <li>
-                                <span class="legend-label"><span class="legend-dot rejected"></span>Ditolak</span>
-                                <span class="legend-value"><%= rejectedChart %></span>
-                            </li>
-                            <li>
-                                <span class="legend-label"><span class="legend-dot new"></span>Baharu</span>
-                                <span class="legend-value"><%= pendingChart %></span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
             </div>
 
             <div class="right-panel">
-                <div class="panel">
-                    <h3 class="section-title">Pemberitahuan</h3>
-                    <ul class="notification-list">
-                        <li class="notification-item notif-warning">
-                            <strong>Permohonan Menunggu</strong>
-                            <span><%= request.getAttribute("pending_count") != null ? request.getAttribute("pending_count") : "0" %> permohonan perlu semakan.</span>
-                        </li>
-                        <li class="notification-item notif-warning">
-                            <strong>Permohonan Ditolak</strong>
-                            <span><%= request.getAttribute("rejected_count") != null ? request.getAttribute("rejected_count") : "0" %> rekod memerlukan tindakan susulan.</span>
-                        </li>
-                        <% if (applications != null && !applications.isEmpty()) {
-                            int noticeShown = 0;
-                            for (Map<String, Object> appNotice : applications) {
-                                if (noticeShown >= 3) { break; }
-                                noticeShown++;
-                        %>
-                        <li class="notification-item notif-recent">
-                            <strong><%= escapeHtml(String.valueOf(appNotice.get("company_name"))) %></strong>
-                            <span>Status: <%= escapeHtml(displayStatusLabel(String.valueOf(appNotice.get("status")))) %></span>
-                        </li>
-                        <%      }
-                           } %>
-                    </ul>
-                </div>
-
                 <div class="panel">
                     <h3 class="section-title">Aktiviti Terkini</h3>
                     <ul class="activity-list">
@@ -1722,13 +1829,14 @@
                                         : String.valueOf(auditRow.get("full_name"));
                                 String actorDisplayId = String.valueOf(auditRow.get("display_user_id") == null ? "-" : auditRow.get("display_user_id"));
                                 String action = String.valueOf(auditRow.get("action") == null ? "-" : auditRow.get("action"));
+                                String actionDisplay = action.replace('_', ' ').replaceAll("\\s+", " ").trim();
                                 String details = String.valueOf(auditRow.get("details") == null ? "Tiada penerangan." : auditRow.get("details"));
                                 Timestamp actionAt = (Timestamp) auditRow.get("created_at");
                                 String actorFilterValue = actorName + " (" + actorDisplayId + ")";
                                 String auditSearchValue = (action + " " + details + " " + actorName + " " + actorDisplayId).toLowerCase();
                         %>
                         <li class="audit-item" data-audit-text="<%= escapeHtml(auditSearchValue) %>">
-                            <strong><%= escapeHtml(actorName) %> (<%= escapeHtml(actorDisplayId) %>) · <%= escapeHtml(action) %></strong>
+                            <strong><%= escapeHtml(actorName) %> (<%= escapeHtml(actorDisplayId) %>) <%= escapeHtml(actionDisplay) %></strong>
                             <p><%= escapeHtml(details) %></p>
                             <div class="audit-meta">
                                 <span><%= actionAt == null ? "Masa tidak direkod" : escapeHtml(String.valueOf(actionAt)) %></span>
@@ -1904,12 +2012,13 @@
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
-                <h3>Hubungi JANS</h3>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
-                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
-                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+                <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
         </div>
     </div>
     <div class="expand-overlay" id="expandOverlay" aria-hidden="true"></div>
@@ -1945,6 +2054,18 @@
             </div>
         </div>
     </div>
+    <div class="aduan-password-popup" id="aduanPasswordPopup" aria-hidden="true">
+        <div class="aduan-password-popup-card" role="dialog" aria-modal="true" aria-labelledby="aduanPasswordPopupTitle">
+            <img src="${pageContext.request.contextPath}/icon/password.gif" alt="Masukkan kata laluan" class="aduan-password-popup-icon">
+            <h4 class="aduan-password-popup-title" id="aduanPasswordPopupTitle">Penerimaan Borang Aduan</h4>
+            <p class="aduan-password-popup-text">Sila masukkan kata laluan admin <%= escapeHtml(aduanPasswordPromptLabel) %> untuk akses modul penerimaan aduan.</p>
+            <input type="password" id="aduanPasswordPopupInput" class="aduan-password-popup-input" autocomplete="current-password" placeholder="Masukkan kata laluan">
+            <div class="aduan-password-popup-actions">
+                <button type="button" class="aduan-password-popup-btn aduan-password-popup-btn-cancel" id="aduanPasswordPopupCancelBtn">Batal</button>
+                <button type="button" class="aduan-password-popup-btn aduan-password-popup-btn-confirm" id="aduanPasswordPopupConfirmBtn">Teruskan</button>
+            </div>
+        </div>
+    </div>
 <script>
     (function () {
         var pieChart = document.querySelector('.pie-chart[data-gradient]');
@@ -1954,6 +2075,8 @@
         
         var toolbarForm = document.querySelector('.toolbar');
         var exportButton = document.getElementById('exportDownloadBtn');
+        var latestArchiveBtn = document.getElementById('latestArchiveBtn');
+        var latestArchiveBtnLabel = document.getElementById('latestArchiveBtnLabel');
         var exportOption = document.getElementById('exportOption');
         var searchInput = document.getElementById('q');
         var statusSelect = document.getElementById('status');
@@ -2000,6 +2123,13 @@
         var kppSubmissionMeta = document.getElementById('kppSubmissionMeta');
         var kppSubmissionContent = document.getElementById('kppSubmissionContent');
         var kppSubmissionsBox = document.getElementById('kpp-submissions');
+        var aduanSecureForm = document.getElementById('aduanSecureForm');
+        var aduanSecureBtn = document.getElementById('aduanSecureBtn');
+        var aduanSecurePassword = document.getElementById('aduanSecurePassword');
+        var aduanPasswordPopup = document.getElementById('aduanPasswordPopup');
+        var aduanPasswordPopupInput = document.getElementById('aduanPasswordPopupInput');
+        var aduanPasswordPopupCancelBtn = document.getElementById('aduanPasswordPopupCancelBtn');
+        var aduanPasswordPopupConfirmBtn = document.getElementById('aduanPasswordPopupConfirmBtn');
 
         var appDetailModal = document.getElementById('appDetailModal');
         var appModalCloseBtn = document.getElementById('appModalCloseBtn');
@@ -2009,6 +2139,77 @@
         var isAdminRoleClient = userRoleClient === 'ADMIN';
 
         var contextPath = '<%= request.getContextPath() %>';
+
+        function closeAduanPasswordPopup() {
+            if (!aduanPasswordPopup) {
+                return;
+            }
+            aduanPasswordPopup.classList.remove('show');
+            aduanPasswordPopup.setAttribute('aria-hidden', 'true');
+            if (aduanPasswordPopupInput) {
+                aduanPasswordPopupInput.value = '';
+            }
+        }
+
+        if (aduanSecureForm && aduanSecureBtn && aduanSecurePassword) {
+            aduanSecureBtn.addEventListener('click', function () {
+                var isAllowed = aduanSecureBtn.getAttribute('data-allowed') === '1';
+                if (!isAllowed) {
+                    window.alert('Akses modul Aduan hanya untuk admin ID ADM001.');
+                    return;
+                }
+
+                if (!aduanPasswordPopup || !aduanPasswordPopupInput) {
+                    window.alert('Paparan kata laluan tidak tersedia. Sila muat semula halaman.');
+                    return;
+                }
+
+                aduanPasswordPopup.classList.add('show');
+                aduanPasswordPopup.setAttribute('aria-hidden', 'false');
+                aduanPasswordPopupInput.focus();
+            });
+        }
+
+        if (aduanPasswordPopupCancelBtn) {
+            aduanPasswordPopupCancelBtn.addEventListener('click', closeAduanPasswordPopup);
+        }
+
+        if (aduanPasswordPopup) {
+            aduanPasswordPopup.addEventListener('click', function (event) {
+                if (event.target === aduanPasswordPopup) {
+                    closeAduanPasswordPopup();
+                }
+            });
+        }
+
+        if (aduanPasswordPopupConfirmBtn && aduanPasswordPopupInput && aduanSecurePassword && aduanSecureForm) {
+            aduanPasswordPopupConfirmBtn.addEventListener('click', function () {
+                var passwordInput = aduanPasswordPopupInput.value || '';
+
+                if (!passwordInput.trim()) {
+                    window.alert('Kata laluan diperlukan untuk meneruskan akses modul Aduan.');
+                    aduanPasswordPopupInput.focus();
+                    return;
+                }
+
+                aduanSecurePassword.value = passwordInput;
+                closeAduanPasswordPopup();
+                aduanSecureForm.submit();
+            });
+        }
+
+        if (aduanPasswordPopupInput && aduanPasswordPopupConfirmBtn) {
+            aduanPasswordPopupInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    aduanPasswordPopupConfirmBtn.click();
+                }
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    closeAduanPasswordPopup();
+                }
+            });
+        }
 
         function keepKppPanelOnScreen() {
             try {
@@ -2076,6 +2277,44 @@
                 + '&date_from=' + encodeURIComponent(dateFrom)
                 + '&date_to=' + encodeURIComponent(dateTo);
             window.location.href = url;
+        }
+
+        function resolveLatestArchiveMode() {
+            var selectedRows = appRowChecks.filter(function(row) {
+                return row && row.checked;
+            });
+
+            if (selectedRows.length > 0) {
+                var archivedCount = selectedRows.filter(function(row) {
+                    return row.getAttribute('data-is-archived') === '1';
+                }).length;
+
+                if (archivedCount === selectedRows.length) {
+                    return 'unarchive';
+                }
+                if (archivedCount === 0) {
+                    return 'archive';
+                }
+            }
+
+            var statusValue = statusSelect ? String(statusSelect.value || '').toUpperCase() : '';
+            if (statusValue === 'DIARKIB') {
+                return 'unarchive';
+            }
+            return 'archive';
+        }
+
+        function updateLatestArchiveButtonUi() {
+            if (!latestArchiveBtn) {
+                return;
+            }
+            var mode = resolveLatestArchiveMode();
+            var label = mode === 'unarchive' ? 'Keluarkan Dari Arkib' : 'Arkib';
+            latestArchiveBtn.setAttribute('title', label);
+            latestArchiveBtn.setAttribute('aria-label', label);
+            if (latestArchiveBtnLabel) {
+                latestArchiveBtnLabel.textContent = label;
+            }
         }
 
         function getKppActionLabel(actionType) {
@@ -2161,6 +2400,8 @@
             }
             return base;
         }
+
+        var KPP_LINK_PLACEHOLDER = '[Pautan khas akan dijana semasa Hantar Email]';
 
         function buildKppBody(recipientLabel, actionType, guestLinkBlock, applicationLabel) {
             var actionLine = '';
@@ -2261,7 +2502,7 @@
             }).join('');
 
             popup.document.open();
-            popup.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Draf Email KPP</title></head><body style="font-family:Segoe UI,Tahoma,Arial,sans-serif;padding:16px;background:#f6fbff;color:#173042;">'
+            popup.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Draf Email KPP</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1"></head><body style="padding:16px;background:#f6fbff;color:#173042;">'
                 + '<h2 style="margin:0 0 10px;">Draf Email KPP</h2>'
                 + '<p style="margin:0 0 14px;">SMTP belum dikonfigurasi. Klik setiap butang di bawah untuk buka draf email khusus bagi setiap KPP.</p>'
                 + '<ol style="padding-left:20px;">' + itemHtml + '</ol>'
@@ -2319,7 +2560,43 @@
             var actionType = kppActionType ? (kppActionType.value || 'KSPP') : 'KSPP';
             var applicationLabel = getSelectedKppApplicationLabel();
             kppEmailSubject.value = buildKppSubject(actionType, applicationLabel);
-            kppEmailBody.value = buildKppBody(kppName, actionType, '[Pautan khas akan dijana semasa Hantar Email]', applicationLabel);
+            kppEmailBody.value = buildKppBody(kppName, actionType, KPP_LINK_PLACEHOLDER, applicationLabel);
+        }
+
+        function escapeRegExpText(value) {
+            return String(value || '').replace(/[.*+?^$(){}|[\]\\]/g, '\\$&');
+        }
+
+        function buildEditableKppEmailDraft(subjectTemplate, bodyTemplate, recipient, guestLink, actionType, applicationLabel) {
+            var recipientName = (recipient && recipient.name ? recipient.name : '').trim() || 'tuan/puan';
+            var finalSubjectTemplate = String(subjectTemplate || '').trim();
+            var finalBodyTemplate = String(bodyTemplate || '').trim();
+
+            if (!finalSubjectTemplate) {
+                finalSubjectTemplate = buildKppSubject(actionType, applicationLabel);
+            }
+            if (!finalBodyTemplate) {
+                finalBodyTemplate = buildKppBody(recipientName, actionType, KPP_LINK_PLACEHOLDER, applicationLabel);
+            }
+
+            var finalSubject = finalSubjectTemplate
+                .replace(/\{recipient_name\}|\{\{recipient_name\}\}/gi, recipientName)
+                .replace(/\{application\}|\{\{application\}\}/gi, applicationLabel || '');
+
+            var finalBody = finalBodyTemplate
+                .replace(/\{recipient_name\}|\{\{recipient_name\}\}/gi, recipientName)
+                .replace(new RegExp(escapeRegExpText(KPP_LINK_PLACEHOLDER), 'g'), guestLink)
+                .replace(/\{link\}|\{\{link\}\}/gi, guestLink)
+                .replace(/\{application\}|\{\{application\}\}/gi, applicationLabel || '');
+
+            if (finalBody.indexOf(guestLink) < 0) {
+                finalBody += '\n\nPautan khas:\n' + guestLink;
+            }
+
+            return {
+                subject: finalSubject,
+                body: finalBody
+            };
         }
 
         function parseKppPayloadText(payloadText) {
@@ -2909,6 +3186,65 @@
             });
         }
 
+        if (latestArchiveBtn) {
+            latestArchiveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                var selectedRows = appRowChecks.filter(function(row) {
+                    return row && row.checked;
+                });
+
+                if (selectedRows.length === 0) { return; }
+
+                var mode = resolveLatestArchiveMode();
+                var archivableRows = selectedRows.filter(function(row) {
+                    if (mode === 'unarchive') {
+                        return row.getAttribute('data-is-archived') === '1';
+                    }
+                    return row.getAttribute('data-can-archive') === '1' && row.getAttribute('data-is-archived') !== '1';
+                });
+
+                if (archivableRows.length === 0) { return; }
+
+                latestArchiveBtn.disabled = true;
+                var previousLabel = latestArchiveBtn.title;
+                latestArchiveBtn.title = mode === 'unarchive' ? 'Mengeluarkan dari arkib...' : 'Mengarkibkan...';
+
+                Promise.all(archivableRows.map(function(row) {
+                    return doArchiveRequest(
+                        row.value || '',
+                        mode === 'unarchive' ? 'unarchive' : 'archive',
+                        '${csrf_token}',
+                        contextPath
+                    );
+                }))
+                    .then(function() {
+                        window.location.reload();
+                    })
+                    .catch(function() {})
+                    .finally(function() {
+                        latestArchiveBtn.disabled = false;
+                        latestArchiveBtn.title = previousLabel;
+                        updateLatestArchiveButtonUi();
+                    });
+            });
+        }
+
+        if (statusSelect) {
+            statusSelect.addEventListener('change', function() {
+                if (toolbarForm) {
+                    toolbarForm.submit();
+                }
+            });
+            statusSelect.addEventListener('change', updateLatestArchiveButtonUi);
+        }
+
+        appRowChecks.forEach(function(row) {
+            row.addEventListener('change', updateLatestArchiveButtonUi);
+        });
+
+        updateLatestArchiveButtonUi();
+
         if (kppRecipientPickerBtn && kppRecipientPicker) {
             kppRecipientPickerBtn.addEventListener('click', function() {
                 var isOpen = kppRecipientPicker.classList.contains('open');
@@ -2969,6 +3305,8 @@
                 var actionType = kppActionType ? (kppActionType.value || 'KSPP') : 'KSPP';
                 var applicationRef = kppApplicationRef ? (kppApplicationRef.value || '') : '';
                 var applicationLabel = getSelectedKppApplicationLabel();
+                var subjectTemplate = kppEmailSubject ? String(kppEmailSubject.value || '').trim() : '';
+                var bodyTemplate = kppEmailBody ? String(kppEmailBody.value || '').trim() : '';
                 var preparedEmailRequests = [];
 
                 if (selectedRecipients.length === 0) {
@@ -2978,6 +3316,16 @@
 
                 if (!applicationRef) {
                     alert('Sila pilih Borang Permohonan yang hendak diambil tindakan.');
+                    return;
+                }
+
+                if (!subjectTemplate) {
+                    alert('Sila isi Subjek Email dahulu.');
+                    return;
+                }
+
+                if (!bodyTemplate) {
+                    alert('Sila isi kandungan Isi Email dahulu.');
                     return;
                 }
 
@@ -3002,9 +3350,16 @@
                     .then(function(results) {
                         var firstDraft = null;
                         var emailRequests = results.map(function(item) {
-                            var recipientName = (item.recipient.name || '').trim() || 'tuan/puan';
-                            var subject = buildKppSubject(actionType, applicationLabel);
-                            var body = buildKppBody(recipientName, actionType, item.link, applicationLabel);
+                            var editableDraft = buildEditableKppEmailDraft(
+                                subjectTemplate,
+                                bodyTemplate,
+                                item.recipient,
+                                item.link,
+                                actionType,
+                                applicationLabel
+                            );
+                            var subject = editableDraft.subject;
+                            var body = editableDraft.body;
 
                             if (!firstDraft) {
                                 firstDraft = {
@@ -3016,7 +3371,9 @@
                             return {
                                 to: item.recipient.email,
                                 subject: subject,
-                                body: body
+                                body: body,
+                                actionType: actionType,
+                                applicationRef: applicationRef
                             };
                         });
                         preparedEmailRequests = emailRequests;
@@ -3057,13 +3414,13 @@
         }
     })();
 
-    function doArchive(appId, actionValue, confirmText, csrfToken, ctxPath) {
-        if (!window.confirm(confirmText)) { return; }
+    function doArchiveRequest(appId, actionValue, csrfToken, ctxPath) {
         var body = 'id=' + encodeURIComponent(appId) +
                    '&action=' + encodeURIComponent(actionValue) +
                    '&ajax=1' +
                    '&_csrf=' + encodeURIComponent(csrfToken);
-        fetch(ctxPath + '/admin/application', {
+
+        return fetch(ctxPath + '/admin/application', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -3074,11 +3431,21 @@
             body: body
         }).then(function(resp) {
             if (resp.ok) {
-                window.location.reload();
-            } else {
-                resp.text().then(function(t) { alert('Gagal: ' + resp.status + ' ' + t.substring(0, 200)); });
+                return;
             }
-        }).catch(function(err) { alert('Ralat rangkaian: ' + err); });
+            return resp.text().then(function(t) {
+                throw new Error(resp.status + ' ' + t.substring(0, 200));
+            });
+        });
+    }
+
+    function doArchive(appId, actionValue, confirmText, csrfToken, ctxPath) {
+        if (!window.confirm(confirmText)) { return; }
+        doArchiveRequest(appId, actionValue, csrfToken, ctxPath).then(function() {
+            window.location.reload();
+        }).catch(function(err) {
+            alert('Ralat rangkaian: ' + err);
+        });
     }
 </script>
 <script>
@@ -3122,3 +3489,4 @@
 </script>
 </body>
 </html>
+

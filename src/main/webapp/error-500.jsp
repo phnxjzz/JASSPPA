@@ -1,17 +1,17 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" isErrorPage="true" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" isErrorPage="true" %>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>500 â€“ Ralat Pelayan | SPPPA</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
-        :root { --brand-blue: #2A9D8F; --brand-navy: #0F6BAE; --brand-green: #6DBE45; --brand-lime: #CDE11D; --brand-gold: #F2F72E; }
+:root { --brand-blue: #2A9D8F; --brand-navy: #0F6BAE; --brand-green: #6DBE45; --brand-lime: #CDE11D; --brand-gold: #F2F72E; }
         * { box-sizing: border-box; }
          body { margin: 0; min-height: 100vh; display: grid; place-items: center;
              background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%);
-               font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif; }
+               font-family: inherit; }
         .card { background: white; border-radius: 20px; padding: 48px 52px; text-align: center;
                 max-width: 520px; width: 90%; box-shadow: 0 24px 60px rgba(8,51,77,0.25); }
         .code { font-size: 96px; font-weight: 800; color: #c0392b; line-height: 1;

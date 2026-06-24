@@ -6,10 +6,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Borang KSPP Pembaharuan</title>
     <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #edf1f5; color: #111; }
+* { box-sizing: border-box; }
+        body { margin: 0; font-family: inherit; background: #edf1f5; color: #111; }
         .screen-bar {
             background: #1b2a52; color: #fff; padding: 10px 22px;
             display: flex; justify-content: space-between; align-items: center; font-size: 14px;

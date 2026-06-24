@@ -5,12 +5,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Akses Khas Ketua Penolong Pengarah</title>
     <style>
-        * { box-sizing: border-box; }
+* { box-sizing: border-box; }
         body {
             margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
+            font-family: inherit;
             background: linear-gradient(145deg, #e7f0f8, #f8fbff);
             min-height: 100vh;
             display: flex;

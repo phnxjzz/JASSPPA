@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%!
     private String statusCssClass(String status) {
         if (status == null) {
@@ -22,7 +22,7 @@
             return "DIGANTUNG";
         }
         if ("DRAFT".equals(normalized) || "DRAF".equals(normalized)) {
-            return "DRAF";
+            return "NEW";
         }
         if ("ARCHIVED".equals(normalized) || "DIARKIB".equals(normalized)) {
             return "DIARKIB";
@@ -69,9 +69,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Dashboard Pemohon - SPPPA</title>
     <style>
-        :root {
+:root {
             --brand-blue: #2A9D8F;
             --brand-navy: #0F6BAE;
             --brand-green: #6DBE45;
@@ -86,7 +87,7 @@
         * { box-sizing: border-box; }
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: inherit;
             color: var(--text);
             background:
                 linear-gradient(rgba(247, 252, 255, 0.76), rgba(238, 246, 251, 0.82)),
@@ -276,7 +277,7 @@
             transform: translateY(-8px);
             box-shadow: 0 28px 50px rgba(7, 62, 92, 0.36);
         }
-        .feature-card h4 { margin: 0 0 8px; font-size: 28px; line-height: 1.15; letter-spacing: 0.01em; }
+        .feature-card h4 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; letter-spacing: 0.01em; }
         .feature-card p { margin: 0; max-width: 650px; font-size: 15px; line-height: 1.62; color: rgba(255,255,255,0.92); }
         .feature-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
         .feature-badge {
@@ -541,7 +542,7 @@
             background: #ffffff;
             color: #166534;
             font-size: 16px;
-            line-height: 1.35;
+            line-height: 1.6;
             box-shadow: 0 16px 32px rgba(10, 64, 38, 0.2);
             transform: translate(-50%, -58%) scale(0.97);
             opacity: 0;
@@ -581,11 +582,12 @@
             50% { transform: scale(1.06); }
         }
         .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
-        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; }
+        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; display: inline-flex; align-items: center; gap: 8px; }
         .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; font-size: 13px; color: #4e6a7c; line-height: 1.45; }
-        .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .contact-icon { width: 13px; height: 13px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
         .contact-address-link { color: #0f6bae; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
         .jans-contact-section .contact-line span { line-height: 1.45; }
+        .contact-line-hanging { margin-left: 21px; }
         .contact-address-link:hover { color: #0d4f77; }
 
         .presentation-popup {
@@ -902,6 +904,10 @@
                         <td><%= app.get("submitted_at") == null ? "-" : app.get("submitted_at") %></td>
                         <td>
                             <a href="${pageContext.request.contextPath}/applications/<%= app.get("id") %>" style="color:#0d6fa7;font-weight:700;text-decoration:none;">Lihat</a>
+                            <% if ("APPROVED".equalsIgnoreCase(appStatus)) { %>
+                                <span style="color:#8aa0b2; margin: 0 6px;">|</span>
+                                <a href="${pageContext.request.contextPath}/applications/new?renewFrom=<%= app.get("id") %>" style="color:#15803d;font-weight:700;text-decoration:none;">Pembaharuan</a>
+                            <% } %>
                         </td>
                     </tr>
                 <%  } %>
@@ -1024,12 +1030,13 @@
 
 <div class="container" style="padding-top:0;">
     <div class="jans-contact-section">
-        <h3>Hubungi JANS</h3>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
-                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
-                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+        <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
 </div>
 
 <div class="app-floating-actions" aria-label="Sidebar Cara Guna Sistem">
@@ -1264,6 +1271,7 @@
 </script>
 </body>
 </html>
+
 
 
 

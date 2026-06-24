@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List, java.util.Map" %>
 <%!
     private String statusCssClass(String status) {
@@ -23,7 +23,7 @@
             return "DIGANTUNG";
         }
         if ("DRAFT".equals(normalized) || "DRAF".equals(normalized)) {
-            return "DRAF";
+            return "NEW";
         }
         if ("ARCHIVED".equals(normalized) || "DIARKIB".equals(normalized)) {
             return "DIARKIB";
@@ -58,10 +58,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Butiran Permohonan <%= appIdFormatted %> - SPPPA</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
-        :root {
+:root {
             --brand-blue: #2A9D8F;
             --brand-navy: #0F6BAE;
             --brand-green: #6DBE45;
@@ -73,7 +73,7 @@
             --muted: #5d7484;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: var(--text); }
+        body { margin: 0; font-family: inherit; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%); border-bottom: 3px solid var(--brand-gold); color: white; padding: 14px 26px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 12px 28px rgba(8,51,77,0.2); }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 52px; height: 52px; object-fit: contain; }
@@ -146,7 +146,6 @@
     </div>
     <div style="display:flex;align-items:center;">
         <a class="icon-link" href="${pageContext.request.contextPath}/dashboard" title="Dashboard" aria-label="Dashboard"><img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard"></a>
-        <a href="${pageContext.request.contextPath}/profile">Profil</a>
         <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
         <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
     </div>
@@ -154,15 +153,10 @@
 
 <div class="container">
     <div class="breadcrumb">
-        <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a> &rsaquo; Permohonan <%= appIdFormatted %>
+        <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a> &rsaquo; Permohonan ID: <%= appIdFormatted %>
     </div>
 
-    <div class="page-title">Permohonan <%= appIdFormatted %></div>
-    <div class="page-sub">
-        <%= app.get("product_name") %>
-        &mdash;
-        <span class="status-badge status-<%= statusCssClass(status) %>"><%= statusDisplay %></span>
-    </div>
+    <div class="page-title">Permohonan ID: <%= appIdFormatted %></div>
 
     <% if (showUpdatedNotice) { %>
     <div class="alert alert-success">
@@ -177,9 +171,13 @@
         Permohonan ini telah <strong>diluluskan</strong>. No. Perakuan: <strong><%= certNum %></strong>.
         Sah sehingga: <strong><%= app.get("valid_until") %></strong>.
         <a class="btn btn-green" style="margin-left:12px;padding:6px 14px;font-size:13px;" href="${pageContext.request.contextPath}/certificate?id=<%= appId %>" target="_blank">Lihat Perakuan</a>
+        <a class="btn btn-primary" style="margin-left:8px;padding:6px 14px;font-size:13px;" href="${pageContext.request.contextPath}/applications/new?renewFrom=<%= appId %>">Pembaharuan</a>
     </div>
     <% } else if ("APPROVED".equals(status)) { %>
-    <div class="alert alert-success">Permohonan ini telah <strong>diluluskan</strong>.</div>
+    <div class="alert alert-success">
+        Permohonan ini telah <strong>diluluskan</strong>.
+        <a class="btn btn-primary" style="margin-left:8px;padding:6px 14px;font-size:13px;" href="${pageContext.request.contextPath}/applications/new?renewFrom=<%= appId %>">Pembaharuan</a>
+    </div>
     <% } else if ("REJECTED".equals(status)) { %>
     <div class="alert alert-danger">Permohonan ini telah <strong>ditolak</strong>.
         <% String notes = app.get("admin_notes") == null ? "" : String.valueOf(app.get("admin_notes")); if (!notes.isBlank()) { %>
@@ -368,12 +366,15 @@
     <% } %>
 
     <div style="display:flex;gap:12px;margin-top:8px;">
-        <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-secondary" title="Kembali ke Dashboard" aria-label="Kembali ke Dashboard"><img class="icon-inline" src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard"></a>
+        <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-secondary" title="Kembali" aria-label="Kembali">Kembali</a>
         <% if ("DRAFT".equals(status) || "NEW".equals(status) || "UNDER_REVIEW".equals(status) || "IN_PROGRESS".equals(status) || "REJECTED".equals(status)) { %>
         <a href="${pageContext.request.contextPath}/applications/<%= appId %>/edit" class="btn btn-primary">Kemaskini Permohonan</a>
         <% } %>
         <% if ("APPROVED".equals(status) && certNum != null) { %>
         <a href="${pageContext.request.contextPath}/certificate?id=<%= appId %>" class="btn btn-green" target="_blank">Lihat Perakuan</a>
+        <% } %>
+        <% if ("APPROVED".equals(status)) { %>
+        <a href="${pageContext.request.contextPath}/applications/new?renewFrom=<%= appId %>" class="btn btn-primary">Pembaharuan</a>
         <% } %>
     </div>
 </div>

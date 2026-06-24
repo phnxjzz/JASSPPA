@@ -69,6 +69,10 @@
     -->
      <Connector port="8081" protocol="HTTP/1.1"
                connectionTimeout="20000"
+               maxPostSize="104857600"
+               maxPartCount="500"
+               maxParameterCount="20000"
+               maxSwallowSize="104857600"
                redirectPort="8443" />
     <!-- A "Connector" using the shared thread pool-->
     <!--

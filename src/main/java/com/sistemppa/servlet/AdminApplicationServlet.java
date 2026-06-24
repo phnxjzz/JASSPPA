@@ -3,7 +3,6 @@ package com.sistemppa.servlet;
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.DashboardDataService;
 import com.sistemppa.util.EmailUtil;
-import com.sistemppa.util.UserDisplayIdUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -85,6 +84,7 @@ public class AdminApplicationServlet extends HttpServlet {
         try (Connection conn = DatabaseConfig.getConnection()) {
             ensureApplicationArchiveTable(conn);
             DashboardDataService.ensureCertificateColumns(conn);
+            String adminDisplayId = DashboardDataService.resolveDisplayUserId(conn, adminUserId, "ADMIN");
 
             if ("reject".equals(action) && (adminNotes == null || adminNotes.isBlank())) {
                 if (ajaxRequest) {
@@ -99,18 +99,18 @@ public class AdminApplicationServlet extends HttpServlet {
 
             if ("approve".equals(action)) {
                 updateApplicationStatus(conn, applicationId, "APPROVED", adminNotes, adminUserId, validUntilStr);
-                insertAdminAuditLog(conn, adminUserId, "APPROVE_APPLICATION",
-                    "Admin " + UserDisplayIdUtil.format(adminUserId, "ADMIN") + " luluskan permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
+                insertAdminAuditLog(conn, adminUserId, "APPROVE APPLICATION",
+                    "Admin " + adminDisplayId + " luluskan permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
                 sendStatusEmail(request, conn, applicationId, "APPROVED", adminNotes);
             } else if ("reject".equals(action)) {
                 updateApplicationStatus(conn, applicationId, "REJECTED", adminNotes, adminUserId, null);
-                insertAdminAuditLog(conn, adminUserId, "REJECT_APPLICATION",
-                    "Admin " + UserDisplayIdUtil.format(adminUserId, "ADMIN") + " tolak permohonan PPP" + String.format("%03d", applicationId) + ". Sebab: " + adminNotes, request.getRemoteAddr());
+                insertAdminAuditLog(conn, adminUserId, "REJECT APPLICATION",
+                    "Admin " + adminDisplayId + " tolak permohonan PPP" + String.format("%03d", applicationId) + ". Sebab: " + adminNotes, request.getRemoteAddr());
                 sendStatusEmail(request, conn, applicationId, "REJECTED", adminNotes);
             } else if ("under_review".equals(action) || "dalam_semakan".equals(action)) {
                 updateApplicationStatus(conn, applicationId, "UNDER_REVIEW", adminNotes, adminUserId, null);
-                insertAdminAuditLog(conn, adminUserId, "UNDER_REVIEW_APPLICATION",
-                    "Admin " + UserDisplayIdUtil.format(adminUserId, "ADMIN") + " set permohonan PPP" + String.format("%03d", applicationId) + " ke Dalam Semakan", request.getRemoteAddr());
+                insertAdminAuditLog(conn, adminUserId, "UNDER REVIEW APPLICATION",
+                    "Admin " + adminDisplayId + " set permohonan PPP" + String.format("%03d", applicationId) + " ke Dalam Semakan", request.getRemoteAddr());
             } else if ("in_progress".equals(action) || "dalam_proses".equals(action)) {
                 if (presentationDate == null || presentationDate.isBlank()
                         || presentationTime == null || presentationTime.isBlank()
@@ -129,30 +129,30 @@ public class AdminApplicationServlet extends HttpServlet {
                         presentationDate, presentationTime, presentationVenue, presentationMessage);
                 sendInProgressPresentationEmail(request, conn, applicationId,
                     presentationDate, presentationTime, presentationVenue, presentationMessage);
-                insertAdminAuditLog(conn, adminUserId, "IN_PROGRESS_APPLICATION",
-                        "Admin " + UserDisplayIdUtil.format(adminUserId, "ADMIN") + " set permohonan PPP" + String.format("%03d", applicationId) + " ke Dalam Proses", request.getRemoteAddr());
+                insertAdminAuditLog(conn, adminUserId, "IN PROGRESS APPLICATION",
+                        "Admin " + adminDisplayId + " set permohonan PPP" + String.format("%03d", applicationId) + " ke Dalam Proses", request.getRemoteAddr());
             } else if ("suspend_application".equals(action)) {
                 updateApplicationStatus(conn, applicationId, "SUSPENDED", adminNotes, adminUserId, null);
-                insertAdminAuditLog(conn, adminUserId, "SUSPEND_APPLICATION",
-                        "Admin " + UserDisplayIdUtil.format(adminUserId, "ADMIN") + " gantung permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
+                insertAdminAuditLog(conn, adminUserId, "SUSPEND APPLICATION",
+                        "Admin " + adminDisplayId + " gantung permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
             } else if ("suspend_user".equals(action)) {
                 suspendUserByApplication(conn, applicationId, adminNotes);
-                insertAdminAuditLog(conn, adminUserId, "SUSPEND_USER_BY_APPLICATION",
-                        "Admin " + UserDisplayIdUtil.format(adminUserId, "ADMIN") + " gantung pengguna melalui permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
+                insertAdminAuditLog(conn, adminUserId, "SUSPEND USER BY APPLICATION",
+                        "Admin " + adminDisplayId + " gantung pengguna melalui permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
             } else if ("archive".equals(action)) {
                 if (!canArchiveApplication(conn, applicationId)) {
                     if (ajaxRequest) {
                         writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false,
-                                "Permohonan hanya boleh diarkib selepas diambil tindakan (APPROVED/REJECTED/SUSPENDED).", action);
+                                "Permohonan ini sudah diarkib atau tidak ditemui.", action);
                     } else {
-                        request.setAttribute("error", "Permohonan hanya boleh diarkib selepas diambil tindakan (APPROVED/REJECTED/SUSPENDED). ");
+                        request.setAttribute("error", "Permohonan ini sudah diarkib atau tidak ditemui.");
                         renderApplicationPage(conn, request, response, applicationId, adminNotes);
                     }
                     return;
                 }
                 archiveApplication(conn, applicationId, adminNotes, adminUserId);
-                insertAdminAuditLog(conn, adminUserId, "ARCHIVE_APPLICATION",
-                    "Admin " + UserDisplayIdUtil.format(adminUserId, "ADMIN") + " arkib permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
+                insertAdminAuditLog(conn, adminUserId, "ARCHIVE APPLICATION",
+                    "Admin " + adminDisplayId + " arkib permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
             } else if ("unarchive".equals(action)) {
                 if (!isArchived(conn, applicationId)) {
                     if (ajaxRequest) {
@@ -165,8 +165,8 @@ public class AdminApplicationServlet extends HttpServlet {
                     return;
                 }
                 unarchiveApplication(conn, applicationId);
-                insertAdminAuditLog(conn, adminUserId, "UNARCHIVE_APPLICATION",
-                    "Admin " + UserDisplayIdUtil.format(adminUserId, "ADMIN") + " buka arkib permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
+                insertAdminAuditLog(conn, adminUserId, "UNARCHIVE APPLICATION",
+                    "Admin " + adminDisplayId + " buka arkib permohonan PPP" + String.format("%03d", applicationId), request.getRemoteAddr());
             } else {
                 if (ajaxRequest) {
                     writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false,
@@ -383,9 +383,11 @@ public class AdminApplicationServlet extends HttpServlet {
         }
 
         // Generate and store Perakuan Pendaftaran when approved
+        String issuedCertificateNumber = null;
         if ("APPROVED".equals(status)) {
-            String certNumber = String.format("JANS/PPP/%d/%04d",
-                    java.time.Year.now().getValue(), applicationId);
+            ensureCertificateNumberSequenceTable(conn);
+            String certNumber = generateNextCertificateNumber(conn);
+            issuedCertificateNumber = certNumber;
             LocalDate validUntil;
             if (validUntilStr != null && !validUntilStr.isBlank()) {
                 try {
@@ -414,8 +416,9 @@ public class AdminApplicationServlet extends HttpServlet {
             String message;
             String type;
             if ("APPROVED".equals(status)) {
-                String certRef = String.format("JANS/PPP/%d/%04d",
-                        java.time.Year.now().getValue(), applicationId);
+                String certRef = issuedCertificateNumber != null
+                        ? issuedCertificateNumber
+                        : loadCertificateNumber(conn, applicationId);
                 message = "Permohonan PPP" + String.format("%03d", applicationId) + " anda telah DILULUSKAN. Perakuan Pendaftaran " + certRef + " telah dikeluarkan.";
                 type = "SUCCESS";
             } else if ("REJECTED".equals(status)) {
@@ -431,6 +434,61 @@ public class AdminApplicationServlet extends HttpServlet {
             }
             DashboardDataService.insertNotification(conn, userId, message, type);
         }
+    }
+
+    private void ensureCertificateNumberSequenceTable(Connection conn) throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS certificate_number_sequences ("
+                + "sequence_year INT PRIMARY KEY, "
+                + "last_sequence INT NOT NULL DEFAULT -1, "
+                + "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+                + ")";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        }
+    }
+
+    private String generateNextCertificateNumber(Connection conn) throws SQLException {
+        int year = LocalDate.now().getYear();
+
+        String ensureYearSql = "INSERT INTO certificate_number_sequences (sequence_year, last_sequence) "
+                + "VALUES (?, -1) "
+                + "ON DUPLICATE KEY UPDATE sequence_year = sequence_year";
+        try (PreparedStatement stmt = conn.prepareStatement(ensureYearSql)) {
+            stmt.setInt(1, year);
+            stmt.executeUpdate();
+        }
+
+        String incrementSql = "UPDATE certificate_number_sequences "
+                + "SET last_sequence = LAST_INSERT_ID(last_sequence + 1), updated_at = CURRENT_TIMESTAMP "
+                + "WHERE sequence_year = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(incrementSql)) {
+            stmt.setInt(1, year);
+            stmt.executeUpdate();
+        }
+
+        int runningNo = 0;
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT LAST_INSERT_ID()")) {
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    runningNo = rs.getInt(1);
+                }
+            }
+        }
+
+        return String.format("JANS.%d.%03d", year, runningNo);
+    }
+
+    private String loadCertificateNumber(Connection conn, int applicationId) throws SQLException {
+        String sql = "SELECT certificate_number FROM applications WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, applicationId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("certificate_number");
+                }
+            }
+        }
+        return "";
     }
 
     private int getApplicationUserId(Connection conn, int applicationId) throws SQLException {
@@ -513,7 +571,7 @@ public class AdminApplicationServlet extends HttpServlet {
     }
 
     private boolean canArchiveApplication(Connection conn, int applicationId) throws SQLException {
-        String sql = "SELECT a.status, a.reviewed_at, aa.application_id AS archived_ref "
+        String sql = "SELECT a.id, aa.application_id AS archived_ref "
                 + "FROM applications a "
                 + "LEFT JOIN application_archives aa ON aa.application_id = a.id "
                 + "WHERE a.id = ? LIMIT 1";
@@ -523,13 +581,7 @@ public class AdminApplicationServlet extends HttpServlet {
                 if (!rs.next()) {
                     return false;
                 }
-                if (rs.getObject("archived_ref") != null) {
-                    return false;
-                }
-                String status = rs.getString("status");
-                boolean hasReviewedAt = rs.getTimestamp("reviewed_at") != null;
-                boolean allowedStatus = "APPROVED".equals(status) || "REJECTED".equals(status) || "SUSPENDED".equals(status);
-                return hasReviewedAt && allowedStatus;
+                return rs.getObject("archived_ref") == null;
             }
         }
     }
@@ -572,6 +624,7 @@ public class AdminApplicationServlet extends HttpServlet {
             String details, String ip) {
         if (adminId == null) return;
         try {
+            DashboardDataService.ensureAuditLogTable(conn);
             String sql = "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, adminId);

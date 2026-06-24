@@ -1,6 +1,7 @@
 package com.sistemppa.servlet;
 
 import com.sistemppa.config.DatabaseConfig;
+import com.sistemppa.service.KppReminderService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -220,6 +221,12 @@ public class KppGuestAccessServlet extends HttpServlet {
         try (Connection conn = DatabaseConfig.getConnection()) {
             ensureSubmissionTable(conn);
             saveSubmission(conn, payload, token, submitterEmail, collected, request.getRemoteAddr());
+            KppReminderService.cancelPendingReminders(
+                    conn,
+                    payload.recipientEmail(),
+                    payload.actionType(),
+                    payload.applicationRef()
+            );
         } catch (SQLException e) {
             LOGGER.severe("Failed to save KPP guest submission: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,

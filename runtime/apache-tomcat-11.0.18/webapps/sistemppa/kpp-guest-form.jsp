@@ -26,12 +26,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Borang Digital KPP Guest</title>
     <style>
-        * { box-sizing: border-box; }
+* { box-sizing: border-box; }
         body {
             margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
+            font-family: inherit;
             background: #eef4f8;
             color: #0f172a;
         }
@@ -110,6 +111,11 @@
             font-size: 0.93rem;
             font-family: inherit;
             width: 100%;
+        }
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            text-transform: uppercase;
         }
         textarea { min-height: 90px; resize: vertical; }
         [data-locked-field="1"] {
@@ -266,10 +272,10 @@
                     <div class="check-item"><p>20. Adakah produk mempunyai rekod prestasi dalam tempoh lima (5) tahun selepas dipasang? Jika ya, sila sertakan.</p><div class="check-grid"><div class="radio-row"><label><input type="radio" name="f_kspp_q20" value="Ya" data-field="f_kspp_q20">Ya</label><label><input type="radio" name="f_kspp_q20" value="Tidak" data-field="f_kspp_q20">Tidak</label><label><input type="radio" name="f_kspp_q20" value="Tidak Berkenaan" data-field="f_kspp_q20">Tidak Berkenaan</label></div><input name="f_kspp_q20_note" data-field="f_kspp_q20_note" placeholder="Catatan"></div></div>
                 </div>
 
-                <h3>Bahagian E: Ulasan Terhadap Pembaharuan Perakuan</h3>
+                <h3>Bahagian E: Keputusan Pembaharuan Perakuan</h3>
                 <div class="grid">
                     <div class="field">
-                        <label>Keputusan Ulasan</label>
+                        <label>Keputusan</label>
                         <select name="f_kspp_review_decision" data-field="f_kspp_review_decision">
                             <option value="">-- Pilih --</option>
                             <option value="Bersetuju">Bersetuju</option>
@@ -277,8 +283,6 @@
                         </select>
                     </div>
                     <div class="field"><label>Tarikh</label><input type="date" name="f_kspp_review_date" data-field="f_kspp_review_date"></div>
-                    <div class="field field-full"><label>Ulasan</label><textarea name="f_kspp_review_note" data-field="f_kspp_review_note"></textarea></div>
-                    <div class="field"><label>Nama</label><input name="f_kspp_sign_name" data-field="f_kspp_sign_name"></div>
                 </div>
             </div>
             <% } %>
@@ -310,6 +314,7 @@
                 <div class="grid">
                     <div class="field"><label>Tarikh</label><input type="date" name="f_ujppp_review_date" data-field="f_ujppp_review_date"></div>
                     <div class="field field-full"><label>Syor (diterima/ditolak/digantung/dibatal)</label><select name="f_ujppp_review_recommendation" data-field="f_ujppp_review_recommendation"><option value="">-- Pilih --</option><option value="diterima">diterima</option><option value="ditolak">ditolak</option><option value="digantung">digantung</option><option value="dibatal">dibatal</option></select></div>
+                    <div class="field field-full"><label>Ulasan</label><textarea name="f_ujppp_review_note" data-field="f_ujppp_review_note"></textarea></div>
                 </div>
             </div>
             <% } %>
@@ -396,9 +401,61 @@
         ujpppLockedFields.forEach((name) => activeLockedFields.push(name));
     }
     const lockedFieldNames = new Set(activeLockedFields);
+    const isKsppRenewalForm = shouldLockKspp && !shouldLockUjppp;
+
+    function isKsppSectionDField(fieldName) {
+        return /^f_kspp_q([1-9]|1\d|20)(_note)?$/.test(fieldName || '');
+    }
+
+    function isRenewalLockedField(field) {
+        if (!isKsppRenewalForm || !field) {
+            return false;
+        }
+        const fieldName = field.name || '';
+        const fieldKey = field.dataset ? (field.dataset.field || '') : '';
+        if (!fieldName || !fieldKey) {
+            return false;
+        }
+        return !isKsppSectionDField(fieldName);
+    }
+
+    function isUppercaseTarget(field) {
+        if (!field) {
+            return false;
+        }
+        if (field.tagName === 'TEXTAREA') {
+            return true;
+        }
+        if (field.tagName !== 'INPUT') {
+            return false;
+        }
+        const inputType = (field.type || '').toLowerCase();
+        return inputType === 'text' || inputType === 'email';
+    }
+
+    function enforceUppercase(field) {
+        if (!isUppercaseTarget(field)) {
+            return;
+        }
+        const currentValue = field.value || '';
+        const normalizedValue = currentValue.toUpperCase();
+        if (currentValue !== normalizedValue) {
+            field.value = normalizedValue;
+        }
+    }
+
+    function applyUppercaseAttributes() {
+        fields.forEach((field) => {
+            if (!isUppercaseTarget(field)) {
+                return;
+            }
+            field.setAttribute('autocapitalize', 'characters');
+            enforceUppercase(field);
+        });
+    }
 
     function isLockedField(field) {
-        return !!field && lockedFieldNames.has(field.name || '');
+        return !!field && (lockedFieldNames.has(field.name || '') || isRenewalLockedField(field));
     }
 
     function applyLockedPrefill() {
@@ -416,6 +473,25 @@
                     field.value = value;
                 }
             });
+        });
+    }
+
+    function applyRenewalLockState() {
+        if (!isKsppRenewalForm) {
+            return;
+        }
+        fields.forEach((field) => {
+            if (!isRenewalLockedField(field)) {
+                return;
+            }
+            field.setAttribute('data-locked-field', '1');
+            if (field.type === 'radio' || field.type === 'checkbox' || field.tagName === 'SELECT') {
+                field.disabled = true;
+                return;
+            }
+            if (typeof field.readOnly !== 'undefined') {
+                field.readOnly = true;
+            }
         });
     }
 
@@ -462,6 +538,7 @@
                 }
 
                 field.value = data[key];
+                enforceUppercase(field);
             });
         } catch (error) {
             console.warn('Gagal muat cache borang guest:', error);
@@ -472,13 +549,23 @@
         if (isLockedField(field)) {
             return;
         }
-        field.addEventListener('input', save);
-        field.addEventListener('change', save);
+        field.addEventListener('input', () => {
+            enforceUppercase(field);
+            save();
+        });
+        field.addEventListener('change', () => {
+            enforceUppercase(field);
+            save();
+        });
     });
 
+    applyUppercaseAttributes();
     applyLockedPrefill();
+    applyRenewalLockState();
     load();
+    applyUppercaseAttributes();
     applyLockedPrefill();
+    applyRenewalLockState();
 })();
 </script>
 </body>

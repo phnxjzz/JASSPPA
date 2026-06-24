@@ -15,10 +15,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Senarai Pengguna &ndash; SPPPA Admin</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
-        :root {
+:root {
             --brand-blue: #2A9D8F;
             --brand-navy: #0F6BAE;
             --brand-green: #6DBE45;
@@ -31,7 +31,7 @@
             --muted: #5d7484;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Source Sans 3', 'Trebuchet MS', sans-serif; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: var(--text); }
+        body { margin: 0; font-family: inherit; background: linear-gradient(180deg, #eef3f8 0%, #f8fbfd 100%); color: var(--text); }
         .navbar { background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 30%, var(--brand-green) 58%, var(--brand-lime) 80%, var(--brand-gold) 100%); border-bottom: 3px solid var(--brand-gold); color: white; padding: 14px 26px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 12px 28px rgba(8, 51, 77, 0.2); }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 52px; height: 52px; object-fit: contain; }
@@ -48,6 +48,50 @@
         .page-header h2 { margin: 0 0 4px; font-size: 26px; color: var(--brand-navy); }
         .page-header p { margin: 0; color: var(--muted); }
         .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 26px rgba(9, 53, 79, 0.07); padding: 22px; }
+        .users-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .search-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f6fbff;
+            border: 1px solid #d4e1ec;
+            border-radius: 12px;
+            padding: 6px;
+        }
+        .search-form-icon {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            opacity: 0.9;
+            margin-left: 4px;
+        }
+        .search-form input[type="text"] {
+            min-width: 280px;
+            border: 1px solid #d0deea;
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text);
+            background: #ffffff;
+        }
+        .search-form input[type="text"]:focus {
+            outline: none;
+            border-color: #8fb6d2;
+            box-shadow: 0 0 0 2px rgba(15, 107, 174, 0.12);
+        }
+        .search-form .btn {
+            padding: 9px 12px;
+            border-radius: 8px;
+            box-shadow: none;
+        }
         .btn { padding: 10px 16px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 14px; transition: transform 0.15s ease, box-shadow 0.15s ease; text-decoration: none; }
         .btn:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(9,53,79,0.15); }
         .btn-primary { background: linear-gradient(180deg, var(--brand-navy) 0%, var(--brand-blue) 55%, var(--brand-green) 100%); color: white; }
@@ -60,6 +104,7 @@
         .role-pill { display: inline-block; padding: 4px 11px; border-radius: 999px; font-weight: 700; font-size: 12px; }
         .role-admin { background: #fef3c7; color: #92400e; }
         .role-user { background: #dbeafe; color: #1e40af; }
+        .role-staff { background: #dcfce7; color: #166534; }
         .status-pill { display: inline-block; padding: 4px 11px; border-radius: 999px; font-weight: 700; font-size: 12px; }
         .status-active { background: #dcfce7; color: #166534; }
         .status-inactive { background: #e2e8f0; color: #334155; }
@@ -87,7 +132,7 @@
             background: #ffffff;
             color: #166534;
             font-size: 16px;
-            line-height: 1.35;
+            line-height: 1.6;
             box-shadow: 0 16px 32px rgba(10, 64, 38, 0.2);
             transform: translate(-50%, -58%) scale(0.97);
             opacity: 0;
@@ -127,6 +172,32 @@
             50% { transform: scale(1.06); }
         }
         .user-count { font-size: 13px; color: var(--muted); float: right; margin-top: 4px; }
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #d9e5ef;
+            border-radius: 12px;
+            background: #fff;
+        }
+        .table-wrap table {
+            min-width: 1050px;
+            margin: 0;
+            border-collapse: collapse;
+        }
+        .table-wrap th,
+        .table-wrap td {
+            white-space: nowrap;
+        }
+        .table-wrap td:nth-child(3),
+        .table-wrap td:nth-child(4),
+        .table-wrap td:nth-child(5) {
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        .table-wrap td:nth-child(10) {
+            white-space: nowrap;
+        }
         /* Modal */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(8,51,77,0.45); z-index: 1000; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
@@ -181,7 +252,13 @@
         .action-item-danger { color: #b91c1c; }
         .action-item-danger:hover { background: #fff1f2; }
         @media (max-width: 768px) { .navbar { flex-direction: column; align-items: flex-start; } .navbar a { margin-left: 0; margin-right: 10px; } }
-        .temp-pw-box { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; font-family: monospace; font-size: 18px; text-align: center; letter-spacing: 2px; color: #0f172a; margin: 12px 0; word-break: break-all; }
+        @media (max-width: 768px) {
+            .search-form { width: 100%; }
+            .search-form input[type="text"] { min-width: 0; width: 100%; }
+            .user-count { float: none; width: 100%; text-align: right; }
+            .panel { padding: 16px; }
+        }
+        .temp-pw-box { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; font-family: inherit; font-size: 18px; text-align: center; letter-spacing: 2px; color: #0f172a; margin: 12px 0; word-break: break-all; }
         .audit-panel { margin-top: 18px; }
         .audit-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
         .audit-item { border: 1px solid #d8e5ef; border-radius: 10px; background: #f8fbff; padding: 10px 12px; }
@@ -358,10 +435,22 @@
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> users = (List<Map<String, Object>>) request.getAttribute("users");
             List<Map<String, Object>> adminAuditLogs = (List<Map<String, Object>>) request.getAttribute("admin_audit_logs");
+            String searchQuery = String.valueOf(request.getAttribute("search") == null ? "" : request.getAttribute("search"));
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         %>
-        <span class="user-count">Jumlah: <%= users != null ? users.size() : 0 %> pengguna</span>
+        <div class="users-toolbar">
+            <form class="search-form" method="get" action="${pageContext.request.contextPath}/admin/users">
+                <img class="search-form-icon" src="${pageContext.request.contextPath}/icon/search.png" alt="Cari pengguna">
+                <input type="text" name="search" value="<%= esc(searchQuery) %>" placeholder="Cari nama, username atau e-mel">
+                <button type="submit" class="btn btn-secondary">Cari</button>
+                <% if (searchQuery != null && !searchQuery.isBlank()) { %>
+                    <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/users">Reset</a>
+                <% } %>
+            </form>
+            <span class="user-count">Jumlah: <%= users != null ? users.size() : 0 %> pengguna</span>
+        </div>
 
+        <div class="table-wrap">
         <table>
             <thead>
                 <tr>
@@ -393,11 +482,12 @@
                     String status    = String.valueOf(u.get("status"));
                     Timestamp createdAt = (Timestamp) u.get("created_at");
                     String dateStr   = createdAt != null ? sdf.format(createdAt) : "-";
-                    String roleClass = "ADMIN".equals(role) ? "role-admin" : "role-user";
+                        String roleClass = "ADMIN".equals(role) ? "role-admin"
+                            : "STAFF".equals(role) ? "role-staff"
+                            : "role-user";
                     String statClass = "ACTIVE".equals(status) ? "status-active"
                                      : "SUSPENDED".equals(status) ? "status-suspended" : "status-inactive";
-                    String toggleLabel = "SUSPENDED".equals(status) ? "Aktifkan" : "Gantung";
-                    String toggleBtnClass = "SUSPENDED".equals(status) ? "btn btn-success" : "btn btn-warning";
+                    boolean isActive = "ACTIVE".equals(status);
             %>
                 <tr>
                     <td><%= idx++ %></td>
@@ -431,9 +521,17 @@
                                 </button>
                                 <form method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
                                     <input type="hidden" name="_csrf" value="${csrf_token}">
-                                    <input type="hidden" name="action" value="toggle_status">
+                                    <input type="hidden" name="action" value="set_status">
+                                    <input type="hidden" name="status" value="ACTIVE">
                                     <input type="hidden" name="userId" value="<%= userId %>">
-                                    <button type="submit" class="action-item"><%= toggleLabel %></button>
+                                    <button type="submit" class="action-item" <%= isActive ? "disabled" : "" %>>Aktifkan</button>
+                                </form>
+                                <form method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
+                                    <input type="hidden" name="_csrf" value="${csrf_token}">
+                                    <input type="hidden" name="action" value="set_status">
+                                    <input type="hidden" name="status" value="SUSPENDED">
+                                    <input type="hidden" name="userId" value="<%= userId %>">
+                                    <button type="submit" class="action-item" <%= !isActive ? "disabled" : "" %>>Nyahaktifkan</button>
                                 </form>
                                 <button type="button" class="action-item action-item-danger"
                                         onclick="confirmDelete('<%= userId %>', '<%= username %>')">
@@ -446,6 +544,7 @@
             <% } } %>
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="panel kpp-panel">
@@ -530,11 +629,12 @@
                             : String.valueOf(auditRow.get("full_name"));
                     String actorDisplayId = String.valueOf(auditRow.get("display_user_id") == null ? "-" : auditRow.get("display_user_id"));
                     String action = String.valueOf(auditRow.get("action") == null ? "-" : auditRow.get("action"));
+                    String actionDisplay = action.replace('_', ' ').replaceAll("\\s+", " ").trim();
                     String details = String.valueOf(auditRow.get("details") == null ? "Tiada perincian." : auditRow.get("details"));
                     Timestamp actionAt = (Timestamp) auditRow.get("created_at");
             %>
             <li class="audit-item">
-                <strong><%= esc(actorName) %> (<%= esc(actorDisplayId) %>) · <%= esc(action) %></strong>
+                <strong><%= esc(actorName) %> (<%= esc(actorDisplayId) %>) · <%= esc(actionDisplay) %></strong>
                 <p><%= esc(details) %></p>
                 <div class="audit-meta">
                     <span><%= actionAt != null ? sdf.format(actionAt) : "Masa tidak direkod" %></span>
@@ -599,6 +699,7 @@
                 <label for="roleSelect" style="display:block;font-weight:700;margin-bottom:8px;color:#334155;">Peranan</label>
                 <select id="roleSelect" name="role" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;">
                     <option value="USER">USER (Pengguna)</option>
+                    <option value="STAFF">STAFF (Staf Dalaman)</option>
                     <option value="ADMIN">ADMIN (Pentadbir)</option>
                 </select>
             </div>
@@ -689,7 +790,8 @@
         document.getElementById('roleUserId').value = userId;
         document.getElementById('roleModalMsg').textContent =
             'Pilih peranan baharu untuk pengguna "' + username + '".';
-        document.getElementById('roleSelect').value = currentRole === 'ADMIN' ? 'ADMIN' : 'USER';
+        document.getElementById('roleSelect').value =
+            currentRole === 'ADMIN' ? 'ADMIN' : (currentRole === 'STAFF' ? 'STAFF' : 'USER');
         document.getElementById('roleModal').classList.add('active');
     }
     function confirmPhone(userId, username, currentPhone) {

@@ -29,11 +29,10 @@ public final class DashboardDataService {
 
         String sql = "SELECT "
                 + "COUNT(CASE WHEN aa.application_id IS NULL THEN 1 END) AS total_applications, "
-                + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'NEW' THEN 1 ELSE 0 END) AS pending_count, "
+            + "SUM(CASE WHEN aa.application_id IS NULL AND a.status IN ('NEW', 'DRAFT') THEN 1 ELSE 0 END) AS pending_count, "
                 + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count, "
                 + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected_count, "
                 + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'SUSPENDED' THEN 1 ELSE 0 END) AS suspended_count, "
-                + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'DRAFT' THEN 1 ELSE 0 END) AS draft_count, "
                 + "SUM(CASE WHEN aa.application_id IS NOT NULL THEN 1 ELSE 0 END) AS archived_count "
                 + "FROM applications a "
                 + "LEFT JOIN application_archives aa ON aa.application_id = a.id";
@@ -45,7 +44,6 @@ public final class DashboardDataService {
                 stats.put("approved_count", rs.getInt("approved_count"));
                 stats.put("rejected_count", rs.getInt("rejected_count"));
                 stats.put("suspended_count", rs.getInt("suspended_count"));
-                stats.put("draft_count", rs.getInt("draft_count"));
                 stats.put("archived_count", rs.getInt("archived_count"));
             }
         }
@@ -60,7 +58,7 @@ public final class DashboardDataService {
 
     public static List<Map<String, Object>> loadRegisteredUsers(Connection conn, String search,
                                                                  boolean onlyNew, int limit) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT id, username, full_name, email, status, created_at "
+        StringBuilder sql = new StringBuilder("SELECT id, username, full_name, email, role, role_seq, status, created_at "
                 + "FROM users WHERE role = 'USER'");
         List<Object> parameters = new ArrayList<>();
 
@@ -95,6 +93,10 @@ public final class DashboardDataService {
                     row.put("username", rs.getString("username"));
                     row.put("full_name", rs.getString("full_name"));
                     row.put("email", rs.getString("email"));
+                        row.put("display_id", UserDisplayIdUtil.format(
+                            rs.getInt("id"),
+                            rs.getString("role"),
+                            rs.getObject("role_seq", Integer.class)));
                     row.put("status", rs.getString("status"));
                     row.put("created_at", rs.getTimestamp("created_at"));
                     users.add(row);
@@ -394,8 +396,9 @@ public final class DashboardDataService {
     }
 
     public static List<Map<String, Object>> loadRecentAdminAuditLogs(Connection conn, int limit) throws SQLException {
+        ensureAuditLogTable(conn);
         String sql = "SELECT al.id, al.user_id, al.action, al.details, al.ip_address, al.created_at, "
-                + "u.username, u.full_name, u.role "
+            + "u.username, u.full_name, u.role, u.role_seq "
                 + "FROM audit_log al "
                 + "JOIN users u ON u.id = al.user_id "
                 + "WHERE u.role = 'ADMIN' "
@@ -421,7 +424,10 @@ public final class DashboardDataService {
                     row.put("username", rs.getString("username"));
                     row.put("full_name", rs.getString("full_name"));
                     row.put("role", rs.getString("role"));
-                    row.put("display_user_id", UserDisplayIdUtil.format(rs.getInt("user_id"), rs.getString("role")));
+                        row.put("display_user_id", UserDisplayIdUtil.format(
+                            rs.getInt("user_id"),
+                            rs.getString("role"),
+                            rs.getObject("role_seq", Integer.class)));
                     logs.add(row);
                 }
             }
@@ -431,13 +437,14 @@ public final class DashboardDataService {
 
     public static List<Map<String, Object>> loadRecentAdminAuditLogsByKeyword(
             Connection conn, String keyword, int limit) throws SQLException {
+        ensureAuditLogTable(conn);
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
         if (normalizedKeyword.isBlank()) {
             return loadRecentAdminAuditLogs(conn, limit);
         }
 
         String sql = "SELECT al.id, al.user_id, al.action, al.details, al.ip_address, al.created_at, "
-            + "u.username, u.full_name, u.role "
+            + "u.username, u.full_name, u.role, u.role_seq "
                 + "FROM audit_log al "
                 + "JOIN users u ON u.id = al.user_id "
                 + "WHERE u.role = 'ADMIN' AND (al.action LIKE ? OR al.details LIKE ?) "
@@ -466,12 +473,53 @@ public final class DashboardDataService {
                     row.put("username", rs.getString("username"));
                     row.put("full_name", rs.getString("full_name"));
                     row.put("role", rs.getString("role"));
-                    row.put("display_user_id", UserDisplayIdUtil.format(rs.getInt("user_id"), rs.getString("role")));
+                    row.put("display_user_id", UserDisplayIdUtil.format(
+                            rs.getInt("user_id"),
+                            rs.getString("role"),
+                            rs.getObject("role_seq", Integer.class)));
                     logs.add(row);
                 }
             }
         }
         return logs;
+    }
+
+    public static String resolveDisplayUserId(Connection conn, Integer userId, String fallbackRole) throws SQLException {
+        if (userId == null || userId <= 0) {
+            return "-";
+        }
+
+        String sql = "SELECT role, role_seq FROM users WHERE id = ? LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String role = rs.getString("role");
+                    Integer roleSeq = rs.getObject("role_seq", Integer.class);
+                    return UserDisplayIdUtil.format(userId, role, roleSeq);
+                }
+            }
+        }
+
+        return UserDisplayIdUtil.format(userId, fallbackRole);
+    }
+
+    public static void ensureAuditLogTable(Connection conn) throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS audit_log ("
+                + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
+                + "user_id INT NOT NULL, "
+                + "action VARCHAR(120) NOT NULL, "
+                + "details TEXT NULL, "
+                + "ip_address VARCHAR(64) NULL, "
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "INDEX idx_audit_created_at (created_at), "
+                + "INDEX idx_audit_user_id (user_id), "
+                + "INDEX idx_audit_action (action)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        }
     }
 
     public static List<Map<String, Object>> loadActiveAnnouncements(Connection conn, int limit) throws SQLException {
@@ -850,8 +898,6 @@ public final class DashboardDataService {
             normalized = "REJECTED";
         } else if ("DIGANTUNG".equals(normalized)) {
             normalized = "SUSPENDED";
-        } else if ("DRAF".equals(normalized)) {
-            normalized = "DRAFT";
         } else if ("DIARKIB".equals(normalized)) {
             normalized = "ARCHIVED";
         }
@@ -862,8 +908,7 @@ public final class DashboardDataService {
             || "IN_PROGRESS".equals(normalized)
             || "APPROVED".equals(normalized)
             || "REJECTED".equals(normalized)
-            || "SUSPENDED".equals(normalized)
-            || "DRAFT".equals(normalized)) {
+            || "SUSPENDED".equals(normalized)) {
             return normalized;
         }
         return null;

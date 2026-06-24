@@ -33,10 +33,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Perakuan Pendaftaran - JANS</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, Helvetica, sans-serif; background: #e8e8e8; color: #111; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: inherit; background: #e8e8e8; color: #111; }
 
         /* ── screen toolbar ── */
         .screen-bar {
@@ -53,7 +54,7 @@
         }
         .btn {
             border: none; border-radius: 6px; padding: 10px 24px;
-            font-size: 14px; cursor: pointer; font-family: Arial, sans-serif;
+            font-size: 14px; cursor: pointer; font-family: inherit;
             text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
         }
         .btn-print { background: #1b2a52; color: #fff; }
@@ -100,6 +101,13 @@
             border-bottom: 1px solid #111;
             padding-bottom: 3px;
         }
+        .field-table .val-multiline {
+            white-space: pre-line;
+            vertical-align: top;
+            line-height: 1.25;
+            padding-top: 4px;
+            padding-bottom: 6px;
+        }
 
         /* ── product table ── */
         .prod-wrap { margin-top: 22px; }
@@ -136,6 +144,9 @@
     String productName  = String.valueOf(certApp.get("product_name"));
     String productCat   = String.valueOf(certApp.get("product_category"));
     String stdName      = certApp.get("standard_name")       != null ? String.valueOf(certApp.get("standard_name"))       : "";
+    String classSizeModel = certApp.get("certificate_class_size_model") != null ? String.valueOf(certApp.get("certificate_class_size_model")) : "";
+    String brandName      = certApp.get("certificate_brand") != null ? String.valueOf(certApp.get("certificate_brand")) : "";
+    String productBrief   = certApp.get("certificate_product_brief") != null ? String.valueOf(certApp.get("certificate_product_brief")) : "";
 
     DateTimeFormatter fmtMs = DateTimeFormatter.ofPattern("dd MMMM yyyy", new java.util.Locale("ms", "MY"));
     java.sql.Date issuedAtSql   = (java.sql.Date) certApp.get("issued_at");
@@ -207,12 +218,12 @@
         <tr>
             <td class="lbl">Kelas/Saiz/Model</td>
             <td class="colon">:</td>
-            <td class="val">&nbsp;</td>
+            <td class="val"><%= classSizeModel %></td>
         </tr>
         <tr>
             <td class="lbl">Jenama</td>
             <td class="colon">:</td>
-            <td class="val">&nbsp;</td>
+            <td class="val"><%= brandName %></td>
         </tr>
         <tr>
             <td class="lbl">Piawaian</td>
@@ -232,7 +243,7 @@
         <tr>
             <td class="lbl">Perihal Produk</td>
             <td class="colon">:</td>    
-            <td class="val">&nbsp;</td>
+            <td class="val val-multiline"><%= productBrief %></td>
         </tr>
     </table>
 

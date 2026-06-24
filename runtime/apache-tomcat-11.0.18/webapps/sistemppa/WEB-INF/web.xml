@@ -86,6 +86,10 @@
         <param-name>app.base.url</param-name>
         <param-value>http://localhost:8081/sistemppa</param-value>
     </context-param>
+    <context-param>
+        <param-name>kpp.reminder.job.key</param-name>
+        <param-value>CHANGE_ME_INTERNAL_KPP_REMINDER_KEY</param-value>
+    </context-param>
 
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
@@ -287,6 +291,24 @@
     <servlet-mapping>
         <servlet-name>KppGuestAccessServlet</servlet-name>
         <url-pattern>/kpp/delete-entry</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>KppReminderJobServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.KppReminderJobServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>KppReminderJobServlet</servlet-name>
+        <url-pattern>/internal/kpp-reminder-run</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>StaffComplaintServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.StaffComplaintServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>StaffComplaintServlet</servlet-name>
+        <url-pattern>/staff/complaints</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>

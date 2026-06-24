@@ -91,35 +91,16 @@ public class RegisterServlet extends HttpServlet {
             }
 
             String bcryptHash = BCrypt.hashpw(password, BCrypt.gensalt(12));
-            int newUserId = -1;
-            String sql = "INSERT INTO users (username, email, phone_number, password_hash, role, full_name, status) VALUES (?, ?, ?, ?, 'USER', ?, 'INACTIVE')";
-            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            String sql = "INSERT INTO users (username, email, phone_number, password_hash, role, full_name, status) VALUES (?, ?, ?, ?, 'USER', ?, 'ACTIVE')";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
                 stmt.setString(2, email);
                 stmt.setString(3, phoneNumber);
                 stmt.setString(4, bcryptHash);
                 stmt.setString(5, fullName);
                 stmt.executeUpdate();
-                try (ResultSet keys = stmt.getGeneratedKeys()) {
-                    if (keys.next()) {
-                        newUserId = keys.getInt(1);
-                    }
-                }
             }
-
-            // Try to send verification email
-            boolean emailSent = false;
-            if (newUserId > 0) {
-                emailSent = sendVerificationEmail(request, conn, newUserId, email, fullName);
-            }
-
-            // If email could not be sent, activate user directly (graceful degradation)
-            if (!emailSent && newUserId > 0) {
-                activateUserDirectly(conn, newUserId);
-                response.sendRedirect(request.getContextPath() + "/login?registered=1");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/login?verify_pending=1");
-            }
+            response.sendRedirect(request.getContextPath() + "/login?registered=1");
 
         } catch (SQLException e) {
             LOGGER.severe("Registration failed: " + e.getMessage());

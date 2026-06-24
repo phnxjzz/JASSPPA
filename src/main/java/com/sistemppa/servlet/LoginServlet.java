@@ -65,7 +65,7 @@ public class LoginServlet extends HttpServlet {
         }
 
         try (Connection conn = DatabaseConfig.getConnection()) {
-            String sql = "SELECT id, username, role, status, password_hash FROM users WHERE username = ? LIMIT 1";
+            String sql = "SELECT id, username, email, role, status, password_hash FROM users WHERE username = ? LIMIT 1";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
 
@@ -93,6 +93,7 @@ public class LoginServlet extends HttpServlet {
                         }
 
                         String userRole = rs.getString("role");
+                        String userEmail = trim(rs.getString("email"));
                         if (maintenanceMode && "USER".equals(userRole)) {
                             request.setAttribute("error", "Portal Pemohon sedang dalam penyelenggaraan. Sila cuba lagi sebentar.");
                             request.setAttribute("selected_role", selectedRole != null ? selectedRole : "USER");
@@ -100,7 +101,23 @@ public class LoginServlet extends HttpServlet {
                             return;
                         }
 
-                        if (selectedRole != null && !selectedRole.equals(userRole)) {
+                        if ("STAFF".equals(selectedRole)) {
+                            boolean staffPortalRoleAllowed = "ADMIN".equals(userRole) || "STAFF".equals(userRole);
+                            if (!staffPortalRoleAllowed) {
+                                RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
+                                request.setAttribute("error", "Portal Staff hanya untuk akaun Admin atau Staff.");
+                                request.setAttribute("selected_role", selectedRole);
+                                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                                return;
+                            }
+                            if (!isGovernmentEmail(userEmail)) {
+                                RateLimitFilter.recordFailure(RateLimitFilter.resolveClientIp(request));
+                                request.setAttribute("error", "Portal Staff memerlukan e-mel rasmi kerajaan (contoh: @sabah.gov.my). ");
+                                request.setAttribute("selected_role", selectedRole);
+                                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                                return;
+                            }
+                        } else if (selectedRole != null && !selectedRole.equals(userRole)) {
                             boolean userTryingAdminPortal = "ADMIN".equals(selectedRole) && "USER".equals(userRole);
                             boolean adminUsingApplicantPortal = "USER".equals(selectedRole) && "ADMIN".equals(userRole);
 
@@ -134,7 +151,12 @@ public class LoginServlet extends HttpServlet {
                         HttpSession session = request.getSession();
                         session.setAttribute("user_id", rs.getInt("id"));
                         session.setAttribute("username", rs.getString("username"));
+                        session.setAttribute("email", userEmail);
                         session.setAttribute("role", userRole);
+                        String effectivePortalRole = selectedRole != null && !selectedRole.isBlank()
+                            ? selectedRole
+                            : userRole;
+                        session.setAttribute("portal_role", effectivePortalRole);
                         session.setAttribute("login_time", new Timestamp(System.currentTimeMillis()));
 
                         LOGGER.info("User logged in: " + username);
@@ -160,7 +182,7 @@ public class LoginServlet extends HttpServlet {
             return null;
         }
         String role = value.trim().toUpperCase();
-        if ("ADMIN".equals(role) || "USER".equals(role)) {
+        if ("ADMIN".equals(role) || "USER".equals(role) || "STAFF".equals(role)) {
             return role;
         }
         return null;
@@ -168,6 +190,14 @@ public class LoginServlet extends HttpServlet {
 
     private String trim(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private boolean isGovernmentEmail(String email) {
+        if (email == null) {
+            return false;
+        }
+        String normalizedEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
+        return normalizedEmail.endsWith(".gov.my");
     }
 
     private boolean passwordMatches(String inputPassword, String storedPassword) {

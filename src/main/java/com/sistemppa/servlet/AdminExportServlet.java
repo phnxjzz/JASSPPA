@@ -190,7 +190,7 @@ public class AdminExportServlet extends HttpServlet {
         addHeaderCell(table, "Tarikh Daftar");
 
         for (Map<String, Object> user : users) {
-            table.addCell(String.valueOf(user.get("id")));
+            table.addCell(String.valueOf(user.get("display_id")));
             table.addCell(String.valueOf(user.get("username")));
             table.addCell(String.valueOf(user.get("full_name")));
             table.addCell(String.valueOf(user.get("email")));
@@ -221,7 +221,7 @@ public class AdminExportServlet extends HttpServlet {
             int rowIndex = 1;
             for (Map<String, Object> user : users) {
                 Row row = sheet.createRow(rowIndex++);
-                row.createCell(0).setCellValue(ValidationUtil.sanitizeXlsxCell(user.get("id")));
+                row.createCell(0).setCellValue(ValidationUtil.sanitizeXlsxCell(user.get("display_id")));
                 row.createCell(1).setCellValue(ValidationUtil.sanitizeXlsxCell(user.get("username")));
                 row.createCell(2).setCellValue(ValidationUtil.sanitizeXlsxCell(user.get("full_name")));
                 row.createCell(3).setCellValue(ValidationUtil.sanitizeXlsxCell(user.get("email")));

@@ -7,11 +7,23 @@ public final class UserDisplayIdUtil {
     }
 
     public static String format(int userId, String role) {
-        if (userId <= 0) {
+        return format(userId, role, null);
+    }
+
+    public static String format(int userId, String role, Integer roleSequence) {
+        int number = roleSequence != null && roleSequence > 0 ? roleSequence : userId;
+        if (number <= 0) {
             return "-";
         }
         String normalizedRole = role == null ? "" : role.trim().toUpperCase(Locale.ROOT);
-        String prefix = "ADMIN".equals(normalizedRole) ? "A" : "P";
-        return prefix + String.format("%03d", userId);
+        String prefix;
+        if ("ADMIN".equals(normalizedRole)) {
+            prefix = "ADM";
+        } else if ("STAFF".equals(normalizedRole)) {
+            prefix = "STF";
+        } else {
+            prefix = "P";
+        }
+        return prefix + String.format("%03d", number);
     }
 }

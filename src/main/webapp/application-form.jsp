@@ -1,6 +1,7 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Set" %>
+<%@ page import="java.util.List" %>
 <%@ page import="java.util.LinkedHashSet" %>
 <%!
     private String toJs(Object value) {
@@ -22,12 +23,60 @@
         Object value = app.get(key);
         return value == null ? "" : String.valueOf(value);
     }
+
+    private String buildRenewalSourceJson(List<Map<String, Object>> apps) {
+        if (apps == null || apps.isEmpty()) {
+            return "{}";
+        }
+        StringBuilder json = new StringBuilder("{");
+        for (int i = 0; i < apps.size(); i++) {
+            Map<String, Object> approvedApp = apps.get(i);
+            Object approvedIdObj = approvedApp.get("id");
+            String approvedId = approvedIdObj == null ? "" : String.valueOf(((Number) approvedIdObj).intValue());
+            if (i > 0) {
+                json.append(',');
+            }
+            json.append('"').append(toJs(approvedId)).append("\":{")
+                .append("\"supplier_email\":\"").append(toJs(appValue(approvedApp, "supplier_email"))).append("\",")
+                .append("\"supplier_phone\":\"").append(toJs(appValue(approvedApp, "supplier_phone"))).append("\",")
+                .append("\"supplier_name\":\"").append(toJs(appValue(approvedApp, "supplier_name"))).append("\",")
+                .append("\"supplier_address\":\"").append(toJs(appValue(approvedApp, "supplier_address"))).append("\",")
+                .append("\"manufacturer_name\":\"").append(toJs(appValue(approvedApp, "manufacturer_name"))).append("\",")
+                .append("\"manufacturer_address\":\"").append(toJs(appValue(approvedApp, "manufacturer_address"))).append("\",")
+                .append("\"manufacturer_phone\":\"").append(toJs(appValue(approvedApp, "manufacturer_phone"))).append("\",")
+                .append("\"principal_name\":\"").append(toJs(appValue(approvedApp, "principal_name"))).append("\",")
+                .append("\"principal_address\":\"").append(toJs(appValue(approvedApp, "principal_address"))).append("\",")
+                .append("\"principal_phone\":\"").append(toJs(appValue(approvedApp, "principal_phone"))).append("\",")
+                .append("\"product_category\":\"").append(toJs(appValue(approvedApp, "product_category"))).append("\",")
+                .append("\"product_name\":\"").append(toJs(appValue(approvedApp, "product_name"))).append("\",")
+                .append("\"brand\":\"").append(toJs(appValue(approvedApp, "brand"))).append("\",")
+                .append("\"standard_name\":\"").append(toJs(appValue(approvedApp, "standard_name"))).append("\",")
+                .append("\"certification_license\":\"").append(toJs(appValue(approvedApp, "certification_license"))).append("\",")
+                .append("\"certification_valid_until\":\"").append(toJs(appValue(approvedApp, "certification_valid_until"))).append("\",")
+                .append("\"test_report_reference\":\"").append(toJs(appValue(approvedApp, "test_report_reference"))).append("\",")
+                .append("\"test_report_date\":\"").append(toJs(appValue(approvedApp, "test_report_date"))).append("\",")
+                .append("\"warranty_years\":\"").append(toJs(appValue(approvedApp, "warranty_years"))).append("\",")
+                .append("\"product_model\":\"").append(toJs(appValue(approvedApp, "product_model"))).append("\",")
+                .append("\"product_series\":\"").append(toJs(appValue(approvedApp, "product_series"))).append("\",")
+                .append("\"product_description\":\"").append(toJs(appValue(approvedApp, "product_description"))).append("\",")
+                .append("\"sabah_rep_name\":\"").append(toJs(appValue(approvedApp, "sabah_rep_name"))).append("\",")
+                .append("\"sabah_rep_address\":\"").append(toJs(appValue(approvedApp, "sabah_rep_address"))).append("\",")
+                .append("\"sabah_rep_phone\":\"").append(toJs(appValue(approvedApp, "sabah_rep_phone"))).append("\"}");
+        }
+        json.append('}');
+        return json.toString();
+    }
 %>
 <%
     Map<String, Object> editingApp = (Map<String, Object>) request.getAttribute("application");
     boolean editMode = Boolean.TRUE.equals(request.getAttribute("editMode"));
     boolean renewalMode = Boolean.TRUE.equals(request.getAttribute("renewalMode"));
     Object renewalSourceApplicationId = request.getAttribute("renewalSourceApplicationId");
+    List<Map<String, Object>> approvedApplications = (List<Map<String, Object>>) request.getAttribute("approvedApplications");
+    if (approvedApplications == null) {
+        approvedApplications = java.util.Collections.emptyList();
+    }
+    String selectedRenewalSourceId = renewalSourceApplicationId == null ? "" : String.valueOf(renewalSourceApplicationId);
     String formAction = request.getAttribute("formAction") != null
             ? String.valueOf(request.getAttribute("formAction"))
             : (request.getContextPath() + "/applications/new");
@@ -63,9 +112,9 @@
     String jsTestReportReference = toJs(appValue(editingApp, "test_report_reference"));
     String jsTestReportDate = toJs(appValue(editingApp, "test_report_date"));
     String jsWarrantyYears = toJs(appValue(editingApp, "warranty_years"));
+    String jsProductModel = toJs(appValue(editingApp, "product_model"));
+    String jsProductSeries = toJs(appValue(editingApp, "product_series"));
     String jsProductDescription = toJs(appValue(editingApp, "product_description"));
-    String jsProductClass = toJs(appValue(editingApp, "product_class"));
-    String jsProductSize = toJs(appValue(editingApp, "product_size"));
     String jsSabahRepName = toJs(appValue(editingApp, "sabah_rep_name"));
     String jsSabahRepAddress = toJs(appValue(editingApp, "sabah_rep_address"));
     String jsSabahRepPhone = toJs(appValue(editingApp, "sabah_rep_phone"));
@@ -75,16 +124,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Borang Permohonan Online PPP1 - SPPA</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: linear-gradient(180deg, #eff9ff 0%, #f7fbfd 100%); color: #223; }
-        .navbar { background: linear-gradient(130deg, #0F6BAE 0%, #2A9D8F 30%, #6DBE45 58%, #CDE11D 80%, #F2F72E 100%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+* { box-sizing: border-box; }
+        body { font-family: inherit; margin: 0; background: linear-gradient(180deg, #eff9ff 0%, #f7fbfd 100%); color: #223; }
+        .navbar { background: linear-gradient(130deg, #0F6BAE 0%, #2A9D8F 30%, #6DBE45 58%, #CDE11D 80%, #F2F72E 100%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: nowrap; }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: contain; padding: 3px; }
         .brand strong { display: block; }
         .brand span { font-size: 12px; opacity: 0.88; }
-        .navbar a { color: white; text-decoration: none; margin-left: 16px; }
+        .nav-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .navbar a { color: white; text-decoration: none; }
         .container { max-width: 1100px; margin: 28px auto; padding: 0 20px; }
         .panel { border-radius: 12px; box-shadow: 0 12px 30px rgba(16, 24, 40, 0.08); padding: 24px; margin-bottom: 24px; }
         .hero { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
@@ -124,7 +175,7 @@
             background: #ffffff;
             color: #166534;
             font-size: 16px;
-            line-height: 1.35;
+            line-height: 1.6;
             box-shadow: 0 16px 32px rgba(10, 64, 38, 0.2);
             transform: translate(-50%, -58%) scale(0.97);
             opacity: 0;
@@ -222,6 +273,7 @@
         .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; min-width: 0; }
         .jans-contact-section .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
         .jans-contact-section .contact-line span { line-height: 1.45; }
+        .contact-line-hanging { margin-left: 21px; }
         @media (max-width: 900px) { .hero, .grid, .grid-3, .doc-list { grid-template-columns: 1fr; } }
                     /* Enforce visible white border on all clickable buttons */
         button,
@@ -259,7 +311,7 @@
             box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
         }
         .icon-inline { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; }
-        .icon-link { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.38); transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; }
+        .icon-link { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.38); transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 0; }
         .icon-link img { width: 20px; height: 20px; object-fit: contain; }
         .icon-link:hover { transform: translateY(-1px) scale(1.03); background: rgba(255,255,255,0.26); }
     </style>
@@ -268,13 +320,13 @@
         <div class="brand">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
-                <strong>SPPA - Permohonan Online PPP1</strong>
+                <strong>Borang Permohonan</strong>
                 <span>Jabatan Air Negeri Sabah</span>
             </div>
         </div>
-        <div>
+        <div class="nav-actions">
             <a class="icon-link" href="${pageContext.request.contextPath}/dashboard" title="Kembali ke Dashboard" aria-label="Kembali ke Dashboard"><img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard"></a>
-            <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/icon/home.png" alt="Home"></a>
             <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
         </div>
     </div>
@@ -305,15 +357,6 @@
             <div>
                 <span class="badge">PPP1 + PPP2 + Garis Panduan JANS</span>
                 <h1>Borang Permohonan Pendaftaran Pembekal dan Produk Bekalan Air</h1>
-                <p>
-                    Borang online ini menggantikan pengisian manual PPP1. Pemohon perlu mengisi maklumat pembekal, produk,
-                    dan sokongan teknikal dengan lengkap, kemudian memuat naik dokumen sokongan dalam format PDF mengikut PPP2
-                    dan garis panduan pendaftaran pembekal dan produk bekalan air.
-                </p>
-                <p>
-                    Permohonan baharu dan pembaharuan kedua-duanya disokong. Untuk pembaharuan, sijil/perakuan lama JANS perlu
-                    dilampirkan dan pembaharuan perlu dibuat sekurang-kurangnya enam bulan sebelum tarikh tamat.
-                </p>
             </div>
             <div class="docs-box">
                 <strong>Rujukan Asal</strong>
@@ -326,9 +369,7 @@
         <form id="applicationForm" class="panel" method="post" action="<%= formAction %>" enctype="multipart/form-data">
             <input type="hidden" name="_csrf" value="${csrf_token}">
             <input type="hidden" id="existingDocKeysCsv" value="<%= toJs(existingDocKeysCsv.toString()) %>">
-            <% if (renewalSourceApplicationId != null) { %>
-            <input type="hidden" name="renew_from_application_id" value="<%= renewalSourceApplicationId %>">
-            <% } %>
+            <input type="hidden" id="renew_from_application_id" name="renew_from_application_id" value="<%= toJs(selectedRenewalSourceId) %>">
             <% if (editMode) { %>
             <div class="alert success">Mod kemaskini permohonan. Maklumat boleh dikemaskini dan dihantar semula.</div>
             <% } else if (renewalMode) { %>
@@ -343,6 +384,25 @@
                         <option value="BAHARU" <%= "BAHARU".equals(appValue(editingApp, "application_type")) ? "selected" : "" %>>Baharu</option>
                         <option value="PEMBAHARUAN" <%= "PEMBAHARUAN".equals(appValue(editingApp, "application_type")) ? "selected" : "" %>>Pembaharuan</option>
                     </select>
+                </div>
+                <div class="field" id="renewalSourceField" style="display:none; grid-column: 1 / -1;">
+                    <label for="renewal_source_selector">Produk Diluluskan Untuk Pembaharuan</label>
+                    <select id="renewal_source_selector">
+                        <option value="">Pilih produk yang diluluskan</option>
+                        <% for (Map<String, Object> approvedApp : approvedApplications) {
+                               int approvedId = approvedApp.get("id") == null ? 0 : ((Number) approvedApp.get("id")).intValue();
+                               String approvedProduct = approvedApp.get("product_name") == null ? "-" : String.valueOf(approvedApp.get("product_name"));
+                               String approvedCompany = approvedApp.get("supplier_name") == null ? "-" : String.valueOf(approvedApp.get("supplier_name"));
+                               String selectedAttr = String.valueOf(approvedId).equals(selectedRenewalSourceId) ? "selected" : "";
+                        %>
+                        <option value="<%= approvedId %>" <%= selectedAttr %>><%= String.format("PPP%03d", approvedId) %> - <%= approvedProduct %> (<%= approvedCompany %>)</option>
+                        <% } %>
+                    </select>
+                    <% if (approvedApplications.isEmpty()) { %>
+                    <span class="hint" style="color:#b91c1c;">Tiada produk diluluskan ditemui untuk pembaharuan.</span>
+                    <% } else { %>
+                    <span class="hint">Pilih produk diluluskan untuk auto-isi borang pembaharuan. Anda masih boleh edit semua maklumat selepas auto-isi.</span>
+                    <% } %>
                 </div>
                 <div class="field">
                     <label for="supplier_email">Email Pembekal</label>
@@ -451,16 +511,16 @@
                                 <input id="warranty_years_1" name="warranty_years[]" type="number" step="0.1" min="0" required value="<%= appValue(editingApp, "warranty_years") %>" />
                             </div>
                             <div class="field full">
-                                <label for="product_description_1">Perihal Produk</label>
+                                <label for="product_model_1">Perihal Produk (Model)</label>
+                                <input id="product_model_1" name="product_model[]" type="text" placeholder="Contoh: DUC-500" value="<%= appValue(editingApp, "product_model") %>" />
+                            </div>
+                            <div class="field full">
+                                <label for="product_series_1">Perihal Produk (Siri)</label>
+                                <input id="product_series_1" name="product_series[]" type="text" placeholder="Contoh: SERIES-A" value="<%= appValue(editingApp, "product_series") %>" />
+                            </div>
+                            <div class="field full">
+                                <label for="product_description_1">Perihal Produk (Deskripsi / Class / Saiz)</label>
                                 <textarea id="product_description_1" name="product_description[]" required><%= appValue(editingApp, "product_description") %></textarea>
-                            </div>
-                            <div class="field">
-                                <label for="product_class_1">Class Produk</label>
-                                <input id="product_class_1" name="product_class[]" type="text" placeholder="Contoh: Class C" value="<%= appValue(editingApp, "product_class") %>" />
-                            </div>
-                            <div class="field">
-                                <label for="product_size_1">Saiz Produk</label>
-                                <input id="product_size_1" name="product_size[]" type="text" placeholder="Contoh: DN100" value="<%= appValue(editingApp, "product_size") %>" />
                             </div>
                         </div>
                         <div class="product-item-actions">
@@ -535,12 +595,13 @@
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
-                <h3>Hubungi JANS</h3>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
-                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
-                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p>
+                <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
+                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
+                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p>
             </div>
         </div>
     </div>
@@ -549,6 +610,10 @@
     var applicationForm = document.getElementById('applicationForm');
     var productArrayList = document.getElementById('productArrayList');
     var addProductBtn = document.getElementById('addProductBtn');
+    var applicationTypeField = document.getElementById('application_type');
+    var renewalSourceField = document.getElementById('renewalSourceField');
+    var renewalSourceSelect = document.getElementById('renewal_source_selector');
+    var renewalSourceInput = document.getElementById('renew_from_application_id');
     var unsuccessfulPopup = document.getElementById('unsuccessfulPopup');
     var popup = document.getElementById('successPopup');
     var mandatoryDocKeys = [
@@ -569,6 +634,30 @@
             ? existingDocCsvField.value.split('|').filter(function(v) { return v && v.trim() !== ''; })
             : []
     );
+    var uppercaseFieldNames = new Set([
+        'supplier_name',
+        'supplier_address',
+        'supplier_phone',
+        'manufacturer_name',
+        'manufacturer_address',
+        'manufacturer_phone',
+        'principal_name',
+        'principal_address',
+        'principal_phone',
+        'sabah_rep_name',
+        'sabah_rep_address',
+        'sabah_rep_phone',
+        'declaration_name',
+        'declaration_position',
+        'product_name[]',
+        'brand[]',
+        'standard_name[]',
+        'certification_license[]',
+        'test_report_reference[]',
+        'product_model[]',
+        'product_series[]',
+        'product_description[]',
+    ]);
 
     var initialFormData = {
         application_type: "<%= jsApplicationType %>",
@@ -591,13 +680,16 @@
         test_report_reference: "<%= jsTestReportReference %>",
         test_report_date: "<%= jsTestReportDate %>",
         warranty_years: "<%= jsWarrantyYears %>",
+        product_model: "<%= jsProductModel %>",
+        product_series: "<%= jsProductSeries %>",
         product_description: "<%= jsProductDescription %>",
-        product_class: "<%= jsProductClass %>",
-        product_size: "<%= jsProductSize %>",
         sabah_rep_name: "<%= jsSabahRepName %>",
         sabah_rep_address: "<%= jsSabahRepAddress %>",
         sabah_rep_phone: "<%= jsSabahRepPhone %>"
     };
+
+    var selectedRenewalSourceId = "<%= toJs(selectedRenewalSourceId) %>";
+    var renewalSourceData = JSON.parse("<%= toJs(buildRenewalSourceJson(approvedApplications)) %>" || "{}");
 
     function setFieldValue(selector, value) {
         var field = document.querySelector(selector);
@@ -605,6 +697,41 @@
             return;
         }
         field.value = value;
+    }
+
+    function forceFieldValue(selector, value) {
+        var field = document.querySelector(selector);
+        if (!field) {
+            return;
+        }
+        field.value = value == null ? '' : value;
+    }
+
+    function shouldForceUppercase(field) {
+        if (!field || !field.name) {
+            return false;
+        }
+        return uppercaseFieldNames.has(field.name);
+    }
+
+    function forceUppercaseField(field) {
+        if (!shouldForceUppercase(field)) {
+            return;
+        }
+        var original = field.value;
+        var upper = original == null ? '' : original.toUpperCase();
+        if (original === upper) {
+            return;
+        }
+        field.value = upper;
+    }
+
+    function normalizeUppercaseFields() {
+        if (!applicationForm) {
+            return;
+        }
+        var fields = applicationForm.querySelectorAll('input[type="text"], textarea');
+        Array.prototype.forEach.call(fields, forceUppercaseField);
     }
 
     function closeUnsuccessfulPopup() {
@@ -635,9 +762,9 @@
                 { name: 'test_report_reference[]', id: 'test_report_reference_' },
                 { name: 'test_report_date[]', id: 'test_report_date_' },
                 { name: 'warranty_years[]', id: 'warranty_years_' },
+                { name: 'product_model[]', id: 'product_model_' },
+                { name: 'product_series[]', id: 'product_series_' },
                 { name: 'product_description[]', id: 'product_description_' },
-                { name: 'product_class[]', id: 'product_class_' },
-                { name: 'product_size[]', id: 'product_size_' }
             ];
             var items = Array.prototype.slice.call(productArrayList.querySelectorAll('[data-product-item]'));
             items.forEach(function(item, index) {
@@ -669,6 +796,68 @@
             });
         }
 
+        function keepSingleProductBlock() {
+            if (!productArrayList) {
+                return;
+            }
+            var items = Array.prototype.slice.call(productArrayList.querySelectorAll('[data-product-item]'));
+            while (items.length > 1) {
+                var item = items.pop();
+                item.remove();
+            }
+            syncProductBlocks();
+        }
+
+        function applyRenewalSourcePrefill(sourceId) {
+            var source = renewalSourceData[sourceId];
+            if (!source) {
+                return;
+            }
+            keepSingleProductBlock();
+            forceFieldValue('#supplier_email', source.supplier_email);
+            forceFieldValue('#supplier_phone', source.supplier_phone);
+            forceFieldValue('#supplier_name', source.supplier_name);
+            forceFieldValue('#supplier_address', source.supplier_address);
+            forceFieldValue('#manufacturer_name', source.manufacturer_name);
+            forceFieldValue('#manufacturer_address', source.manufacturer_address);
+            forceFieldValue('#manufacturer_phone', source.manufacturer_phone);
+            forceFieldValue('#principal_name', source.principal_name);
+            forceFieldValue('#principal_address', source.principal_address);
+            forceFieldValue('#principal_phone', source.principal_phone);
+            forceFieldValue('#product_category_1', source.product_category);
+            forceFieldValue('#product_name_1', source.product_name);
+            forceFieldValue('#brand_1', source.brand);
+            forceFieldValue('#standard_name_1', source.standard_name);
+            forceFieldValue('#certification_license_1', source.certification_license);
+            forceFieldValue('#certification_valid_until_1', source.certification_valid_until);
+            forceFieldValue('#test_report_reference_1', source.test_report_reference);
+            forceFieldValue('#test_report_date_1', source.test_report_date);
+            forceFieldValue('#warranty_years_1', source.warranty_years);
+            forceFieldValue('#product_model_1', source.product_model);
+            forceFieldValue('#product_series_1', source.product_series);
+            forceFieldValue('#product_description_1', source.product_description);
+            forceFieldValue('#sabah_rep_name', source.sabah_rep_name);
+            forceFieldValue('#sabah_rep_address', source.sabah_rep_address);
+            forceFieldValue('#sabah_rep_phone', source.sabah_rep_phone);
+            normalizeUppercaseFields();
+        }
+
+        function toggleRenewalSourceField() {
+            var isRenewal = applicationTypeField && applicationTypeField.value === 'PEMBAHARUAN';
+            if (!renewalSourceField) {
+                return;
+            }
+            renewalSourceField.style.display = isRenewal ? '' : 'none';
+            if (!isRenewal) {
+                if (renewalSourceSelect) {
+                    renewalSourceSelect.value = '';
+                }
+                if (renewalSourceInput) {
+                    renewalSourceInput.value = '';
+                }
+            }
+        }
+
         if (addProductBtn && productArrayList) {
             addProductBtn.addEventListener('click', function() {
                 var firstItem = productArrayList.querySelector('[data-product-item]');
@@ -689,6 +878,7 @@
 
                 productArrayList.appendChild(clone);
                 syncProductBlocks();
+                normalizeUppercaseFields();
             });
 
             productArrayList.addEventListener('click', function(event) {
@@ -730,19 +920,75 @@
         setFieldValue('#test_report_reference_1', initialFormData.test_report_reference);
         setFieldValue('#test_report_date_1', initialFormData.test_report_date);
         setFieldValue('#warranty_years_1', initialFormData.warranty_years);
+        setFieldValue('#product_model_1', initialFormData.product_model);
+        setFieldValue('#product_series_1', initialFormData.product_series);
         setFieldValue('#product_description_1', initialFormData.product_description);
-        setFieldValue('#product_class_1', initialFormData.product_class);
-        setFieldValue('#product_size_1', initialFormData.product_size);
         setFieldValue('#sabah_rep_name', initialFormData.sabah_rep_name);
         setFieldValue('#sabah_rep_address', initialFormData.sabah_rep_address);
         setFieldValue('#sabah_rep_phone', initialFormData.sabah_rep_phone);
+        normalizeUppercaseFields();
+
+        applicationForm.addEventListener('input', function(event) {
+            forceUppercaseField(event.target);
+        });
+
+        if (renewalSourceSelect && selectedRenewalSourceId) {
+            renewalSourceSelect.value = selectedRenewalSourceId;
+        }
+        if (renewalSourceInput && selectedRenewalSourceId) {
+            renewalSourceInput.value = selectedRenewalSourceId;
+        }
+        toggleRenewalSourceField();
+
+        if (applicationTypeField) {
+            applicationTypeField.addEventListener('change', function() {
+                toggleRenewalSourceField();
+                if (applicationTypeField.value !== 'PEMBAHARUAN') {
+                    return;
+                }
+                var selectedId = renewalSourceSelect ? renewalSourceSelect.value : '';
+                if (renewalSourceInput) {
+                    renewalSourceInput.value = selectedId;
+                }
+                if (selectedId) {
+                    applyRenewalSourcePrefill(selectedId);
+                }
+            });
+        }
+
+        if (renewalSourceSelect) {
+            renewalSourceSelect.addEventListener('change', function() {
+                var selectedId = renewalSourceSelect.value;
+                if (renewalSourceInput) {
+                    renewalSourceInput.value = selectedId;
+                }
+                if (selectedId) {
+                    applyRenewalSourcePrefill(selectedId);
+                }
+            });
+
+            if (applicationTypeField && applicationTypeField.value === 'PEMBAHARUAN' && renewalSourceSelect.value) {
+                applyRenewalSourcePrefill(renewalSourceSelect.value);
+            }
+        }
 
         applicationForm.addEventListener('submit', function(e) {
-            var applicationTypeField = document.getElementById('application_type');
             var applicationType = applicationTypeField ? applicationTypeField.value : '';
             var keysToCheck = mandatoryDocKeys.slice();
 
             if (applicationType === 'PEMBAHARUAN') {
+                var selectedRenewalId = renewalSourceSelect ? renewalSourceSelect.value : '';
+                if (!selectedRenewalId) {
+                    e.preventDefault();
+                    window.alert('Sila pilih produk diluluskan untuk pembaharuan.');
+                    if (renewalSourceSelect) {
+                        renewalSourceSelect.focus();
+                    }
+                    return;
+                }
+                if (renewalSourceInput) {
+                    renewalSourceInput.value = selectedRenewalId;
+                }
                 keysToCheck.push('renewal_certificate');
             }
 

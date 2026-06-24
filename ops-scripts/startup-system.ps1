@@ -79,7 +79,7 @@ try {
         Write-Log "========== AKSES SISTEM ==========" "INFO"
         Write-Log "URL Lokal: http://localhost:8081/sistemppa/" "INFO"
         Write-Log "URL Jaringan: http://192.168.1.52:8081/sistemppa/" "INFO"
-        Write-Log "Admin Login: admin / admin123" "INFO"
+        Write-Log "Admin Login: Administrator / Administrator@001 " "INFO"
         Write-Log "=================================" "INFO"
     } else {
         Write-Log "Warning: Sistem merespons dengan status $($response.StatusCode)" "WARN"
@@ -92,7 +92,8 @@ try {
 # 5. Buka browser
 Write-Log "" "INFO"
 Write-Log "Membuka sistem di browser..." "INFO"
-Start-Process "http://192.168.1.52:8081/sistemppa/" -ErrorAction SilentlyContinue
+Start-Process "http://192.168.1.52:8081/sistemppa
+/" -ErrorAction SilentlyContinue
 
-Write-Log "Selamat datang ke Sistem Pendaftaran Produk Air!" "SUCCESS"
+Write-Log "Selamat datang ke Sistem Pendaftaran Pembekal dan Produk Air!" "SUCCESS"
 

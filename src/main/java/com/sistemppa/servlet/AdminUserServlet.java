@@ -49,9 +49,10 @@ public class AdminUserServlet extends HttpServlet {
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             ensureUsersPhoneNumberColumn(conn);
+            ensureUsersRoleSupportsStaff(conn);
             syncKppContactsFromCsv(conn);
 
-            String sql = "SELECT id, username, email, phone_number, full_name, role, status, created_at " +
+            String sql = "SELECT id, username, email, phone_number, full_name, role, role_seq, status, created_at " +
                          "FROM users " +
                          (search != null && !search.isEmpty()
                              ? "WHERE username LIKE ? OR email LIKE ? OR full_name LIKE ? "
@@ -74,7 +75,10 @@ public class AdminUserServlet extends HttpServlet {
                         row.put("phone_number", rs.getString("phone_number"));
                         row.put("full_name", rs.getString("full_name"));
                         row.put("role", rs.getString("role"));
-                        row.put("display_id", UserDisplayIdUtil.format(rs.getInt("id"), rs.getString("role")));
+                        row.put("display_id", UserDisplayIdUtil.format(
+                            rs.getInt("id"),
+                            rs.getString("role"),
+                            rs.getObject("role_seq", Integer.class)));
                         row.put("status", rs.getString("status"));
                         row.put("created_at", rs.getTimestamp("created_at"));
                         users.add(row);
@@ -135,11 +139,22 @@ public class AdminUserServlet extends HttpServlet {
             return;
         }
 
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            ensureUsersRoleSupportsStaff(conn);
+        } catch (SQLException e) {
+            LOGGER.severe("Failed to ensure users.role supports STAFF: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=db_error");
+            return;
+        }
+
         switch (action) {
             case "delete":
                 handleDelete(request, response, targetUserId, currentAdminId);
                 break;
             case "toggle_status":
+                handleToggleStatus(request, response, targetUserId, currentAdminId);
+                break;
+            case "set_status":
                 handleToggleStatus(request, response, targetUserId, currentAdminId);
                 break;
             case "reset_password":
@@ -182,8 +197,8 @@ public class AdminUserServlet extends HttpServlet {
         try (Connection conn = DatabaseConfig.getConnection()) {
             DashboardDataService.addKppContact(conn, normalizedName, normalizedBranch, normalizedEmail);
             appendKppContactToCsv(normalizedName, normalizedBranch, normalizedEmail);
-            insertAdminAuditLog(conn, currentAdminId, "ADD_KPP_CONTACT",
-                    "Admin " + UserDisplayIdUtil.format(currentAdminId, "ADMIN")
+                insertAdminAuditLog(conn, currentAdminId, "ADD KPP CONTACT",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
                             + " tambah rekod KPP: " + normalizedName + " (" + normalizedBranch + ") - " + normalizedEmail,
                     request.getRemoteAddr());
         } catch (SQLException e) {
@@ -229,8 +244,8 @@ public class AdminUserServlet extends HttpServlet {
             if (deletedEmail != null && !deletedEmail.isBlank()) {
                 removeKppContactFromCsv(deletedEmail);
             }
-            insertAdminAuditLog(conn, currentAdminId, "DELETE_KPP_CONTACT",
-                    "Admin " + UserDisplayIdUtil.format(currentAdminId, "ADMIN")
+                insertAdminAuditLog(conn, currentAdminId, "DELETE KPP CONTACT",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
                             + " padam rekod KPP ID " + kppId,
                     request.getRemoteAddr());
         } catch (SQLException e) {
@@ -282,8 +297,8 @@ public class AdminUserServlet extends HttpServlet {
                 update.executeUpdate();
             }
 
-            insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_EMAIL",
-                    "Admin " + UserDisplayIdUtil.format(currentAdminId, "ADMIN")
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE USER EMAIL",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
                         + " kemaskini e-mel pengguna " + resolveDisplayUserId(conn, targetUserId),
                     request.getRemoteAddr());
         } catch (SQLException e) {
@@ -325,8 +340,8 @@ public class AdminUserServlet extends HttpServlet {
                 update.executeUpdate();
             }
 
-            insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_PHONE",
-                    "Admin " + UserDisplayIdUtil.format(currentAdminId, "ADMIN")
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE USER PHONE",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
                         + " kemaskini nombor telefon pengguna " + resolveDisplayUserId(conn, targetUserId),
                     request.getRemoteAddr());
         } catch (SQLException e) {
@@ -347,7 +362,7 @@ public class AdminUserServlet extends HttpServlet {
         }
 
         String newRole = roleParam.trim().toUpperCase(Locale.ROOT);
-        if (!"ADMIN".equals(newRole) && !"USER".equals(newRole)) {
+        if (!"ADMIN".equals(newRole) && !"USER".equals(newRole) && !"STAFF".equals(newRole)) {
             response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_role");
             return;
         }
@@ -378,7 +393,7 @@ public class AdminUserServlet extends HttpServlet {
                 return;
             }
 
-            if ("ADMIN".equals(existingRole) && "USER".equals(newRole)) {
+            if ("ADMIN".equals(existingRole) && !"ADMIN".equals(newRole)) {
                 try (PreparedStatement ps = conn.prepareStatement(
                         "SELECT COUNT(*) FROM users WHERE role = 'ADMIN'")) {
                     try (ResultSet rs = ps.executeQuery()) {
@@ -397,8 +412,8 @@ public class AdminUserServlet extends HttpServlet {
                 update.executeUpdate();
             }
 
-            insertAdminAuditLog(conn, currentAdminId, "UPDATE_USER_ROLE",
-                    "Admin " + UserDisplayIdUtil.format(currentAdminId, "ADMIN")
+            insertAdminAuditLog(conn, currentAdminId, "UPDATE USER ROLE",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
                         + " tukar peranan pengguna " + resolveDisplayUserId(conn, targetUserId)
                             + " daripada " + existingRole + " kepada " + newRole,
                     request.getRemoteAddr());
@@ -444,8 +459,8 @@ public class AdminUserServlet extends HttpServlet {
                 ps.setInt(1, targetUserId);
                 ps.executeUpdate();
             }
-            insertAdminAuditLog(conn, currentAdminId, "DELETE_USER",
-                    "Admin " + UserDisplayIdUtil.format(currentAdminId, "ADMIN")
+            insertAdminAuditLog(conn, currentAdminId, "DELETE USER",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
                         + " memadam pengguna " + resolveDisplayUserId(conn, targetUserId),
                     request.getRemoteAddr());
         } catch (SQLException e) {
@@ -462,6 +477,15 @@ public class AdminUserServlet extends HttpServlet {
         if (currentAdminId == targetUserId) {
             response.sendRedirect(request.getContextPath() + "/admin/users?error=cannot_suspend_self");
             return;
+        }
+
+        String requestedStatus = request.getParameter("status");
+        if (requestedStatus != null) {
+            requestedStatus = requestedStatus.trim().toUpperCase(Locale.ROOT);
+            if (!"ACTIVE".equals(requestedStatus) && !"SUSPENDED".equals(requestedStatus)) {
+                response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_action");
+                return;
+            }
         }
 
         try (Connection conn = DatabaseConfig.getConnection()) {
@@ -491,14 +515,26 @@ public class AdminUserServlet extends HttpServlet {
                 }
             }
 
+            String targetStatus = requestedStatus;
+            if (targetStatus == null || targetStatus.isBlank()) {
+                targetStatus = "ACTIVE".equals(currentStatus) ? "SUSPENDED" : "ACTIVE";
+            }
+
+            if (targetStatus.equals(currentStatus)) {
+                response.sendRedirect(request.getContextPath() + "/admin/users?toggled=1");
+                return;
+            }
+
             try (PreparedStatement ps = conn.prepareStatement(
-                    "UPDATE users SET status = CASE WHEN status = 'ACTIVE' THEN 'SUSPENDED' ELSE 'ACTIVE' END WHERE id = ?")) {
-                ps.setInt(1, targetUserId);
+                    "UPDATE users SET status = ? WHERE id = ?")) {
+                ps.setString(1, targetStatus);
+                ps.setInt(2, targetUserId);
                 ps.executeUpdate();
             }
-            insertAdminAuditLog(conn, currentAdminId, "TOGGLE_USER_STATUS",
-                    "Admin " + UserDisplayIdUtil.format(currentAdminId, "ADMIN")
-                        + " tukar status pengguna " + resolveDisplayUserId(conn, targetUserId),
+            insertAdminAuditLog(conn, currentAdminId, "TOGGLE USER STATUS",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
+                        + " set status pengguna " + resolveDisplayUserId(conn, targetUserId)
+                        + " kepada " + targetStatus,
                     request.getRemoteAddr());
         } catch (SQLException e) {
             LOGGER.severe("Failed to toggle user status: " + e.getMessage());
@@ -521,8 +557,8 @@ public class AdminUserServlet extends HttpServlet {
                 ps.setInt(2, targetUserId);
                 ps.executeUpdate();
             }
-            insertAdminAuditLog(conn, currentAdminId, "RESET_PASSWORD",
-                    "Admin " + UserDisplayIdUtil.format(currentAdminId, "ADMIN")
+            insertAdminAuditLog(conn, currentAdminId, "RESET PASSWORD",
+                    "Admin " + resolveDisplayUserId(conn, currentAdminId)
                         + " reset kata laluan pengguna " + resolveDisplayUserId(conn, targetUserId),
                     request.getRemoteAddr());
         } catch (SQLException e) {
@@ -557,6 +593,7 @@ public class AdminUserServlet extends HttpServlet {
     private void insertAdminAuditLog(Connection conn, int adminId, String action,
             String details, String ip) {
         try {
+            DashboardDataService.ensureAuditLogTable(conn);
             String sql = "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, adminId);
@@ -582,19 +619,44 @@ public class AdminUserServlet extends HttpServlet {
         }
     }
 
+    private void ensureUsersRoleSupportsStaff(Connection conn) throws SQLException {
+        String sql = "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS "
+                + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'role'";
+        String columnType = null;
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                columnType = rs.getString("COLUMN_TYPE");
+            }
+        }
+
+        if (columnType == null) {
+            return;
+        }
+
+        if (!columnType.toUpperCase(Locale.ROOT).contains("'STAFF'")) {
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "ALTER TABLE users MODIFY COLUMN role ENUM('ADMIN', 'USER', 'STAFF') NOT NULL DEFAULT 'USER'")) {
+                stmt.executeUpdate();
+            }
+        }
+    }
+
     private String resolveDisplayUserId(Connection conn, int userId) {
         String role = null;
-        try (PreparedStatement stmt = conn.prepareStatement("SELECT role FROM users WHERE id = ?")) {
+        Integer roleSeq = null;
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT role, role_seq FROM users WHERE id = ?")) {
             stmt.setInt(1, userId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     role = rs.getString("role");
+                    roleSeq = rs.getObject("role_seq", Integer.class);
                 }
             }
         } catch (SQLException e) {
             LOGGER.warning("Failed to resolve role for display user id: " + e.getMessage());
         }
-        return UserDisplayIdUtil.format(userId, role);
+        return UserDisplayIdUtil.format(userId, role, roleSeq);
     }
 
     private void syncKppContactsFromCsv(Connection conn) {
