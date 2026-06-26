@@ -521,6 +521,7 @@
             margin-left: 20px;
             display: block;
         }
+        .hero-contact .contact-line span { line-height: 1.45; }
 
         footer {
             background: #072d43;

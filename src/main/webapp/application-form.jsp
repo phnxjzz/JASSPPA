@@ -1,10 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Set" %>
-<<<<<<< HEAD
 <%@ page import="java.util.List" %>
-=======
->>>>>>> origin/SPPPA
 <%@ page import="java.util.LinkedHashSet" %>
 <%!
     private String toJs(Object value) {
@@ -26,7 +23,6 @@
         Object value = app.get(key);
         return value == null ? "" : String.valueOf(value);
     }
-<<<<<<< HEAD
 
     private String buildRenewalSourceJson(List<Map<String, Object>> apps) {
         if (apps == null || apps.isEmpty()) {
@@ -70,22 +66,17 @@
         json.append('}');
         return json.toString();
     }
-=======
->>>>>>> origin/SPPPA
 %>
 <%
     Map<String, Object> editingApp = (Map<String, Object>) request.getAttribute("application");
     boolean editMode = Boolean.TRUE.equals(request.getAttribute("editMode"));
     boolean renewalMode = Boolean.TRUE.equals(request.getAttribute("renewalMode"));
     Object renewalSourceApplicationId = request.getAttribute("renewalSourceApplicationId");
-<<<<<<< HEAD
     List<Map<String, Object>> approvedApplications = (List<Map<String, Object>>) request.getAttribute("approvedApplications");
     if (approvedApplications == null) {
         approvedApplications = java.util.Collections.emptyList();
     }
     String selectedRenewalSourceId = renewalSourceApplicationId == null ? "" : String.valueOf(renewalSourceApplicationId);
-=======
->>>>>>> origin/SPPPA
     String formAction = request.getAttribute("formAction") != null
             ? String.valueOf(request.getAttribute("formAction"))
             : (request.getContextPath() + "/applications/new");
@@ -121,11 +112,8 @@
     String jsTestReportReference = toJs(appValue(editingApp, "test_report_reference"));
     String jsTestReportDate = toJs(appValue(editingApp, "test_report_date"));
     String jsWarrantyYears = toJs(appValue(editingApp, "warranty_years"));
-<<<<<<< HEAD
     String jsProductModel = toJs(appValue(editingApp, "product_model"));
     String jsProductSeries = toJs(appValue(editingApp, "product_series"));
-=======
->>>>>>> origin/SPPPA
     String jsProductDescription = toJs(appValue(editingApp, "product_description"));
     String jsSabahRepName = toJs(appValue(editingApp, "sabah_rep_name"));
     String jsSabahRepAddress = toJs(appValue(editingApp, "sabah_rep_address"));
@@ -285,10 +273,7 @@
         .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; min-width: 0; }
         .jans-contact-section .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
         .jans-contact-section .contact-line span { line-height: 1.45; }
-<<<<<<< HEAD
         .contact-line-hanging { margin-left: 21px; }
-=======
->>>>>>> origin/SPPPA
         @media (max-width: 900px) { .hero, .grid, .grid-3, .doc-list { grid-template-columns: 1fr; } }
                     /* Enforce visible white border on all clickable buttons */
         button,
@@ -384,13 +369,7 @@
         <form id="applicationForm" class="panel" method="post" action="<%= formAction %>" enctype="multipart/form-data">
             <input type="hidden" name="_csrf" value="${csrf_token}">
             <input type="hidden" id="existingDocKeysCsv" value="<%= toJs(existingDocKeysCsv.toString()) %>">
-<<<<<<< HEAD
             <input type="hidden" id="renew_from_application_id" name="renew_from_application_id" value="<%= toJs(selectedRenewalSourceId) %>">
-=======
-            <% if (renewalSourceApplicationId != null) { %>
-            <input type="hidden" name="renew_from_application_id" value="<%= renewalSourceApplicationId %>">
-            <% } %>
->>>>>>> origin/SPPPA
             <% if (editMode) { %>
             <div class="alert success">Mod kemaskini permohonan. Maklumat boleh dikemaskini dan dihantar semula.</div>
             <% } else if (renewalMode) { %>
@@ -532,7 +511,6 @@
                                 <input id="warranty_years_1" name="warranty_years[]" type="number" step="0.1" min="0" required value="<%= appValue(editingApp, "warranty_years") %>" />
                             </div>
                             <div class="field full">
-<<<<<<< HEAD
                                 <label for="product_model_1">Perihal Produk (Model)</label>
                                 <input id="product_model_1" name="product_model[]" type="text" placeholder="Contoh: DUC-500" value="<%= appValue(editingApp, "product_model") %>" />
                             </div>
@@ -542,9 +520,6 @@
                             </div>
                             <div class="field full">
                                 <label for="product_description_1">Perihal Produk (Deskripsi / Class / Saiz)</label>
-=======
-                                <label for="product_description_1">Perihal Produk (Model / Siri / Deskripsi)</label>
->>>>>>> origin/SPPPA
                                 <textarea id="product_description_1" name="product_description[]" required><%= appValue(editingApp, "product_description") %></textarea>
                             </div>
                         </div>
@@ -620,7 +595,6 @@
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
-<<<<<<< HEAD
                 <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
                 <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
@@ -628,14 +602,6 @@
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
                 <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p>
-=======
-                <h3>Hubungi JANS</h3>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
-                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
-                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p>
->>>>>>> origin/SPPPA
             </div>
         </div>
     </div>
@@ -644,13 +610,10 @@
     var applicationForm = document.getElementById('applicationForm');
     var productArrayList = document.getElementById('productArrayList');
     var addProductBtn = document.getElementById('addProductBtn');
-<<<<<<< HEAD
     var applicationTypeField = document.getElementById('application_type');
     var renewalSourceField = document.getElementById('renewalSourceField');
     var renewalSourceSelect = document.getElementById('renewal_source_selector');
     var renewalSourceInput = document.getElementById('renew_from_application_id');
-=======
->>>>>>> origin/SPPPA
     var unsuccessfulPopup = document.getElementById('unsuccessfulPopup');
     var popup = document.getElementById('successPopup');
     var mandatoryDocKeys = [
@@ -671,7 +634,6 @@
             ? existingDocCsvField.value.split('|').filter(function(v) { return v && v.trim() !== ''; })
             : []
     );
-<<<<<<< HEAD
     var uppercaseFieldNames = new Set([
         'supplier_name',
         'supplier_address',
@@ -696,8 +658,6 @@
         'product_series[]',
         'product_description[]',
     ]);
-=======
->>>>>>> origin/SPPPA
 
     var initialFormData = {
         application_type: "<%= jsApplicationType %>",
@@ -720,23 +680,17 @@
         test_report_reference: "<%= jsTestReportReference %>",
         test_report_date: "<%= jsTestReportDate %>",
         warranty_years: "<%= jsWarrantyYears %>",
-<<<<<<< HEAD
         product_model: "<%= jsProductModel %>",
         product_series: "<%= jsProductSeries %>",
-=======
->>>>>>> origin/SPPPA
         product_description: "<%= jsProductDescription %>",
         sabah_rep_name: "<%= jsSabahRepName %>",
         sabah_rep_address: "<%= jsSabahRepAddress %>",
         sabah_rep_phone: "<%= jsSabahRepPhone %>"
     };
 
-<<<<<<< HEAD
     var selectedRenewalSourceId = "<%= toJs(selectedRenewalSourceId) %>";
     var renewalSourceData = JSON.parse("<%= toJs(buildRenewalSourceJson(approvedApplications)) %>" || "{}");
 
-=======
->>>>>>> origin/SPPPA
     function setFieldValue(selector, value) {
         var field = document.querySelector(selector);
         if (!field || value == null || value === '') {
@@ -744,7 +698,6 @@
         }
         field.value = value;
     }
-<<<<<<< HEAD
 
     function forceFieldValue(selector, value) {
         var field = document.querySelector(selector);
@@ -780,8 +733,6 @@
         var fields = applicationForm.querySelectorAll('input[type="text"], textarea');
         Array.prototype.forEach.call(fields, forceUppercaseField);
     }
-=======
->>>>>>> origin/SPPPA
 
     function closeUnsuccessfulPopup() {
         if (!unsuccessfulPopup) return;
@@ -811,13 +762,9 @@
                 { name: 'test_report_reference[]', id: 'test_report_reference_' },
                 { name: 'test_report_date[]', id: 'test_report_date_' },
                 { name: 'warranty_years[]', id: 'warranty_years_' },
-<<<<<<< HEAD
                 { name: 'product_model[]', id: 'product_model_' },
                 { name: 'product_series[]', id: 'product_series_' },
                 { name: 'product_description[]', id: 'product_description_' },
-=======
-                { name: 'product_description[]', id: 'product_description_' }
->>>>>>> origin/SPPPA
             ];
             var items = Array.prototype.slice.call(productArrayList.querySelectorAll('[data-product-item]'));
             items.forEach(function(item, index) {
@@ -849,7 +796,6 @@
             });
         }
 
-<<<<<<< HEAD
         function keepSingleProductBlock() {
             if (!productArrayList) {
                 return;
@@ -912,8 +858,6 @@
             }
         }
 
-=======
->>>>>>> origin/SPPPA
         if (addProductBtn && productArrayList) {
             addProductBtn.addEventListener('click', function() {
                 var firstItem = productArrayList.querySelector('[data-product-item]');
@@ -934,10 +878,7 @@
 
                 productArrayList.appendChild(clone);
                 syncProductBlocks();
-<<<<<<< HEAD
                 normalizeUppercaseFields();
-=======
->>>>>>> origin/SPPPA
             });
 
             productArrayList.addEventListener('click', function(event) {
@@ -979,16 +920,12 @@
         setFieldValue('#test_report_reference_1', initialFormData.test_report_reference);
         setFieldValue('#test_report_date_1', initialFormData.test_report_date);
         setFieldValue('#warranty_years_1', initialFormData.warranty_years);
-<<<<<<< HEAD
         setFieldValue('#product_model_1', initialFormData.product_model);
         setFieldValue('#product_series_1', initialFormData.product_series);
-=======
->>>>>>> origin/SPPPA
         setFieldValue('#product_description_1', initialFormData.product_description);
         setFieldValue('#sabah_rep_name', initialFormData.sabah_rep_name);
         setFieldValue('#sabah_rep_address', initialFormData.sabah_rep_address);
         setFieldValue('#sabah_rep_phone', initialFormData.sabah_rep_phone);
-<<<<<<< HEAD
         normalizeUppercaseFields();
 
         applicationForm.addEventListener('input', function(event) {
@@ -1034,8 +971,6 @@
                 applyRenewalSourcePrefill(renewalSourceSelect.value);
             }
         }
-=======
->>>>>>> origin/SPPPA
 
         applicationForm.addEventListener('submit', function(e) {
             var applicationType = applicationTypeField ? applicationTypeField.value : '';

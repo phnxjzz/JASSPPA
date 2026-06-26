@@ -84,7 +84,7 @@
     </context-param>
     <context-param>
         <param-name>app.base.url</param-name>
-        <param-value>http://localhost:8081/sistemppa</param-value>
+        <param-value>http://192.168.1.8:8081/sistemppa</param-value>
     </context-param>
     <context-param>
         <param-name>kpp.reminder.job.key</param-name>

@@ -19,6 +19,25 @@ function Write-Log {
     Write-Host "[$timestamp] [$Type] $Message" -ForegroundColor $color
 }
 
+function Get-LanBaseUrl {
+    param([int]$Port = 8081)
+
+    $ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+        Where-Object {
+            $_.IPAddress -notlike '127.*' -and
+            $_.IPAddress -notlike '169.254.*' -and
+            $_.PrefixOrigin -ne 'WellKnown'
+        } |
+        Sort-Object -Property InterfaceMetric |
+        Select-Object -ExpandProperty IPAddress -First 1)
+
+    if ([string]::IsNullOrWhiteSpace($ip)) {
+        return "http://localhost:$Port/sistemppa/"
+    }
+
+    return "http://${ip}:$Port/sistemppa/"
+}
+
 # Periksa jika running as Administrator
 $admin = [Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()
 if (-not $admin.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -74,11 +93,12 @@ Write-Log "Menguji koneksian sistem..." "INFO"
 try {
     $response = Invoke-WebRequest -Uri "http://localhost:8081/sistemppa/" -UseBasicParsing -TimeoutSec 5
     if ($response.StatusCode -eq 200) {
+        $networkUrl = Get-LanBaseUrl -Port 8081
         Write-Log " Sistem boleh diakses: HTTP 200" "SUCCESS"
         Write-Log "" "INFO"
         Write-Log "========== AKSES SISTEM ==========" "INFO"
         Write-Log "URL Lokal: http://localhost:8081/sistemppa/" "INFO"
-        Write-Log "URL Jaringan: http://192.168.1.52:8081/sistemppa/" "INFO"
+        Write-Log "URL Jaringan: $networkUrl" "INFO"
         Write-Log "Admin Login: Administrator / Administrator@001 " "INFO"
         Write-Log "=================================" "INFO"
     } else {
@@ -92,8 +112,8 @@ try {
 # 5. Buka browser
 Write-Log "" "INFO"
 Write-Log "Membuka sistem di browser..." "INFO"
-Start-Process "http://192.168.1.52:8081/sistemppa
-/" -ErrorAction SilentlyContinue
+$browserUrl = Get-LanBaseUrl -Port 8081
+Start-Process $browserUrl -ErrorAction SilentlyContinue
 
 Write-Log "Selamat datang ke Sistem Pendaftaran Pembekal dan Produk Air!" "SUCCESS"
 
