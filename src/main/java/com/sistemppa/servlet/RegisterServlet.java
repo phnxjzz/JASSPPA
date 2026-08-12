@@ -1,7 +1,14 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas RegisterServlet.
+ * Dipanggil melalui URL:  /register (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.DashboardDataService;
+import com.sistemppa.service.TemplateService;
 import com.sistemppa.util.EmailUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -17,6 +24,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.mindrot.jbcrypt.BCrypt;
@@ -91,14 +100,8 @@ public class RegisterServlet extends HttpServlet {
             }
 
             String bcryptHash = BCrypt.hashpw(password, BCrypt.gensalt(12));
-<<<<<<< HEAD
             String sql = "INSERT INTO users (username, email, phone_number, password_hash, role, full_name, status) VALUES (?, ?, ?, ?, 'USER', ?, 'ACTIVE')";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-=======
-            int newUserId = -1;
-            String sql = "INSERT INTO users (username, email, phone_number, password_hash, role, full_name, status) VALUES (?, ?, ?, ?, 'USER', ?, 'INACTIVE')";
-            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
->>>>>>> origin/SPPPA
                 stmt.setString(1, username);
                 stmt.setString(2, email);
                 stmt.setString(3, phoneNumber);
@@ -136,12 +139,26 @@ public class RegisterServlet extends HttpServlet {
             DashboardDataService.storeVerificationToken(conn, userId, token, expires);
 
             String verifyUrl = baseUrl + "/verify-email?token=" + token;
-            String subject = "Pengesahan E-mel \u2013 Sistem Pendaftaran Produk Air";
-            String body = "<p>Salam " + escapeHtml(fullName) + ",</p>"
-                    + "<p>Terima kasih kerana mendaftar. Sila klik pautan di bawah untuk mengaktifkan akaun anda:</p>"
-                    + "<p><a href=\"" + verifyUrl + "\">" + verifyUrl + "</a></p>"
-                    + "<p>Pautan ini akan tamat dalam 24 jam.</p>"
-                    + "<p>Jika anda tidak mendaftar, abaikan e-mel ini.</p>";
+        Map<String, String> vars = new LinkedHashMap<>();
+        vars.put("full_name", escapeHtml(fullName));
+        vars.put("verify_url", escapeHtml(verifyUrl));
+        vars.put("verify_link_html", buildHtmlLink(verifyUrl, "Klik Di Sini"));
+
+        String fallbackSubject = "Pengesahan E-mel \u2013 Sistem Pendaftaran Produk Air";
+        String fallbackBody = "<p>Tuan/Puan " + escapeHtml(fullName) + ",</p>"
+            + "<p><strong>PENGESAHAN ALAMAT E-MEL SISTEM PENDAFTARAN PRODUK AIR</strong></p>"
+            + "<p>Dengan hormatnya perkara di atas adalah dirujuk.</p>"
+            + "<p>2. Sukacita dimaklumkan bahawa pendaftaran akaun tuan/puan telah diterima. "
+            + "Bagi melengkapkan proses pengaktifan akaun, sila sahkan alamat e-mel melalui pautan berikut: "
+            + buildHtmlLink(verifyUrl, "Klik Di Sini") + "</p>"
+            + "<p>3. Pautan pengesahan ini sah selama dua puluh empat (24) jam dari tarikh emel ini dihantar. "
+            + "Jika tuan/puan tidak membuat pendaftaran, sila abaikan emel ini.</p>"
+            + "<p>Sekian, terima kasih.</p>"
+            + "<p>Urusetia<br>Sistem Pendaftaran Produk Air</p>"
+            + "<p>Surat ini merupakan cetakan komputer dan tidak memerlukan tandatangan.</p>";
+
+        String subject = TemplateService.renderEmailSubject(conn, "EMAIL_VERIFICATION", vars, fallbackSubject);
+        String body = TemplateService.renderEmailBody(conn, "EMAIL_VERIFICATION", vars, fallbackBody);
 
             EmailUtil emailUtil = new EmailUtil(smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, smtpAuth, smtpTls);
             return emailUtil.sendHtml(email, subject, body);
@@ -172,6 +189,15 @@ public class RegisterServlet extends HttpServlet {
     private String escapeHtml(String text) {
         if (text == null) return "";
         return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    }
+
+    private String buildHtmlLink(String url, String label) {
+        if (url == null || url.isBlank()) {
+            return "";
+        }
+        String safeUrl = escapeHtml(url);
+        String safeLabel = escapeHtml(label == null || label.isBlank() ? url : label);
+        return "<a href=\"" + safeUrl + "\" target=\"_blank\" rel=\"noopener noreferrer\">" + safeLabel + "</a>";
     }
 
     private boolean userExists(Connection conn, String username, String email) throws SQLException {
@@ -220,3 +246,4 @@ public class RegisterServlet extends HttpServlet {
         return null;
     }
 }
+

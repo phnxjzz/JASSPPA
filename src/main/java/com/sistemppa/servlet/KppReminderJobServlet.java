@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas KppReminderJobServlet.
+ * Dipanggil melalui URL:  /internal/kpp-reminder-run (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.google.gson.JsonObject;
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.KppReminderService;
@@ -10,7 +16,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Locale;
 import java.util.logging.Logger;
 
@@ -44,7 +54,7 @@ public class KppReminderJobServlet extends HttpServlet {
 
             EmailUtil emailUtil = null;
             if (!dryRun) {
-                emailUtil = buildEmailUtil(request);
+                emailUtil = buildEmailUtil(request, conn);
                 if (emailUtil == null) {
                     response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
                     response.getWriter().write(jsonError("SMTP belum dikonfigurasi untuk reminder KPP."));
@@ -61,14 +71,15 @@ public class KppReminderJobServlet extends HttpServlet {
         }
     }
 
-    private EmailUtil buildEmailUtil(HttpServletRequest request) {
-        String smtpHost = getContextParam(request, "smtp.host", "");
-        int smtpPort = parsePositiveInt(getContextParam(request, "smtp.port", "587"), 587);
-        boolean smtpAuth = Boolean.parseBoolean(getContextParam(request, "smtp.auth", "true"));
-        boolean smtpTls = Boolean.parseBoolean(getContextParam(request, "smtp.tls", "true"));
-        String smtpUser = getContextParam(request, "smtp.username", "");
-        String smtpPass = getContextParam(request, "smtp.password", "");
-        String smtpFrom = getContextParam(request, "smtp.from", smtpUser);
+    private EmailUtil buildEmailUtil(HttpServletRequest request, Connection conn) throws SQLException {
+        Map<String, String> smtpSettings = loadSmtpSettings(conn);
+        String smtpHost = firstNonBlank(smtpSettings.get("smtp_host"), getContextParam(request, "smtp.host", ""));
+        int smtpPort = parsePositiveInt(firstNonBlank(smtpSettings.get("smtp_port"), getContextParam(request, "smtp.port", "587")), 587);
+        boolean smtpAuth = parseBoolean(firstNonBlank(smtpSettings.get("smtp_auth"), getContextParam(request, "smtp.auth", "true")), true);
+        boolean smtpTls = parseBoolean(firstNonBlank(smtpSettings.get("smtp_tls"), getContextParam(request, "smtp.tls", "true")), true);
+        String smtpUser = firstNonBlank(smtpSettings.get("smtp_username"), getContextParam(request, "smtp.username", ""));
+        String smtpPass = firstNonBlank(smtpSettings.get("smtp_password"), getContextParam(request, "smtp.password", ""));
+        String smtpFrom = firstNonBlank(smtpSettings.get("smtp_from"), getContextParam(request, "smtp.from", smtpUser));
 
         if (smtpHost.isBlank()) {
             return null;
@@ -80,6 +91,61 @@ public class KppReminderJobServlet extends HttpServlet {
         }
 
         return new EmailUtil(smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, smtpAuth, smtpTls);
+    }
+
+    private String firstNonBlank(String preferred, String fallback) {
+        if (preferred != null && !preferred.isBlank()) {
+            return preferred.trim();
+        }
+        return fallback == null ? "" : fallback.trim();
+    }
+
+    private boolean parseBoolean(String value, boolean defaultValue) {
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        String normalized = value.trim().toLowerCase(Locale.ROOT);
+        if ("true".equals(normalized) || "1".equals(normalized) || "yes".equals(normalized) || "on".equals(normalized)) {
+            return true;
+        }
+        if ("false".equals(normalized) || "0".equals(normalized) || "no".equals(normalized) || "off".equals(normalized)) {
+            return false;
+        }
+        return defaultValue;
+    }
+
+    private Map<String, String> loadSmtpSettings(Connection conn) throws SQLException {
+        ensureSmtpSettingsTable(conn);
+        Map<String, String> settings = new LinkedHashMap<>();
+        String sql = "SELECT setting_key, setting_value FROM smtp_settings WHERE enabled = 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String key = rs.getString("setting_key");
+                String val = rs.getString("setting_value");
+                if (key != null && !key.isBlank()) {
+                    settings.put(key.trim(), val == null ? "" : val.trim());
+                }
+            }
+        }
+        return settings;
+    }
+
+    private void ensureSmtpSettingsTable(Connection conn) throws SQLException {
+        String ddl = "CREATE TABLE IF NOT EXISTS smtp_settings ("
+                + "id INT AUTO_INCREMENT PRIMARY KEY,"
+                + "setting_key VARCHAR(100) NOT NULL,"
+                + "setting_value VARCHAR(255) NOT NULL,"
+                + "enabled TINYINT(1) NOT NULL DEFAULT 1,"
+                + "description VARCHAR(255),"
+                + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+                + "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+                + "UNIQUE KEY uniq_smtp_setting_key (setting_key),"
+                + "INDEX idx_smtp_enabled (enabled)"
+                + ")";
+        try (PreparedStatement stmt = conn.prepareStatement(ddl)) {
+            stmt.execute();
+        }
     }
 
     private String getConfiguredJobKey(HttpServletRequest request) {
@@ -149,3 +215,4 @@ public class KppReminderJobServlet extends HttpServlet {
         return json.toString();
     }
 }
+

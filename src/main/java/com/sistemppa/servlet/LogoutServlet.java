@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas LogoutServlet.
+ * Dipanggil melalui URL:  /logout (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,3 +29,4 @@ public class LogoutServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/login");
     }
 }
+

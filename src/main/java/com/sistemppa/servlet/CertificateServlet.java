@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas CertificateServlet.
+ * Dipanggil melalui URL:  /certificate (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.DashboardDataService;
 import jakarta.servlet.ServletException;
@@ -12,10 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-<<<<<<< HEAD
 import java.sql.Statement;
-=======
->>>>>>> origin/SPPPA
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,13 +76,9 @@ public class CertificateServlet extends HttpServlet {
                 return;
             }
 
-<<<<<<< HEAD
             List<Map<String, String>> products = parseCertificateProducts(app);
             app.put("certificate_products", products);
             app.putAll(buildCertificateHeaderFields(app, products));
-=======
-            app.put("certificate_products", parseCertificateProducts(app));
->>>>>>> origin/SPPPA
             request.setAttribute("certApp", app);
             request.getRequestDispatcher("/certificate.jsp").forward(request, response);
 
@@ -90,7 +89,6 @@ public class CertificateServlet extends HttpServlet {
     }
 
     private Map<String, Object> loadCertificateData(Connection conn, int applicationId) throws SQLException {
-<<<<<<< HEAD
         String sql = "SELECT a.id, a.user_id, "
             + "COALESCE(cs.product_name, a.product_name) AS product_name, "
             + "COALESCE(cs.product_category, a.product_category) AS product_category, "
@@ -112,16 +110,6 @@ public class CertificateServlet extends HttpServlet {
             + "COALESCE(cs.principal_name, ad.principal_name) AS principal_name, "
             + "COALESCE(cs.standard_name, ad.standard_name) AS standard_name, "
             + "COALESCE(cs.certification_license, ad.certification_license) AS certification_license "
-=======
-        String sql = "SELECT a.id, a.user_id, a.product_name, a.product_category, "
-                + "a.product_description, a.company_name, "
-                + "a.company_address, a.contact_number, a.email, a.status, "
-                + "a.certificate_number, a.issued_at, a.valid_until, a.reviewed_at, "
-                + "u.full_name AS applicant_name, u.email AS user_email, "
-                + "ad.application_type, ad.supplier_name, ad.supplier_address, "
-                + "ad.manufacturer_name, ad.principal_name, "
-                + "ad.standard_name, ad.certification_license "
->>>>>>> origin/SPPPA
                 + "FROM applications a "
                 + "JOIN users u ON u.id = a.user_id "
             + "LEFT JOIN certificate_application_snapshots cs ON cs.application_id = a.id "
@@ -284,7 +272,6 @@ public class CertificateServlet extends HttpServlet {
         List<Map<String, String>> products = new ArrayList<>();
         String summary = stringValue(app.get("product_description"));
         if (!summary.isBlank()) {
-<<<<<<< HEAD
             for (String payload : extractProductPayloads(summary)) {
                 String[] parts = payload.split("\\s*\\|\\s*");
                 Map<String, String> product = new HashMap<>();
@@ -298,58 +285,25 @@ public class CertificateServlet extends HttpServlet {
                 product.put("model", !modelRaw.isBlank() ? modelRaw : parsedPerihal.get("model"));
                 product.put("series", !seriesRaw.isBlank() ? seriesRaw : parsedPerihal.get("series"));
                 product.put("description", composeOrderedDescription(parsedPerihal.get("description"), classRaw, sizeRaw));
-=======
-            String[] lines = summary.split("\\r?\\n");
-            for (String rawLine : lines) {
-                String line = rawLine == null ? "" : rawLine.trim();
-                if (!line.startsWith("Produk ")) {
-                    continue;
-                }
-                int colonIdx = line.indexOf(':');
-                if (colonIdx < 0 || colonIdx + 1 >= line.length()) {
-                    continue;
-                }
-
-                String payload = line.substring(colonIdx + 1).trim();
-                String[] parts = payload.split("\\s*\\|\\s*");
-                Map<String, String> product = new HashMap<>();
-                String perihalRaw = extractLabeledPart(parts, "Perihal Produk:");
-                Map<String, String> parsedPerihal = parsePerihalDetails(perihalRaw);
-                product.put("name", normalizeProductValue(parts.length > 0 ? parts[0] : ""));
-                product.put("model", parsedPerihal.get("model"));
-                product.put("series", parsedPerihal.get("series"));
-                product.put("description", parsedPerihal.get("description"));
->>>>>>> origin/SPPPA
                 products.add(product);
             }
         }
 
         if (products.isEmpty()) {
-<<<<<<< HEAD
                 String fallbackPerihal = firstNonBlank(extractTokenValue(summary, "Perihal Produk:"), stringValue(app.get("product_description")));
                 String fallbackClass = extractTokenValue(summary, "Class Produk:");
                 String fallbackSize = extractTokenValue(summary, "Saiz Produk:");
-=======
-            String fallbackPerihal = firstNonBlank(
-                    extractDescriptionFromSummary(summary),
-                    stringValue(app.get("product_description")));
->>>>>>> origin/SPPPA
             Map<String, String> parsedPerihal = parsePerihalDetails(fallbackPerihal);
             Map<String, String> product = new HashMap<>();
             product.put("name", stringValue(app.get("product_name")));
             product.put("model", parsedPerihal.get("model"));
             product.put("series", parsedPerihal.get("series"));
-<<<<<<< HEAD
             product.put("description", composeOrderedDescription(parsedPerihal.get("description"), fallbackClass, fallbackSize));
-=======
-            product.put("description", parsedPerihal.get("description"));
->>>>>>> origin/SPPPA
             products.add(product);
         }
         return products;
     }
 
-<<<<<<< HEAD
     private Map<String, Object> buildCertificateHeaderFields(Map<String, Object> app, List<Map<String, String>> products) {
         Map<String, Object> fields = new HashMap<>();
         String summary = stringValue(app.get("product_description"));
@@ -416,8 +370,6 @@ public class CertificateServlet extends HttpServlet {
         return "";
     }
 
-=======
->>>>>>> origin/SPPPA
     private Map<String, String> parsePerihalDetails(String rawPerihal) {
         String perihal = normalizeProductValue(rawPerihal);
         Map<String, String> details = new HashMap<>();
@@ -475,11 +427,7 @@ public class CertificateServlet extends HttpServlet {
         return "";
     }
 
-<<<<<<< HEAD
     private String extractFieldFromSummary(String summary, String label) {
-=======
-    private String extractDescriptionFromSummary(String summary) {
->>>>>>> origin/SPPPA
         if (summary == null || summary.isBlank()) {
             return "";
         }
@@ -488,7 +436,6 @@ public class CertificateServlet extends HttpServlet {
             if (!line.startsWith("Produk ")) {
                 continue;
             }
-<<<<<<< HEAD
             int labelIdx = line.indexOf(label);
             if (labelIdx >= 0) {
                 String value = normalizeProductValue(line.substring(labelIdx + label.length()).trim());
@@ -497,17 +444,11 @@ public class CertificateServlet extends HttpServlet {
                     value = normalizeProductValue(value.substring(0, separatorIdx).trim());
                 }
                 return value;
-=======
-            int labelIdx = line.indexOf("Perihal Produk:");
-            if (labelIdx >= 0) {
-                return normalizeProductValue(line.substring(labelIdx + "Perihal Produk:".length()).trim());
->>>>>>> origin/SPPPA
             }
         }
         return "";
     }
 
-<<<<<<< HEAD
     private String composeOrderedDescription(String perihal, String classValue, String sizeValue) {
         List<String> segments = new ArrayList<>();
         String safePerihal = normalizeProductValue(perihal);
@@ -526,8 +467,6 @@ public class CertificateServlet extends HttpServlet {
         return String.join(" | ", segments);
     }
 
-=======
->>>>>>> origin/SPPPA
     private String firstNonBlank(String primary, String secondary) {
         return !primary.isBlank() ? primary : secondary;
     }
@@ -541,3 +480,4 @@ public class CertificateServlet extends HttpServlet {
         return value == null ? "" : String.valueOf(value).trim();
     }
 }
+

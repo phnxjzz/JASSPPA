@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas AdminExportServlet.
+ * Dipanggil melalui URL:  /admin/export (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.FontFactory;
@@ -249,3 +255,4 @@ public class AdminExportServlet extends HttpServlet {
         return value == null ? null : value.trim();
     }
 }
+

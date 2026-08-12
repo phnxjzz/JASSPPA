@@ -1,3 +1,4 @@
+﻿<%-- NOTA ALIRAN KOD: Fail index.jsp. Halaman ini biasa dipanggil terus melalui UI atau navigation ke /index.jsp. Tujuan nota ni supaya orang seterusnya terus nampak konteks fail ni. --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
@@ -12,6 +13,8 @@
         }
         return value
                 .replace("&", "&amp;")
+
+                
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
@@ -118,24 +121,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
-    <title>Sistem Pendaftaran Pembekal dan Produk Air (SPPPA)</title>
-    <meta name="description" content="Portal rasmi Sistem Pendaftaran Pembekal dan Produk Air Jabatan Air Negeri Sabah untuk pendaftaran produk air, pengumuman, dan semakan status permohonan.">
+    <title>Sistem Pendaftaran Pembekal dan Produk Bekalan Air (SPPPBA)</title>
+    <meta name="description" content="Portal rasmi Sistem Pendaftaran Pembekal, Produk dan Bekalan Air Jabatan Air Negeri Sabah untuk pendaftaran produk air, pengumuman, dan semakan status permohonan.">
     <style>
-<<<<<<< HEAD
 :root {
-=======
-        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
-
-        :root {
->>>>>>> origin/SPPPA
-            --brand-blue: #1e88e5;
-            --brand-navy: #0F6BAE;
-            --brand-sky: #edf4fb;
+            --brand-green: #114b3a;
+            --brand-green-deep: #0b382b;
+            --brand-yellow-pastel: #f6ecb1;
             --surface: #ffffff;
-            --surface-soft: #f3f8fc;
-            --text: #1a3040;
-            --muted: #5d7484;
-            --ring: rgba(15, 107, 174, 0.22);
+            --surface-soft: #f8f8f0;
+            --text: #111111;
+            --muted: #2b2b2b;
+            --ring: rgba(17, 75, 58, 0.22);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -144,7 +141,10 @@
             font-family: inherit;
             line-height: 1.6;
             color: var(--text);
-            background: #eef5fb;
+            background:
+                radial-gradient(circle at 8% -8%, rgba(17, 75, 58, 0.1), transparent 44%),
+                radial-gradient(circle at 94% 12%, rgba(246, 236, 177, 0.45), transparent 38%),
+                #f4f4ed;
             min-height: 100vh;
         }
 
@@ -152,60 +152,53 @@
             position: sticky;
             top: 0;
             z-index: 30;
-            background: #0f6bae;
-            color: white;
+            background: linear-gradient(90deg, rgba(246, 236, 177, 0.98), rgba(250, 243, 197, 0.94));
+            backdrop-filter: blur(8px);
+            color: #111111;
             padding: 14px 26px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 3px solid #65aeea;
-            box-shadow: 0 12px 28px rgba(8, 51, 77, 0.2);
+            border-bottom: 1px solid rgba(17, 75, 58, 0.2);
+            box-shadow: 0 8px 20px rgba(17, 75, 58, 0.15);
         }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logos { display: flex; align-items: center; gap: 10px; }
-        .brand-logo { width: 48px; height: 48px; object-fit: contain; }
+        .brand-logo { width: 68px; height: 68px; object-fit: contain; }
         .brand-text strong { display: block; font-size: 18px; line-height: 1.1; }
-        .brand-text span { font-size: 12px; opacity: 0.88; }
+        .brand-text span { font-size: 12px; opacity: 0.9; letter-spacing: 0.02em; }
 
         .nav-actions { display: flex; gap: 10px; }
         .nav-link {
-            color: #ffffff;
+            color: #111111;
             text-decoration: none;
             font-weight: 700;
             padding: 9px 13px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 999px;
+            border: 1px solid rgba(17, 75, 58, 0.28);
+            background: rgba(255, 255, 255, 0.58);
             transition: 0.2s ease;
         }
-        .nav-link:hover, .nav-link:focus { background: rgba(255, 255, 255, 0.12); }
+        .nav-link:hover, .nav-link:focus { background: rgba(255, 255, 255, 0.86); transform: translateY(-1px); }
         .nav-link.primary {
-            background: #1e88e5;
-            border-color: rgba(255,255,255,0.35);
-            color: #ffffff;
+            background: linear-gradient(120deg, #f1e39a, #ead575);
+            border-color: rgba(17, 75, 58, 0.36);
+            color: #111111;
         }
 
         .hero {
             position: relative;
             height: auto;
-<<<<<<< HEAD
             min-height: clamp(420px, 58vh, 680px);
             overflow: hidden;
             display: flex;
             align-items: center;
             padding: 96px 34px 150px 22px;
-            background: #1579cc url('${pageContext.request.contextPath}/icon/Hero.jpg?v=20260616hero2') center/cover no-repeat;
-=======
-            min-height: 260px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            padding: 72px 28px 72px 12px;
-            background: #1579cc;
->>>>>>> origin/SPPPA
+            background: #1579cc url('${pageContext.request.contextPath}/icon/Idxbg.gif?v=20260720') center/cover no-repeat;
             color: white;
             border-bottom-left-radius: 28px;
             border-bottom-right-radius: 28px;
-            box-shadow: 0 16px 42px rgba(6, 47, 72, 0.22);
+            box-shadow: 0 20px 46px rgba(6, 47, 72, 0.28);
         }
         /* Shared blob base */
         .hero::before,
@@ -213,53 +206,29 @@
             content: "";
             position: absolute;
             border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.7;
+            filter: blur(140px);
+            opacity: 0.62;
             z-index: 1;
         }
         /* Left big soft blob */
         .hero::before {
-            width: 500px;
-            height: 500px;
-            background: #4ca6f2;
-            top: 50px;
-            left: -100px;
+            width: 620px;
+            height: 620px;
+            background: #4ad5f9;
+            top: 30px;
+            left: -140px;
         }
         /* Right glow */
         .hero::after {
-            width: 600px;
-            height: 600px;
-            background: #1e88e5;
-            top: 0;
-            right: -150px;
-<<<<<<< HEAD
-=======
+            width: 650px;
+            height: 650px;
+            background: #1578cc;
+            top: -20px;
+            right: -170px;
         }
-        .hero-circle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(5px);
-            z-index: 2;
-        }
-        .hero-circle.small  { width: 40px;  height: 40px;  }
-        .hero-circle.medium { width: 80px;  height: 80px;  }
-        .hero-circle1 { top: 80px;    left: 200px;  }
-        .hero-circle2 { top: 150px;   right: 300px; }
-        .hero-circle3 { bottom: 60px; left: 300px;  }
-        .hero-watermark {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            object-position: center;
-            opacity: 0.16;
-            pointer-events: none;
-            z-index: 0;
-            padding: 44px;
-            filter: brightness(1.12);
->>>>>>> origin/SPPPA
+
+        .hero::selection {
+            background: rgba(255, 255, 255, 0.25);
         }
         .hero-inner {
             max-width: 1020px;
@@ -272,17 +241,24 @@
         .hero h1 {
             position: relative;
             z-index: 11;
-<<<<<<< HEAD
             font-size: clamp(36px, 4.8vw, 64px);
             color: #ffffff;
-=======
-            font-size: clamp(30px, 4vw, 52px);
->>>>>>> origin/SPPPA
-            line-height: 1.14;
-            margin-bottom: 14px;
+            line-height: 1.08;
+            margin-bottom: 10px;
             max-width: 760px;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.028em;
+            text-wrap: balance;
+            text-shadow: 0 8px 24px rgba(6, 33, 51, 0.28);
             animation: riseIn .55s ease-out;
+        }
+        .hero .welcome-subtitle {
+            max-width: 760px;
+            color: rgba(246, 252, 255, 0.95);
+            font-size: clamp(15px, 1.9vw, 20px);
+            letter-spacing: 0.01em;
+            font-weight: 500;
+            text-shadow: 0 3px 16px rgba(6, 33, 51, 0.24);
+            animation: riseIn .75s ease-out;
         }
         .hero p { font-size: 17px; margin-bottom: 20px; max-width: 720px; color: rgba(255,255,255,0.95); animation: riseIn .72s ease-out; }
         .hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; justify-content: flex-start; }
@@ -329,20 +305,12 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 16px;
         }
-        .role-choice-secondary {
-            margin-top: 14px;
-            display: flex;
-            justify-content: center;
-        }
-        .staff-access-card {
-            width: min(500px, 100%);
-        }
         .role-card {
-            background: rgba(255, 255, 255, 0.76);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.65);
-            border-radius: 20px;
-            box-shadow: 0 16px 30px rgba(6, 47, 72, 0.14);
+            background: linear-gradient(150deg, #114b3a, #0b382b);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(246, 236, 177, 0.2);
+            border-radius: 22px;
+            box-shadow: 0 18px 36px rgba(9, 35, 27, 0.28);
             padding: 18px;
             min-height: 190px;
             display: flex;
@@ -352,15 +320,16 @@
         }
         .role-card:hover,
         .role-card:focus-within {
-            transform: translateY(-5px);
-            box-shadow: 0 22px 40px rgba(6, 47, 72, 0.2);
-            border-color: rgba(15, 107, 174, 0.45);
-            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-6px);
+            box-shadow: 0 24px 44px rgba(9, 35, 27, 0.36);
+            border-color: rgba(246, 236, 177, 0.42);
+            background: linear-gradient(150deg, #165a46, #114636);
         }
         .role-card h3 {
             margin: 0 0 6px;
-            font-size: 22px;
-            color: #0d4568;
+            font-size: 23px;
+            color: #f9f4dc;
+            letter-spacing: -0.01em;
         }
         .role-card-head {
             display: flex;
@@ -370,13 +339,18 @@
         .role-card-icon {
             width: 46px;
             height: 46px;
-            object-fit: contain;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            line-height: 1;
             flex: 0 0 46px;
             margin-top: 2px;
+            color: #f9f4dc;
         }
         .role-card p {
             margin: 0;
-            color: #2d556d;
+            color: #eef4ef;
             font-size: 15px;
         }
         .role-card .role-login-btn {
@@ -388,16 +362,16 @@
             padding: 10px 16px;
             border-radius: 999px;
             font-weight: 800;
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.85);
-            background: #1e88e5;
+            color: #111111;
+            border: 1px solid rgba(246, 236, 177, 0.88);
+            background: linear-gradient(125deg, #f6ecb1, #edd778);
             transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-            box-shadow: 0 10px 20px rgba(6, 47, 72, 0.18);
+            box-shadow: 0 10px 20px rgba(9, 35, 27, 0.2);
         }
         .role-card .role-login-btn:hover,
         .role-card .role-login-btn:focus {
             transform: translateY(-2px);
-            box-shadow: 0 14px 24px rgba(6, 47, 72, 0.24);
+            box-shadow: 0 14px 24px rgba(9, 35, 27, 0.28);
             filter: brightness(1.03);
         }
         .first-signin-wrap {
@@ -410,11 +384,11 @@
             display: inline-block;
             padding: 11px 24px;
             border-radius: 999px;
-            border: 1px solid #d4e7f4;
-            background: rgba(255, 255, 255, 0.88);
-            color: #0f5d88;
+            border: 1px solid rgba(17, 75, 58, 0.26);
+            background: rgba(255, 255, 255, 0.95);
+            color: #111111;
             font-weight: 800;
-            box-shadow: 0 8px 18px rgba(6, 47, 72, 0.12);
+            box-shadow: 0 10px 20px rgba(9, 35, 27, 0.14);
         }
 
         .container { max-width: 1200px; margin: 0 auto; padding: 42px 20px 56px; }
@@ -432,18 +406,18 @@
             padding: 16px;
             box-shadow: 0 10px 24px rgba(6, 47, 72, 0.07);
         }
-        .quick-card h4 { margin-bottom: 6px; font-size: 16px; color: var(--brand-navy); }
-        .quick-card p { margin: 0; color: var(--muted); font-size: 14px; }
+        .quick-card h4 { margin-bottom: 6px; font-size: 16px; color: #111111; }
+        .quick-card p { margin: 0; color: #111111; font-size: 14px; }
 
         .section-title { margin-bottom: 10px; font-size: 24px; letter-spacing: -0.01em; }
         .section-subtitle { margin-bottom: 16px; color: var(--muted); }
 
         .announcement-section {
             margin-bottom: 24px;
-            border: 1px solid #d9e7f1;
-            border-radius: 20px;
-            background: var(--surface);
-            box-shadow: 0 14px 30px rgba(6, 47, 72, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 22px;
+            background: linear-gradient(155deg, #114b3a, #0b382b);
+            box-shadow: 0 16px 34px rgba(9, 35, 27, 0.22);
             overflow: hidden;
         }
         .maintenance-overlay {
@@ -475,10 +449,15 @@
         }
         .admin-access-card { position: relative; z-index: 1310; }
         .admin-access-card .role-login-btn { position: relative; z-index: 1311; }
-        .maintenance-banner img {
+        .maintenance-banner .maintenance-icon {
             width: 88px;
             height: 60px;
-            object-fit: contain;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            line-height: 1;
+            color: #7b3f00;
             flex: 0 0 auto;
         }
         .maintenance-banner strong {
@@ -498,8 +477,8 @@
             align-items: center;
             gap: 10px;
             padding: 16px 18px;
-            background: #eaf4ff;
-            border-bottom: 1px solid #d9e7f1;
+            background: rgba(0, 0, 0, 0.18);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
         .icon-badge {
             width: 24px;
@@ -507,27 +486,30 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: var(--brand-blue);
+            color: var(--brand-green);
         }
         .icon-badge svg {
             width: 22px;
             height: 22px;
             display: block;
         }
-        .icon-badge img {
+        .icon-badge .icon-glyph {
             width: 22px;
             height: 22px;
-            display: block;
-            object-fit: contain;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            line-height: 1;
         }
-        .announcement-header h3 { margin: 0; font-size: 16px; color: var(--brand-navy); }
+        .announcement-header h3 { margin: 0; font-size: 16px; color: #ffffff; }
         .announcement-list { padding: 0 18px 10px; }
-        .announcement-item { padding: 14px 0; border-bottom: 1px dashed #dce9f2; }
+        .announcement-item { padding: 14px 0; border-bottom: 1px dashed rgba(255, 255, 255, 0.28); }
         .announcement-item:last-child { border-bottom: 0; }
-        .announcement-item h4 { margin: 0 0 6px; font-size: 17px; color: var(--brand-navy); }
-        .announcement-item img { width: 100%; max-width: 360px; height: auto; border: 1px solid #dce8f2; border-radius: 10px; margin: 6px 0 8px; }
-        .announcement-item p { margin: 0; color: var(--text); white-space: pre-wrap; }
-        .announcement-empty { padding: 14px 0; color: var(--muted); }
+        .announcement-item h4 { margin: 0 0 6px; font-size: 17px; color: #ffffff; }
+        .announcement-item img { width: 100%; max-width: 360px; height: auto; border: 1px solid rgba(255, 255, 255, 0.38); border-radius: 10px; margin: 6px 0 8px; }
+        .announcement-item p { margin: 0; color: #f4f7f5; white-space: pre-wrap; }
+        .announcement-empty { padding: 14px 0; color: #f4f7f5; }
 
         .hero-contact {
             width: 100%;
@@ -538,12 +520,11 @@
             box-shadow: 0 8px 24px rgba(6, 47, 72, 0.07);
             margin-top: 10px;
         }
-        .hero-contact h3 { margin: 0 0 10px; font-size: 16px; color: #0f6bae; font-weight: 700; letter-spacing: 0; }
-        .hero-contact p { margin: 7px 0; font-size: 13px; color: #4e6a7c; line-height: 1.45; }
+        .hero-contact h3 { margin: 0 0 10px; font-size: 16px; color: #111111; font-weight: 700; letter-spacing: 0; }
+        .hero-contact p { margin: 7px 0; font-size: 13px; color: #111111; line-height: 1.45; }
         .contact-line {
             display: flex;
             align-items: flex-start;
-<<<<<<< HEAD
             gap: 8px;
         }
         .jans-contact-section h3 {
@@ -554,13 +535,21 @@
         .jans-contact-section h3 .contact-icon {
             width: 14px;
             height: 14px;
-            object-fit: contain;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            line-height: 1;
             flex-shrink: 0;
         }
         .contact-line .contact-icon {
             width: 12px;
             height: 12px;
-            object-fit: contain;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            line-height: 1;
             flex-shrink: 0;
             margin-top: 2px;
         }
@@ -568,36 +557,25 @@
         .contact-line-hanging {
             margin-left: 20px;
             display: block;
-=======
-            gap: 8px;
-        }
-        .contact-line .contact-icon {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            background: #0f6bae;
-            border-radius: 2px;
-            flex-shrink: 0;
-            margin-top: 2px;
->>>>>>> origin/SPPPA
         }
         .hero-contact .contact-line span { line-height: 1.45; }
 
         footer {
-            background: #072d43;
-            color: white;
+            background: #f3f0db;
+            color: #111111;
             text-align: center;
             padding: 30px;
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
+            border-top: 1px solid rgba(17, 75, 58, 0.18);
         }
         footer .footer-links {
             margin-top: 8px;
             font-size: 13px;
-            color: rgba(255,255,255,0.85);
+            color: #111111;
         }
         footer .footer-links a {
-            color: #d3efff;
+            color: #111111;
             text-decoration: none;
             margin: 0 8px;
         }
@@ -607,23 +585,32 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
+            width: 54px;
+            height: 54px;
             margin-left: 12px;
             border-radius: 999px;
-            border: 1px solid #fff;
-            background: rgba(255, 255, 255, 0.12);
+            border: 2px solid #0b3f72;
+            background: #0f4f8f;
             text-decoration: none;
             vertical-align: middle;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+            transition: background 0.18s ease;
         }
-        .floating-home-btn img {
-            width: 16px;
-            height: 16px;
-            object-fit: contain;
+        .floating-home-btn:hover {
+            background: #1263b5;
+        }
+        .floating-home-btn .icon-glyph {
+            width: 30px;
+            height: 30px;
+            font-size: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
         }
         .floating-home-btn svg {
-            width: 16px;
-            height: 16px;
+            width: 28px;
+            height: 28px;
             display: block;
             color: #ffffff;
         }
@@ -639,11 +626,7 @@
             .nav-actions { width: 100%; }
             .nav-link { flex: 1; text-align: center; }
             .role-choice-grid { grid-template-columns: 1fr; }
-<<<<<<< HEAD
             .role-choice-wrap { margin-top: -38px; }
-=======
-            .role-choice-wrap { margin-top: -18px; }
->>>>>>> origin/SPPPA
             .role-card-icon { width: 42px; height: 42px; flex-basis: 42px; }
         }
         </style>
@@ -652,7 +635,7 @@
     <% if (maintenanceMode) { %>
     <div class="maintenance-overlay" aria-hidden="true">
         <div class="maintenance-banner" role="status" aria-live="polite" aria-atomic="true">
-            <img src="${pageContext.request.contextPath}/icon/under-maintenance.gif" alt="Sistem dalam penyelenggaraan">
+            <span class="maintenance-icon" aria-hidden="true">&#9888;</span>
             <div>
                 <strong>Sistem Sedang Dalam Penyelenggaraan</strong>
                 <p>Sila cuba semula selepas penyelenggaraan selesai.</p>
@@ -667,7 +650,7 @@
                 <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             </div>
             <div class="brand-text">
-                <strong>Sistem Pendaftaran Pembekal dan Produk Air</strong>
+                <strong>Sistem Pendaftaran Pembekal dan Produk Bekalan Air</strong>
                 <span>Jabatan Air Negeri Sabah</span>
             </div>
         </div>
@@ -677,64 +660,34 @@
         </div>
     </div>
     <div class="hero">
-<<<<<<< HEAD
         <div class="hero-inner">
             <div>
-                <h1 class="welcome-title">Selamat Datang ke Sistem Pendaftaran Pembekal dan Produk Air</h1>
-=======
-        <img src="${pageContext.request.contextPath}/assets/images/Logo JAS.png" class="hero-watermark" alt="" aria-hidden="true">
-        <div class="hero-circle small  hero-circle1" aria-hidden="true"></div>
-        <div class="hero-circle medium hero-circle2" aria-hidden="true"></div>
-        <div class="hero-circle small  hero-circle3" aria-hidden="true"></div>
-        <div class="hero-inner">
-            <div>
-                <h1>Selamat Datang ke Sistem Pendaftaran Produk Air Negeri Sabah</h1>
->>>>>>> origin/SPPPA
+                <h1 class="welcome-title">Selamat Datang ke Sistem Pendaftaran Pembekal dan Produk Bekalan Air</h1>
             </div>
         </div>
     </div>
 
     <section class="role-choice-wrap" aria-label="Pilih peranan log masuk">
         <div class="role-choice-grid">
-<<<<<<< HEAD
             <article class="role-card admin-access-card">
-=======
-            <article class="role-card">
->>>>>>> origin/SPPPA
                 <div class="role-card-head">
-                    <img class="role-card-icon" src="${pageContext.request.contextPath}/assets/images/admin.png" alt="Ikon portal pentadbir">
+                    <span class="role-card-icon" aria-hidden="true">&#128295;</span>
                     <div>
                         <h3>Portal Pentadbir</h3>
-<<<<<<< HEAD
-                        <p>Untuk pengurusan aplikasi, semakan pengguna, dan pemantauan Sistem Pendaftaran Pembekal dan Produk Air.</p>
-=======
-                        <p>Untuk pengurusan aplikasi, semakan pengguna, dan pemantauan sistem SPPA.</p>
->>>>>>> origin/SPPPA
+                        <p>Untuk pengurusan aplikasi, semakan pengguna, dan pemantauan Sistem Pendaftaran Pembekal dan Produk Bekalan Air.</p>
                     </div>
                 </div>
                 <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=ADMIN">Log Masuk Sebagai Admin</a>
             </article>
             <article class="role-card">
                 <div class="role-card-head">
-                    <img class="role-card-icon" src="${pageContext.request.contextPath}/assets/images/users.png" alt="Ikon portal pemohon">
+                    <span class="role-card-icon" aria-hidden="true">&#128101;</span>
                     <div>
                         <h3>Portal Pemohon</h3>
                         <p>Untuk pendaftaran produk air, kemas kini maklumat, dan semakan status permohonan.</p>
                     </div>
                 </div>
                 <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=USER">Log Masuk Sebagai Pemohon</a>
-            </article>
-        </div>
-        <div class="role-choice-secondary">
-            <article class="role-card staff-access-card">
-                <div class="role-card-head">
-                    <img class="role-card-icon" src="${pageContext.request.contextPath}/icon/Staff.png" alt="Ikon portal staf">
-                    <div>
-                        <h3>Portal Staff</h3>
-                        <p>Untuk kegunaan dalaman organisasi bagi akses modul Borang Aduan dalaman.</p>
-                    </div>
-                </div>
-                <a class="role-login-btn" href="${pageContext.request.contextPath}/login?role=STAFF">Log Masuk Sebagai Staff</a>
             </article>
         </div>
         <div class="first-signin-wrap">
@@ -744,9 +697,7 @@
 
         <div class="announcement-section" aria-label="Pengumuman dan info semasa">
             <div class="announcement-header">
-                <span class="icon-badge" aria-hidden="true">
-                    <img src="${pageContext.request.contextPath}/assets/images/icon-announcement.png" alt="Ikon pengumuman">
-                </span>
+                <span class="icon-badge" aria-hidden="true"><span class="icon-glyph">&#128227;</span></span>
                 <h3>Pengumuman / Info Terkini</h3>
             </div>
             <div class="announcement-list">
@@ -770,27 +721,18 @@
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
-<<<<<<< HEAD
-                <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <h3><span class="contact-icon" aria-hidden="true">&#9743;</span> Hubungi JAS</h3>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#128205;</span><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
                 <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
                 <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
-=======
-                <h3>Hubungi JANS</h3>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
-                <p class="contact-line"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
-                <p class="contact-line"><span>Tel: +60-88-232364 (HQ) , Fax: +60-88-232396</span></p>
-                <p class="contact-line"><span>Email: jans.hq@sabah.gov.my</span></p></div>
->>>>>>> origin/SPPPA
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#9742;</span><span>Tel: +60-88-232364 (HQ)</span></p>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#128224;</span><span>Fax: +60-88-232396</span></p>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#9993;</span><span>Email: jans.hq@sabah.gov.my</span></p></div>
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2026 Sistem Pendaftaran Pembekal dan Produk Air (SPPPA). Semua hak terpelihara.</p>
+        <p>&copy; 2026 Sistem Pendaftaran Pembekal dan Produk Bekalan Air (SPPPBA). Semua hak terpelihara.</p>
         <p>Jabatan Air  Sabah</p>
         <p class="footer-links">
             <a href="${pageContext.request.contextPath}/privacy-policy">Dasar Privasi</a>
@@ -799,7 +741,7 @@
         </p>
     </footer>
     <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama">
-        <img src="${pageContext.request.contextPath}/assets/images/icon-home.png" alt="Laman utama" style="width:18px;height:18px;object-fit:contain;">
+        <svg class="icon-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10.5L12 3l9 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V21h13V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
 <script>
 (function() {
@@ -817,5 +759,6 @@
 </script>
 </body>
 </html>
+
 
 

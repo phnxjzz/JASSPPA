@@ -1,5 +1,11 @@
 package com.sistemppa.service;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas KppReminderService.
+ * Dipanggil oleh servlet untuk proses logik bisnes.
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.util.EmailUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

@@ -4,7 +4,7 @@
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
          version="6.0">
 
-    <display-name>Sistem Pendaftaran Produk Air</display-name>
+    <display-name>Sistem Pendaftaran Pembekal dan Produk Bekalan Air</display-name>
 
     <listener>
         <listener-class>com.sistemppa.config.AppLifecycleListener</listener-class>
@@ -84,7 +84,7 @@
     </context-param>
     <context-param>
         <param-name>app.base.url</param-name>
-        <param-value>http://localhost:8081/sistemppa</param-value>
+        <param-value>http://192.168.0.141:8081/sistemppa</param-value>
     </context-param>
     <context-param>
         <param-name>kpp.reminder.job.key</param-name>
@@ -126,6 +126,15 @@
     <servlet>
         <servlet-name>ApplicationServlet</servlet-name>
         <servlet-class>com.sistemppa.servlet.ApplicationServlet</servlet-class>
+        <!-- multipart-config must be declared in web.xml (not just @MultipartConfig) so that
+             Tomcat sets MultipartConfigElement on the wrapper at deployment time.
+             Without this, parseParts() called from a filter before servlet init
+             would find mce==null and skip parsing, making _csrf invisible to CsrfFilter. -->
+        <multipart-config>
+            <max-file-size>10485760</max-file-size>
+            <max-request-size>125829120</max-request-size>
+            <file-size-threshold>0</file-size-threshold>
+        </multipart-config>
     </servlet>
     <servlet-mapping>
         <servlet-name>ApplicationServlet</servlet-name>
@@ -309,6 +318,24 @@
     <servlet-mapping>
         <servlet-name>StaffComplaintServlet</servlet-name>
         <url-pattern>/staff/complaints</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DirectorApplicationServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.DirectorApplicationServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DirectorApplicationServlet</servlet-name>
+        <url-pattern>/director/application</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DirectorAccessServlet</servlet-name>
+        <servlet-class>com.sistemppa.servlet.DirectorAccessServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DirectorAccessServlet</servlet-name>
+        <url-pattern>/director/access</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>

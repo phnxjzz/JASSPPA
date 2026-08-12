@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas ProductAttachmentProxyServlet.
+ * Dipanggil melalui URL:  /product-attachments/view (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -100,3 +106,4 @@ public class ProductAttachmentProxyServlet extends HttpServlet {
 
     }
 } 
+

@@ -1,6 +1,6 @@
 # Multi-stage build for SPPA Java application
 # Build stage
-FROM openjdk:21-jdk-slim AS builder
+FROM eclipse-temurin:25-jdk-jammy AS builder
 
 # Install Maven
 RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
@@ -14,7 +14,7 @@ WORKDIR /app
 RUN mvn clean package -DskipTests -q
 
 # Runtime stage
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:25-jdk-jammy
 
 # Install curl for health checks
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*

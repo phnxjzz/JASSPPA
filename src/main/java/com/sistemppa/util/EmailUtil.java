@@ -1,5 +1,11 @@
 package com.sistemppa.util;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas EmailUtil.
+ * Dipanggil sebagai util/helper oleh servlet atau service.
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
@@ -65,3 +71,4 @@ public class EmailUtil {
         }
     }
 }
+

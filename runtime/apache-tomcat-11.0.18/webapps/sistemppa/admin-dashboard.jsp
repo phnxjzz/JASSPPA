@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.nio.charset.StandardCharsets" %>
 <%@ page import="java.nio.file.Files" %>
 <%@ page import="java.nio.file.Path" %>
@@ -253,6 +253,26 @@
         .btn-accent { background: #fff7b0; color: #6a5a00; }
         .section-stack { display: grid; gap: 18px; }
         .announcement-panel { border-top: 4px solid #0097d9; }
+        .smtp-settings-panel { border-top: 4px solid #0f6bae; margin-bottom: 18px; }
+        .smtp-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+        .smtp-form .smtp-span-2 { grid-column: span 2; }
+        .smtp-form label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
+        .smtp-form input, .smtp-form select {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font: inherit;
+            font-size: 13px;
+            background: var(--surface-soft);
+        }
+        .smtp-form-help { margin-top: 4px; font-size: 12px; color: #5c7485; }
+        .smtp-form-actions { display: flex; gap: 8px; align-items: center; }
+        .smtp-form-note { font-size: 12px; color: #6f8595; }
+        @media (max-width: 860px) {
+            .smtp-form { grid-template-columns: 1fr; }
+            .smtp-form .smtp-span-2 { grid-column: span 1; }
+        }
         .announcement-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
         .announcement-head img { width: 18px; height: 18px; object-fit: contain; }
         .announce-alert { margin-bottom: 12px; border-radius: 10px; padding: 10px 12px; font-size: 13px; }
@@ -1856,6 +1876,125 @@
                     </div>
                 </div>
 
+                <div class="panel">
+                    <h3 class="section-title">Pemberitahuan</h3>
+                    <ul class="notification-list">
+                        <li class="notification-item notif-warning">
+                            <strong>Permohonan Menunggu</strong>
+                            <span><%= request.getAttribute("pending_count") != null ? request.getAttribute("pending_count") : "0" %> permohonan perlu semakan.</span>
+                        </li>
+                        <li class="notification-item notif-warning">
+                            <strong>Permohonan Ditolak</strong>
+                            <span><%= request.getAttribute("rejected_count") != null ? request.getAttribute("rejected_count") : "0" %> rekod memerlukan tindakan susulan.</span>
+                        </li>
+                        <% if (applications != null && !applications.isEmpty()) {
+                            int noticeShown = 0;
+                            for (Map<String, Object> appNotice : applications) {
+                                if (noticeShown >= 3) { break; }
+                                noticeShown++;
+                        %>
+                        <li class="notification-item notif-recent">
+                            <strong><%= escapeHtml(String.valueOf(appNotice.get("company_name"))) %></strong>
+                            <span>Status: <%= escapeHtml(String.valueOf(appNotice.get("status"))) %></span>
+                        </li>
+                        <%      }
+                           } %>
+                    </ul>
+                </div>
+
+                <div class="panel">
+                    <h3 class="section-title">Aktiviti Terkini</h3>
+                    <ul class="activity-list">
+                        <% if (applications != null && !applications.isEmpty()) {
+                            int activityShown = 0;
+                            for (Map<String, Object> activityRow : applications) {
+                                if (activityShown >= 5) { break; }
+                                activityShown++;
+                                Timestamp activityTime = (Timestamp) activityRow.get("submitted_at");
+                        %>
+                        <li class="activity-item">
+                            <strong><%= escapeHtml(String.valueOf(activityRow.get("full_name"))) %></strong> mengemaskini permohonan
+                            <span class="muted"><%= activityTime != null ? escapeHtml(activityTime.toString()) : "Masa tidak tersedia" %></span>
+                        </li>
+                        <%      }
+                           } else { %>
+                        <li class="activity-item">Tiada aktiviti terkini buat masa ini.</li>
+                        <% } %>
+                    </ul>
+                </div>
+
+                <div class="panel smtp-settings-panel" id="smtpSettingsPanel">
+                    <div class="announcement-head">
+                        <div class="title-wrap">
+                            <img src="${pageContext.request.contextPath}/icon/email.png" alt="Tetapan Email">
+                            <h3 class="section-title" style="margin:0;">Tetapan Email Pengirim KPP</h3>
+                        </div>
+                    </div>
+
+                    <% if (request.getAttribute("smtp_success") != null) { %>
+                        <div class="announce-alert announce-success"><%= request.getAttribute("smtp_success") %></div>
+                    <% } %>
+                    <% if (request.getAttribute("smtp_error") != null) { %>
+                        <div class="announce-alert announce-error"><%= request.getAttribute("smtp_error") %></div>
+                    <% } %>
+
+                    <form method="post" action="${pageContext.request.contextPath}/dashboard" class="smtp-form">
+                        <input type="hidden" name="_csrf" value="${csrf_token}">
+                        <input type="hidden" name="smtp_action" value="update_sender">
+
+                        <div>
+                            <label for="smtp_host">SMTP Host</label>
+                            <input id="smtp_host" name="smtp_host" type="text" required
+                                   value="<%= escapeHtml(String.valueOf(request.getAttribute("smtp_setting_host") == null ? "" : request.getAttribute("smtp_setting_host"))) %>">
+                        </div>
+
+                        <div>
+                            <label for="smtp_port">SMTP Port</label>
+                            <input id="smtp_port" name="smtp_port" type="number" min="1" required
+                                   value="<%= escapeHtml(String.valueOf(request.getAttribute("smtp_setting_port") == null ? "587" : request.getAttribute("smtp_setting_port"))) %>">
+                        </div>
+
+                        <div>
+                            <label for="smtp_username">SMTP Username</label>
+                            <input id="smtp_username" name="smtp_username" type="text"
+                                   value="<%= escapeHtml(String.valueOf(request.getAttribute("smtp_setting_username") == null ? "" : request.getAttribute("smtp_setting_username"))) %>">
+                        </div>
+
+                        <div>
+                            <label for="smtp_password">SMTP Password Baharu</label>
+                            <input id="smtp_password" name="smtp_password" type="password" autocomplete="new-password" placeholder="Kosongkan jika tidak mahu ubah">
+                            <div class="smtp-form-help">Biarkan kosong untuk kekalkan password semasa.</div>
+                        </div>
+
+                        <div>
+                            <label for="smtp_from">From Address</label>
+                            <input id="smtp_from" name="smtp_from" type="email"
+                                   value="<%= escapeHtml(String.valueOf(request.getAttribute("smtp_setting_from") == null ? "" : request.getAttribute("smtp_setting_from"))) %>">
+                        </div>
+
+                        <div>
+                            <label for="smtp_auth">SMTP Auth</label>
+                            <select id="smtp_auth" name="smtp_auth">
+                                <option value="true" <%= "true".equalsIgnoreCase(String.valueOf(request.getAttribute("smtp_setting_auth") == null ? "true" : request.getAttribute("smtp_setting_auth"))) ? "selected" : "" %>>Aktif</option>
+                                <option value="false" <%= "false".equalsIgnoreCase(String.valueOf(request.getAttribute("smtp_setting_auth") == null ? "true" : request.getAttribute("smtp_setting_auth"))) ? "selected" : "" %>>Tidak Aktif</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="smtp_tls">STARTTLS</label>
+                            <select id="smtp_tls" name="smtp_tls">
+                                <option value="true" <%= "true".equalsIgnoreCase(String.valueOf(request.getAttribute("smtp_setting_tls") == null ? "true" : request.getAttribute("smtp_setting_tls"))) ? "selected" : "" %>>Aktif</option>
+                                <option value="false" <%= "false".equalsIgnoreCase(String.valueOf(request.getAttribute("smtp_setting_tls") == null ? "true" : request.getAttribute("smtp_setting_tls"))) ? "selected" : "" %>>Tidak Aktif</option>
+                            </select>
+                        </div>
+
+                        <div class="smtp-span-2 smtp-form-actions">
+                            <button class="btn btn-primary" type="submit">Simpan Tetapan Email</button>
+                            <span class="smtp-form-note">Perubahan akan terus digunakan untuk hantar email Tindakan KPP.</span>
+                        </div>
+                    </form>
+                </div>
+
                 <div class="panel announcement-panel" id="announcementPanel">
                     <div class="announcement-head">
                         <div class="title-wrap">
@@ -2065,6 +2204,21 @@
                 <button type="button" class="aduan-password-popup-btn aduan-password-popup-btn-confirm" id="aduanPasswordPopupConfirmBtn">Teruskan</button>
             </div>
         </div>
+    </div>
+    <div class="expand-overlay" id="expandOverlay" aria-hidden="true"></div>
+    <div class="kpp-modal" id="kppSubmissionModal" aria-hidden="true">
+        <div class="kpp-modal-card" role="dialog" aria-modal="true" aria-labelledby="kppSubmissionModalTitle">
+            <div class="kpp-modal-head">
+                <h4 id="kppSubmissionModalTitle">Borang Dihantar KPP</h4>
+                <button class="kpp-modal-close" type="button" id="kppSubmissionCloseBtn">Tutup</button>
+            </div>
+            <p class="kpp-modal-meta" id="kppSubmissionMeta"></p>
+            <div class="kpp-modal-grid" id="kppSubmissionContent"></div>
+        </div>
+    </div>
+    <div class="archive-toast" id="archiveToast" role="status" aria-live="polite">
+        <img src="${pageContext.request.contextPath}/assets/images/icon-archive.png" alt="Notifikasi arkib" id="archiveToastIcon">
+        <span id="archiveToastText">Berjaya.</span>
     </div>
 <script>
     (function () {
@@ -2567,8 +2721,24 @@
             return String(value || '').replace(/[.*+?^$(){}|[\]\\]/g, '\\$&');
         }
 
+        function replaceAllLiteralSafe(text, findValue, replaceValue) {
+            var source = String(text || '');
+            var findText = String(findValue || '');
+            if (!findText) {
+                return source;
+            }
+            return source.split(findText).join(String(replaceValue || ''));
+        }
+
+        function replaceRegexSafe(text, pattern, replaceValue) {
+            return String(text || '').replace(pattern, function() {
+                return String(replaceValue || '');
+            });
+        }
+
         function buildEditableKppEmailDraft(subjectTemplate, bodyTemplate, recipient, guestLink, actionType, applicationLabel) {
             var recipientName = (recipient && recipient.name ? recipient.name : '').trim() || 'tuan/puan';
+            var guestLinkText = String(guestLink || '').trim();
             var finalSubjectTemplate = String(subjectTemplate || '').trim();
             var finalBodyTemplate = String(bodyTemplate || '').trim();
 
@@ -2579,18 +2749,16 @@
                 finalBodyTemplate = buildKppBody(recipientName, actionType, KPP_LINK_PLACEHOLDER, applicationLabel);
             }
 
-            var finalSubject = finalSubjectTemplate
-                .replace(/\{recipient_name\}|\{\{recipient_name\}\}/gi, recipientName)
-                .replace(/\{application\}|\{\{application\}\}/gi, applicationLabel || '');
+            var finalSubject = replaceRegexSafe(finalSubjectTemplate, /\{recipient_name\}|\{\{recipient_name\}\}/gi, recipientName);
+            finalSubject = replaceRegexSafe(finalSubject, /\{application\}|\{\{application\}\}/gi, applicationLabel || '');
 
-            var finalBody = finalBodyTemplate
-                .replace(/\{recipient_name\}|\{\{recipient_name\}\}/gi, recipientName)
-                .replace(new RegExp(escapeRegExpText(KPP_LINK_PLACEHOLDER), 'g'), guestLink)
-                .replace(/\{link\}|\{\{link\}\}/gi, guestLink)
-                .replace(/\{application\}|\{\{application\}\}/gi, applicationLabel || '');
+            var finalBody = replaceRegexSafe(finalBodyTemplate, /\{recipient_name\}|\{\{recipient_name\}\}/gi, recipientName);
+            finalBody = replaceAllLiteralSafe(finalBody, KPP_LINK_PLACEHOLDER, guestLinkText);
+            finalBody = replaceRegexSafe(finalBody, /\{link\}|\{\{link\}\}/gi, guestLinkText);
+            finalBody = replaceRegexSafe(finalBody, /\{application\}|\{\{application\}\}/gi, applicationLabel || '');
 
-            if (finalBody.indexOf(guestLink) < 0) {
-                finalBody += '\n\nPautan khas:\n' + guestLink;
+            if (guestLinkText && finalBody.indexOf(guestLinkText) < 0) {
+                finalBody += '\n\nPautan khas:\n' + guestLinkText;
             }
 
             return {

@@ -1,8 +1,18 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas ApplicationServlet.
+ * Dipanggil melalui URL:  /applications/* (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.DashboardDataService;
+import com.sistemppa.service.TemplateService;
+import com.sistemppa.util.EmailUtil;
+import com.sistemppa.util.PublicUrlResolver;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +23,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.time.Instant;
+import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -23,6 +37,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,16 +48,50 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.logging.Logger;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
-@MultipartConfig(maxFileSize = 15 * 1024 * 1024, maxRequestSize = 120 * 1024 * 1024)
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 120 * 1024 * 1024)
 public class ApplicationServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(ApplicationServlet.class.getName());
     private static final Pattern EDIT_PATH_PATTERN = Pattern.compile("^/(\\d+)/edit$");
     private static final String RENEW_FROM_PARAM = "renewFrom";
+    private static final long DOCUMENT_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024L;
+    private static final String APPLICATION_TYPE_KEMASKINI = "KEMASKINI";
+    private static final String APPLICATION_TYPE_BAHARU = "BAHARU";
+    private static final String APPLICATION_TYPE_PEMBAHARUAN = "PEMBAHARUAN";
+    private static final long DIRECTOR_LINK_VALIDITY_SECONDS = 30L * 24L * 60L * 60L;
+    private static final String SESSION_SUBMISSION_TOKEN_MAP = "submission_token_map";
+    private static final int MAX_SUBMISSION_TOKENS = 20;
+        private static final String ACTIVE_APPLICATION_STATUS_SQL = "'DRAFT', 'NEW', 'DIRECTOR_REVIEW', 'UNDER_REVIEW', 'IN_PROGRESS', "
+            + "'MENUNGGU_TINDAKAN_PENGARAH', 'MENUNGGU_SETERUSNYA_DILULUSKAN', 'MENUNGGU_SETERUSNYA_GAGAL', "
+            + "'MENUNGGU_SETERUSNYA_GANTUNG', 'MENUNGGU_SETERUSNYA_BATAL', 'DILULUSKAN_PENGARAH', 'KUERI'";
+    private static final java.util.concurrent.ConcurrentHashMap<String, Object> APPLICATION_SUBMISSION_LOCKS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private String directorLinkSecret;
+
+    @Override
+    public void init() throws ServletException {
+        String envSecret = System.getenv("DIRECTOR_LINK_SECRET");
+        if (envSecret != null && !envSecret.isBlank()) {
+            directorLinkSecret = envSecret.trim();
+            return;
+        }
+        String contextSecret = getServletContext().getInitParameter("director.link.secret");
+        if (contextSecret != null && !contextSecret.isBlank()) {
+            directorLinkSecret = contextSecret.trim();
+            return;
+        }
+        directorLinkSecret = "SPPA_DIRECTOR_LINK_SECRET_CHANGE_ME";
+        LOGGER.warning("DIRECTOR_LINK_SECRET not configured. Using fallback secret; set DIRECTOR_LINK_SECRET env var in production.");
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Pintu masuk GET untuk modul permohonan.
+        // Dipanggil dari route /applications/* dan akan decide sama ada:
+        // 1) buka borang baru, 2) buka borang edit, atau 3) papar detail permohonan.
         HttpSession session = requireUserSession(request, response);
         if (session == null) {
             return;
@@ -55,7 +104,6 @@ public class ApplicationServlet extends HttpServlet {
                 showRenewalApplicationForm(request, response, session, renewalSourceId);
                 return;
             }
-<<<<<<< HEAD
             Integer userId = (Integer) session.getAttribute("user_id");
             try (Connection conn = DatabaseConfig.getConnection()) {
                 request.setAttribute("approvedApplications", fetchApprovedApplicationsForUser(conn, userId));
@@ -63,9 +111,8 @@ public class ApplicationServlet extends HttpServlet {
                 LOGGER.warning("Failed to load approved applications for renewal dropdown: " + e.getMessage());
                 request.setAttribute("approvedApplications", Collections.emptyList());
             }
-=======
->>>>>>> origin/SPPPA
             request.setAttribute("requiredDocuments", buildRequiredDocuments());
+            request.setAttribute("submission_token", createFormSubmissionToken(request));
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
         } else if (isEditPath(pathInfo)) {
             Integer applicationId = extractEditApplicationId(pathInfo);
@@ -173,6 +220,10 @@ public class ApplicationServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Pintu masuk POST untuk simpan/hantar permohonan.
+        // Flow utama:
+        // - jika path edit => update permohonan sedia ada
+        // - selain itu => cipta permohonan baru + trigger notifikasi pengarah jika perlu
         HttpSession session = requireUserSession(request, response);
         if (session == null) {
             return;
@@ -192,14 +243,20 @@ public class ApplicationServlet extends HttpServlet {
             return;
         }
 
-<<<<<<< HEAD
         String applicationType = getParamUpper(request, "application_type");
         String supplierName = getParamUpper(request, "supplier_name");
         String productName = getPrimaryParamUpper(request, "product_name");
         String productCategory = getPrimaryParamUpper(request, "product_category");
         Integer renewalSourceId = parseInteger(request.getParameter("renew_from_application_id"));
 
-        if ("PEMBAHARUAN".equalsIgnoreCase(applicationType) && renewalSourceId == null) {
+        if (!isSupportedApplicationType(applicationType)) {
+            prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
+            request.setAttribute("error", "Jenis permohonan tidak sah.");
+            request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+            return;
+        }
+
+        if (APPLICATION_TYPE_PEMBAHARUAN.equalsIgnoreCase(applicationType) && renewalSourceId == null) {
             prepareCreateFormStateFromRequest(request, null, userId, null);
             request.setAttribute("error", "Sila pilih produk diluluskan untuk pembaharuan.");
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
@@ -208,16 +265,6 @@ public class ApplicationServlet extends HttpServlet {
 
         if (supplierName.isEmpty() || productName.isEmpty() || productCategory.isEmpty() || applicationType.isEmpty()) {
             prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
-=======
-        String applicationType = trim(request.getParameter("application_type"));
-        String supplierName = trim(request.getParameter("supplier_name"));
-        String productName = getPrimaryParam(request, "product_name");
-        String productCategory = getPrimaryParam(request, "product_category");
-        Integer renewalSourceId = parseInteger(request.getParameter("renew_from_application_id"));
-
-        if (supplierName.isEmpty() || productName.isEmpty() || productCategory.isEmpty() || applicationType.isEmpty()) {
-            prepareCreateFormStateFromRequest(request, renewalSourceId, null);
->>>>>>> origin/SPPPA
             request.setAttribute("error", "Sila lengkapkan bahagian wajib borang PPP1.");
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
             return;
@@ -225,14 +272,10 @@ public class ApplicationServlet extends HttpServlet {
 
         try (Connection validationConn = DatabaseConfig.getConnection()) {
             Integer validationApplicationId = null;
-            if (renewalSourceId != null && "PEMBAHARUAN".equalsIgnoreCase(applicationType)) {
+            if (renewalSourceId != null && APPLICATION_TYPE_PEMBAHARUAN.equalsIgnoreCase(applicationType)) {
                 Map<String, Object> renewalSource = loadRenewalSourceApplication(validationConn, renewalSourceId, userId);
                 if (renewalSource == null || renewalSource.isEmpty()) {
-<<<<<<< HEAD
                     prepareCreateFormStateFromRequest(request, null, userId, validationConn);
-=======
-                    prepareCreateFormStateFromRequest(request, null, validationConn);
->>>>>>> origin/SPPPA
                     request.setAttribute("error", "Permohonan asal untuk pembaharuan tidak sah atau tidak ditemui.");
                     request.getRequestDispatcher("/application-form.jsp").forward(request, response);
                     return;
@@ -241,11 +284,7 @@ public class ApplicationServlet extends HttpServlet {
             }
             List<String> missingMandatoryDocs = findMissingMandatoryDocuments(request, applicationType, validationConn, validationApplicationId);
             if (!missingMandatoryDocs.isEmpty()) {
-<<<<<<< HEAD
                 prepareCreateFormStateFromRequest(request, renewalSourceId, userId, validationConn);
-=======
-                prepareCreateFormStateFromRequest(request, renewalSourceId, validationConn);
->>>>>>> origin/SPPPA
                 request.setAttribute("error", "Tidak Berjaya Sila Lengkapkan Dokumen yang diperlukan!");
                 request.setAttribute("missingMandatoryDocuments", missingMandatoryDocs);
                 request.getRequestDispatcher("/application-form.jsp").forward(request, response);
@@ -253,99 +292,130 @@ public class ApplicationServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             LOGGER.severe("Failed to validate mandatory documents: " + e.getMessage());
-<<<<<<< HEAD
             prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
-=======
-            prepareCreateFormStateFromRequest(request, renewalSourceId, null);
->>>>>>> origin/SPPPA
             request.setAttribute("error", "Ralat semasa menyemak dokumen. Sila cuba lagi.");
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
             return;
         }
 
-        // Check active application limit (max 3 active applications)
-        try (Connection limitConn = DatabaseConfig.getConnection();
-             PreparedStatement limitPs = limitConn.prepareStatement(
-                 "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status IN ('NEW', 'UNDER_REVIEW', 'IN_PROGRESS', 'DRAFT')")) {
-            limitPs.setInt(1, userId);
-            try (ResultSet limitRs = limitPs.executeQuery()) {
-                if (limitRs.next() && limitRs.getInt(1) >= 3) {
-<<<<<<< HEAD
-                    prepareCreateFormStateFromRequest(request, renewalSourceId, userId, limitConn);
-                    request.setAttribute("error", "Anda telah mencapai had maksimum 3 permohonan aktif. Sila tunggu sehingga permohonan sedia ada diselesaikan sebelum membuat permohonan baharu.");
-=======
-                    prepareCreateFormStateFromRequest(request, renewalSourceId, limitConn);
-                    request.setAttribute("error", "Anda telah mencapai had maksimum 3 permohonan aktif (NEW/DRAFT). Sila tunggu sehingga permohonan sedia ada diselesaikan sebelum membuat permohonan baharu.");
->>>>>>> origin/SPPPA
+        String submissionToken = trim(request.getParameter("submission_token"));
+        HttpSession existingSession = request.getSession(false);
+        if (submissionToken != null && !submissionToken.isBlank() && existingSession != null) {
+            Integer submittedId = getExistingSubmissionApplicationId(existingSession, submissionToken);
+            if (submittedId != null) {
+                if (submittedId > 0) {
+                    response.sendRedirect(request.getContextPath() + "/applications/new?success=1&id=" + submittedId);
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/applications/new?duplicate=1");
+                }
+                return;
+            }
+            markSubmissionStarted(existingSession, submissionToken);
+        }
+
+        String submissionLockKey = buildSubmissionLockKey(userId, request, renewalSourceId);
+        Object submissionLock = acquireSubmissionLock(submissionLockKey);
+        try {
+            synchronized (submissionLock) {
+                try (Connection limitConn = DatabaseConfig.getConnection();
+                     PreparedStatement limitPs = limitConn.prepareStatement(
+                         "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status IN (" + ACTIVE_APPLICATION_STATUS_SQL + ")")) {
+                    limitPs.setInt(1, userId);
+                    try (ResultSet limitRs = limitPs.executeQuery()) {
+                        if (limitRs.next() && limitRs.getInt(1) >= 3) {
+                            prepareCreateFormStateFromRequest(request, renewalSourceId, userId, limitConn);
+                            request.setAttribute("error", "Anda telah mencapai had maksimum 3 permohonan aktif. Sila tunggu sehingga permohonan sedia ada diselesaikan sebelum membuat permohonan baharu.");
+                            request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+                            return;
+                        }
+                    }
+                } catch (SQLException e) {
+                    LOGGER.severe("Failed to check application limit: " + e.getMessage());
+                    prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
+                    request.setAttribute("error", "Ralat semasa memeriksa had permohonan. Sila cuba lagi.");
                     request.getRequestDispatcher("/application-form.jsp").forward(request, response);
                     return;
                 }
-            }
-        } catch (SQLException e) {
-            LOGGER.severe("Failed to check application limit: " + e.getMessage());
-<<<<<<< HEAD
-            prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
-=======
-            prepareCreateFormStateFromRequest(request, renewalSourceId, null);
->>>>>>> origin/SPPPA
-            request.setAttribute("error", "Ralat semasa memeriksa had permohonan. Sila cuba lagi.");
-            request.getRequestDispatcher("/application-form.jsp").forward(request, response);
-            return;
-        }
 
-        try (Connection conn = DatabaseConfig.getConnection()) {
-            ensureOnlineApplicationSchema(conn);
-            conn.setAutoCommit(false);
-            boolean committed = false;
-            try {
-                if (renewalSourceId != null && "PEMBAHARUAN".equalsIgnoreCase(applicationType)) {
-                    Map<String, Object> renewalSource = loadRenewalSourceApplication(conn, renewalSourceId, userId);
-                    if (renewalSource == null || renewalSource.isEmpty()) {
-<<<<<<< HEAD
-                        prepareCreateFormStateFromRequest(request, null, userId, conn);
-=======
-                        prepareCreateFormStateFromRequest(request, null, conn);
->>>>>>> origin/SPPPA
-                        request.setAttribute("error", "Permohonan asal untuk pembaharuan tidak sah atau tidak ditemui.");
-                        request.getRequestDispatcher("/application-form.jsp").forward(request, response);
-                        return;
+                try (Connection conn = DatabaseConfig.getConnection()) {
+                    ensureOnlineApplicationSchema(conn);
+                    conn.setAutoCommit(false);
+                    boolean committed = false;
+                    try {
+                        if (renewalSourceId != null && APPLICATION_TYPE_PEMBAHARUAN.equalsIgnoreCase(applicationType)) {
+                            Map<String, Object> renewalSource = loadRenewalSourceApplication(conn, renewalSourceId, userId);
+                            if (renewalSource == null || renewalSource.isEmpty()) {
+                                prepareCreateFormStateFromRequest(request, null, userId, conn);
+                                request.setAttribute("error", "Permohonan asal untuk pembaharuan tidak sah atau tidak ditemui.");
+                                request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+                                return;
+                            }
+                        }
+                        List<String> oversizedDocuments = findOversizedDocuments(request);
+                        if (!oversizedDocuments.isEmpty()) {
+                            prepareCreateFormStateFromRequest(request, renewalSourceId, userId, conn);
+                            request.setAttribute("error", "Saiz dokumen terlalu besar. Had maksimum ialah 10MB setiap dokumen.");
+                            request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+                            return;
+                        }
+                        Integer duplicateApplicationId = findDuplicateActiveApplicationId(conn, userId, request);
+                        if (duplicateApplicationId != null) {
+                            conn.rollback();
+                            if (submissionToken != null && !submissionToken.isBlank() && existingSession != null) {
+                                markSubmissionCompleted(existingSession, submissionToken, duplicateApplicationId);
+                            }
+                            response.sendRedirect(request.getContextPath() + "/applications/new?duplicate=1&id=" + duplicateApplicationId);
+                            return;
+                        }
+
+                        int applicationId = insertApplication(conn, userId, request);
+                        insertApplicationDetails(conn, applicationId, request);
+                        boolean isKemaskini = APPLICATION_TYPE_KEMASKINI.equalsIgnoreCase(applicationType);
+                        String initialStatus = isKemaskini ? "NEW" : "MENUNGGU_TINDAKAN_PENGARAH";
+                        DashboardDataService.recordStatusHistory(conn, applicationId, null, initialStatus, userId, null);
+                        if (renewalSourceId != null && APPLICATION_TYPE_PEMBAHARUAN.equalsIgnoreCase(applicationType)) {
+                            cloneSourceDocuments(conn, renewalSourceId, applicationId);
+                        }
+                        saveUploadedDocuments(conn, applicationId, request, false);
+                        insertAuditLog(conn, userId, request.getRemoteAddr(), applicationId);
+                        conn.commit();
+                        committed = true;
+                        if (!isKemaskini) {
+                            sendDirectorReviewNotification(request, conn, applicationId);
+                        }
+                        if (submissionToken != null && !submissionToken.isBlank() && existingSession != null) {
+                            markSubmissionCompleted(existingSession, submissionToken, applicationId);
+                        }
+                        response.sendRedirect(request.getContextPath() + "/applications/new?success=1&id=" + applicationId);
+                    } finally {
+                        if (!committed) {
+                            if (submissionToken != null && !submissionToken.isBlank() && existingSession != null) {
+                                removeSubmissionToken(existingSession, submissionToken);
+                            }
+                            try { conn.rollback(); } catch (SQLException rb) {
+                                LOGGER.severe("Rollback failed: " + rb.getMessage());
+                            }
+                        }
                     }
-                }
-                int applicationId = insertApplication(conn, userId, request);
-                insertApplicationDetails(conn, applicationId, request);
-                if (renewalSourceId != null && "PEMBAHARUAN".equalsIgnoreCase(applicationType)) {
-                    cloneSourceDocuments(conn, renewalSourceId, applicationId);
-                }
-                saveUploadedDocuments(conn, applicationId, request, false);
-                insertAuditLog(conn, userId, request.getRemoteAddr(), applicationId);
-                conn.commit();
-                committed = true;
-                response.sendRedirect(request.getContextPath() + "/applications/new?success=1&id=" + applicationId);
-            } finally {
-                if (!committed) {
-                    try { conn.rollback(); } catch (SQLException rb) {
-                        LOGGER.severe("Rollback failed: " + rb.getMessage());
-                    }
+                } catch (SQLException e) {
+                    LOGGER.severe("Failed to save application: " + e.getMessage());
+                    prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
+                    request.setAttribute("error", "Permohonan tidak berjaya disimpan. Sila cuba lagi.");
+                    request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+                } catch (IllegalStateException e) {
+                    LOGGER.warning("File upload exceeded allowed size: " + e.getMessage());
+                    prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
+                    request.setAttribute("error", "Saiz dokumen terlalu besar. Had maksimum ialah 10MB setiap dokumen.");
+                    request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+                } catch (IOException | ServletException e) {
+                    LOGGER.severe("IO/Servlet error saving application: " + e.getMessage());
+                    prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
+                    request.setAttribute("error", "Ralat sistem semasa menghantar permohonan. Sila cuba lagi.");
+                    request.getRequestDispatcher("/application-form.jsp").forward(request, response);
                 }
             }
-        } catch (SQLException e) {
-            LOGGER.severe("Failed to save application: " + e.getMessage());
-<<<<<<< HEAD
-            prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
-=======
-            prepareCreateFormStateFromRequest(request, renewalSourceId, null);
->>>>>>> origin/SPPPA
-            request.setAttribute("error", "Permohonan tidak berjaya disimpan. Sila cuba lagi.");
-            request.getRequestDispatcher("/application-form.jsp").forward(request, response);
-        } catch (IOException | ServletException e) {
-            LOGGER.severe("IO/Servlet error saving application: " + e.getMessage());
-<<<<<<< HEAD
-            prepareCreateFormStateFromRequest(request, renewalSourceId, userId, null);
-=======
-            prepareCreateFormStateFromRequest(request, renewalSourceId, null);
->>>>>>> origin/SPPPA
-            request.setAttribute("error", "Ralat sistem semasa menghantar permohonan. Sila cuba lagi.");
-            request.getRequestDispatcher("/application-form.jsp").forward(request, response);
+        } finally {
+            releaseSubmissionLock(submissionLockKey, submissionLock);
         }
     }
 
@@ -358,25 +428,114 @@ public class ApplicationServlet extends HttpServlet {
         return session;
     }
 
+    private String createFormSubmissionToken(HttpServletRequest request) {
+        String token = UUID.randomUUID().toString();
+        request.setAttribute("submission_token", token);
+        return token;
+    }
+
+    private synchronized Map<String, Integer> getSubmissionTokenMap(HttpSession session) {
+        @SuppressWarnings("unchecked")
+        Map<String, Integer> tokenMap = (Map<String, Integer>) session.getAttribute(SESSION_SUBMISSION_TOKEN_MAP);
+        if (tokenMap == null) {
+            tokenMap = new java.util.LinkedHashMap<String, Integer>() {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest) {
+                    return size() > MAX_SUBMISSION_TOKENS;
+                }
+            };
+            session.setAttribute(SESSION_SUBMISSION_TOKEN_MAP, tokenMap);
+        }
+        return tokenMap;
+    }
+
+    private Integer getExistingSubmissionApplicationId(HttpSession session, String token) {
+        if (session == null || token == null || token.isBlank()) {
+            return null;
+        }
+        Map<String, Integer> tokenMap = getSubmissionTokenMap(session);
+        synchronized (tokenMap) {
+            return tokenMap.get(token);
+        }
+    }
+
+    private void markSubmissionStarted(HttpSession session, String token) {
+        if (session == null || token == null || token.isBlank()) {
+            return;
+        }
+        Map<String, Integer> tokenMap = getSubmissionTokenMap(session);
+        synchronized (tokenMap) {
+            tokenMap.put(token, -1);
+        }
+    }
+
+    private void markSubmissionCompleted(HttpSession session, String token, int applicationId) {
+        if (session == null || token == null || token.isBlank()) {
+            return;
+        }
+        Map<String, Integer> tokenMap = getSubmissionTokenMap(session);
+        synchronized (tokenMap) {
+            tokenMap.put(token, applicationId);
+        }
+    }
+
+    private void removeSubmissionToken(HttpSession session, String token) {
+        if (session == null || token == null || token.isBlank()) {
+            return;
+        }
+        Map<String, Integer> tokenMap = getSubmissionTokenMap(session);
+        synchronized (tokenMap) {
+            tokenMap.remove(token);
+        }
+    }
+
+    private String buildSubmissionLockKey(Integer userId, HttpServletRequest request, Integer renewalSourceId) {
+        return String.valueOf(userId) + "|"
+                + getParamUpper(request, "application_type") + "|"
+                + getParamUpper(request, "supplier_name") + "|"
+                + getPrimaryParamUpper(request, "product_name") + "|"
+                + getPrimaryParamUpper(request, "product_category") + "|"
+                + String.valueOf(renewalSourceId == null ? 0 : renewalSourceId);
+    }
+
+    private Object acquireSubmissionLock(String key) {
+        return APPLICATION_SUBMISSION_LOCKS.computeIfAbsent(key, ignored -> new Object());
+    }
+
+    private void releaseSubmissionLock(String key, Object lock) {
+        if (key == null || lock == null) {
+            return;
+        }
+        APPLICATION_SUBMISSION_LOCKS.remove(key, lock);
+    }
+
     private int insertApplication(Connection conn, Integer userId, HttpServletRequest request) throws SQLException {
-        String sql = "INSERT INTO applications (user_id, product_name, product_category, product_description, company_name, company_address, contact_number, email, status, submitted_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'NEW', ?)";
+        // KEMASKINI goes straight to admin (status NEW).
+        // BAHARU and PEMBAHARUAN go to director first (MENUNGGU_TINDAKAN_PENGARAH).
+        String applicationType = getParamUpper(request, "application_type");
+        boolean isKemaskini = APPLICATION_TYPE_KEMASKINI.equalsIgnoreCase(applicationType);
+        String initialStatus = isKemaskini ? "NEW" : "MENUNGGU_TINDAKAN_PENGARAH";
+        String directorReviewType = isKemaskini ? null : "INITIAL";
+
+        String sql = "INSERT INTO applications (user_id, product_name, product_category, product_description, company_name, company_address, contact_number, email, status, director_review_type, submitted_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, userId);
-<<<<<<< HEAD
             stmt.setString(2, getPrimaryParamUpper(request, "product_name"));
             stmt.setString(3, getPrimaryParamUpper(request, "product_category"));
-=======
-            stmt.setString(2, getPrimaryParam(request, "product_name"));
-            stmt.setString(3, getPrimaryParam(request, "product_category"));
->>>>>>> origin/SPPPA
             stmt.setString(4, buildApplicationSummary(request));
             stmt.setString(5, getParamUpper(request, "supplier_name"));
             stmt.setString(6, getParamUpper(request, "supplier_address"));
             stmt.setString(7, getParamUpper(request, "supplier_phone"));
             stmt.setString(8, trim(request.getParameter("supplier_email")));
-            stmt.setTimestamp(9, Timestamp.valueOf(LocalDateTime.now()));
+            stmt.setString(9, initialStatus);
+            if (directorReviewType == null) {
+                stmt.setNull(10, java.sql.Types.VARCHAR);
+            } else {
+                stmt.setString(10, directorReviewType);
+            }
+            stmt.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
             stmt.executeUpdate();
 
             try (ResultSet keys = stmt.getGeneratedKeys()) {
@@ -389,13 +548,39 @@ public class ApplicationServlet extends HttpServlet {
         throw new SQLException("Application ID not generated.");
     }
 
+    private Integer findDuplicateActiveApplicationId(Connection conn, Integer userId, HttpServletRequest request) throws SQLException {
+        String sql = "SELECT a.id FROM applications a "
+                + "JOIN application_details ad ON ad.application_id = a.id "
+                + "WHERE a.user_id = ? "
+                + "AND a.status IN (" + ACTIVE_APPLICATION_STATUS_SQL + ") "
+                + "AND UPPER(TRIM(a.product_name)) = UPPER(TRIM(?)) "
+                + "AND UPPER(TRIM(a.product_category)) = UPPER(TRIM(?)) "
+                + "AND UPPER(TRIM(a.company_name)) = UPPER(TRIM(?)) "
+                + "AND UPPER(TRIM(ad.application_type)) = UPPER(TRIM(?)) "
+                + "ORDER BY a.id DESC LIMIT 1";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setString(2, getPrimaryParamUpper(request, "product_name"));
+            stmt.setString(3, getPrimaryParamUpper(request, "product_category"));
+            stmt.setString(4, getParamUpper(request, "supplier_name"));
+            stmt.setString(5, getParamUpper(request, "application_type"));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        }
+
+        return null;
+    }
+
     private void insertApplicationDetails(Connection conn, int applicationId, HttpServletRequest request) throws SQLException {
         String sql = "INSERT INTO application_details (application_id, application_type, supplier_name, supplier_address, supplier_phone, manufacturer_name, manufacturer_address, manufacturer_phone, principal_name, principal_address, principal_phone, standard_name, certification_license, certification_valid_until, test_report_reference, test_report_date, warranty_years, sabah_rep_name, sabah_rep_address, sabah_rep_phone, declaration_name, declaration_position) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, applicationId);
-<<<<<<< HEAD
             stmt.setString(2, getParamUpper(request, "application_type"));
             stmt.setString(3, getParamUpper(request, "supplier_name"));
             stmt.setString(4, getParamUpper(request, "supplier_address"));
@@ -417,29 +602,6 @@ public class ApplicationServlet extends HttpServlet {
             stmt.setString(20, getParamUpper(request, "sabah_rep_phone"));
             stmt.setString(21, getParamUpper(request, "declaration_name"));
             stmt.setString(22, getParamUpper(request, "declaration_position"));
-=======
-            stmt.setString(2, trim(request.getParameter("application_type")));
-            stmt.setString(3, trim(request.getParameter("supplier_name")));
-            stmt.setString(4, trim(request.getParameter("supplier_address")));
-            stmt.setString(5, trim(request.getParameter("supplier_phone")));
-            stmt.setString(6, trim(request.getParameter("manufacturer_name")));
-            stmt.setString(7, trim(request.getParameter("manufacturer_address")));
-            stmt.setString(8, trim(request.getParameter("manufacturer_phone")));
-            stmt.setString(9, trim(request.getParameter("principal_name")));
-            stmt.setString(10, trim(request.getParameter("principal_address")));
-            stmt.setString(11, trim(request.getParameter("principal_phone")));
-            stmt.setString(12, getPrimaryParam(request, "standard_name"));
-            stmt.setString(13, getPrimaryParam(request, "certification_license"));
-            stmt.setDate(14, parseDate(getPrimaryParam(request, "certification_valid_until")));
-            stmt.setString(15, getPrimaryParam(request, "test_report_reference"));
-            stmt.setDate(16, parseDate(getPrimaryParam(request, "test_report_date")));
-            stmt.setBigDecimal(17, parseDecimal(getPrimaryParam(request, "warranty_years")));
-            stmt.setString(18, trim(request.getParameter("sabah_rep_name")));
-            stmt.setString(19, trim(request.getParameter("sabah_rep_address")));
-            stmt.setString(20, trim(request.getParameter("sabah_rep_phone")));
-            stmt.setString(21, trim(request.getParameter("declaration_name")));
-            stmt.setString(22, trim(request.getParameter("declaration_position")));
->>>>>>> origin/SPPPA
             stmt.executeUpdate();
         }
     }
@@ -455,7 +617,6 @@ public class ApplicationServlet extends HttpServlet {
                 + "WHERE application_id = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-<<<<<<< HEAD
             stmt.setString(1, getParamUpper(request, "application_type"));
             stmt.setString(2, getParamUpper(request, "supplier_name"));
             stmt.setString(3, getParamUpper(request, "supplier_address"));
@@ -477,29 +638,6 @@ public class ApplicationServlet extends HttpServlet {
             stmt.setString(19, getParamUpper(request, "sabah_rep_phone"));
             stmt.setString(20, getParamUpper(request, "declaration_name"));
             stmt.setString(21, getParamUpper(request, "declaration_position"));
-=======
-            stmt.setString(1, trim(request.getParameter("application_type")));
-            stmt.setString(2, trim(request.getParameter("supplier_name")));
-            stmt.setString(3, trim(request.getParameter("supplier_address")));
-            stmt.setString(4, trim(request.getParameter("supplier_phone")));
-            stmt.setString(5, trim(request.getParameter("manufacturer_name")));
-            stmt.setString(6, trim(request.getParameter("manufacturer_address")));
-            stmt.setString(7, trim(request.getParameter("manufacturer_phone")));
-            stmt.setString(8, trim(request.getParameter("principal_name")));
-            stmt.setString(9, trim(request.getParameter("principal_address")));
-            stmt.setString(10, trim(request.getParameter("principal_phone")));
-            stmt.setString(11, getPrimaryParam(request, "standard_name"));
-            stmt.setString(12, getPrimaryParam(request, "certification_license"));
-            stmt.setDate(13, parseDate(getPrimaryParam(request, "certification_valid_until")));
-            stmt.setString(14, getPrimaryParam(request, "test_report_reference"));
-            stmt.setDate(15, parseDate(getPrimaryParam(request, "test_report_date")));
-            stmt.setBigDecimal(16, parseDecimal(getPrimaryParam(request, "warranty_years")));
-            stmt.setString(17, trim(request.getParameter("sabah_rep_name")));
-            stmt.setString(18, trim(request.getParameter("sabah_rep_address")));
-            stmt.setString(19, trim(request.getParameter("sabah_rep_phone")));
-            stmt.setString(20, trim(request.getParameter("declaration_name")));
-            stmt.setString(21, trim(request.getParameter("declaration_position")));
->>>>>>> origin/SPPPA
             stmt.setInt(22, applicationId);
             int affected = stmt.executeUpdate();
             if (affected == 0) {
@@ -514,21 +652,12 @@ public class ApplicationServlet extends HttpServlet {
                 + "admin_notes = NULL, reviewed_at = NULL, reviewed_by = NULL, certificate_number = NULL, issued_at = NULL, valid_until = NULL "
                 + "WHERE id = ? AND user_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-<<<<<<< HEAD
             stmt.setString(1, getPrimaryParamUpper(request, "product_name"));
             stmt.setString(2, getPrimaryParamUpper(request, "product_category"));
             stmt.setString(3, buildApplicationSummary(request));
             stmt.setString(4, getParamUpper(request, "supplier_name"));
             stmt.setString(5, getParamUpper(request, "supplier_address"));
             stmt.setString(6, getParamUpper(request, "supplier_phone"));
-=======
-            stmt.setString(1, getPrimaryParam(request, "product_name"));
-            stmt.setString(2, getPrimaryParam(request, "product_category"));
-            stmt.setString(3, buildApplicationSummary(request));
-            stmt.setString(4, trim(request.getParameter("supplier_name")));
-            stmt.setString(5, trim(request.getParameter("supplier_address")));
-            stmt.setString(6, trim(request.getParameter("supplier_phone")));
->>>>>>> origin/SPPPA
             stmt.setString(7, trim(request.getParameter("supplier_email")));
             stmt.setInt(8, applicationId);
             stmt.setInt(9, userId);
@@ -547,6 +676,10 @@ public class ApplicationServlet extends HttpServlet {
                 Part part = request.getPart(entry.getKey());
                 if (part == null || part.getSize() == 0) {
                     continue;
+                }
+
+                if (part.getSize() > DOCUMENT_MAX_FILE_SIZE_BYTES) {
+                    throw new ServletException("Saiz dokumen terlalu besar. Had maksimum ialah 10MB setiap dokumen.");
                 }
 
                 if (replaceExisting) {
@@ -574,6 +707,17 @@ public class ApplicationServlet extends HttpServlet {
             }
             stmt.executeBatch();
         }
+    }
+
+    private List<String> findOversizedDocuments(HttpServletRequest request) throws ServletException, IOException {
+        List<String> oversized = new ArrayList<>();
+        for (Map.Entry<String, String> entry : buildRequiredDocuments().entrySet()) {
+            Part part = request.getPart(entry.getKey());
+            if (part != null && part.getSize() > DOCUMENT_MAX_FILE_SIZE_BYTES) {
+                oversized.add(entry.getKey());
+            }
+        }
+        return oversized;
     }
 
     private void cloneSourceDocuments(Connection conn, int sourceApplicationId, int targetApplicationId)
@@ -620,17 +764,10 @@ public class ApplicationServlet extends HttpServlet {
 
     private void processApplicationUpdate(HttpServletRequest request, HttpServletResponse response,
             HttpSession session, Integer userId, int applicationId) throws ServletException, IOException {
-<<<<<<< HEAD
         String applicationType = getParamUpper(request, "application_type");
         String supplierName = getParamUpper(request, "supplier_name");
         String productName = getPrimaryParamUpper(request, "product_name");
         String productCategory = getPrimaryParamUpper(request, "product_category");
-=======
-        String applicationType = trim(request.getParameter("application_type"));
-        String supplierName = trim(request.getParameter("supplier_name"));
-        String productName = getPrimaryParam(request, "product_name");
-        String productCategory = getPrimaryParam(request, "product_category");
->>>>>>> origin/SPPPA
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             String currentStatus = getUserApplicationStatus(conn, applicationId, userId);
@@ -640,6 +777,13 @@ public class ApplicationServlet extends HttpServlet {
             }
             if (!isEditableByApplicant(currentStatus)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
+            if (!isSupportedApplicationType(applicationType)) {
+                prepareEditFormStateFromRequest(request, applicationId, conn);
+                request.setAttribute("error", "Jenis permohonan tidak sah.");
+                request.getRequestDispatcher("/application-form.jsp").forward(request, response);
                 return;
             }
 
@@ -666,18 +810,11 @@ public class ApplicationServlet extends HttpServlet {
                 updateApplicationDetails(conn, applicationId, request);
                 saveUploadedDocuments(conn, applicationId, request, true);
 
-<<<<<<< HEAD
                 DashboardDataService.ensureAuditLogTable(conn);
                 try (PreparedStatement stmt = conn.prepareStatement(
                         "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)")) {
                     stmt.setInt(1, userId);
                     stmt.setString(2, "UPDATE APPLICATION");
-=======
-                try (PreparedStatement stmt = conn.prepareStatement(
-                        "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)")) {
-                    stmt.setInt(1, userId);
-                    stmt.setString(2, "UPDATE_APPLICATION");
->>>>>>> origin/SPPPA
                     stmt.setString(3, "Pemohon mengemaskini permohonan. ID: " + applicationId + " (Status asal: " + currentStatus + ")");
                     stmt.setString(4, request.getRemoteAddr());
                     stmt.executeUpdate();
@@ -685,6 +822,7 @@ public class ApplicationServlet extends HttpServlet {
 
                 conn.commit();
                 committed = true;
+                sendDirectorReviewNotification(request, conn, applicationId);
                 response.sendRedirect(request.getContextPath() + "/applications/" + applicationId + "?updated=1");
             } finally {
                 if (!committed) {
@@ -714,10 +852,10 @@ public class ApplicationServlet extends HttpServlet {
         request.setAttribute("formAction", request.getContextPath() + "/applications/" + applicationId + "/edit");
     }
 
-<<<<<<< HEAD
     private void prepareCreateFormStateFromRequest(HttpServletRequest request, Integer renewalSourceId, Integer userId, Connection conn) {
         request.setAttribute("application", buildApplicationFromRequest(request));
         request.setAttribute("requiredDocuments", buildRequiredDocuments());
+        request.setAttribute("submission_token", createFormSubmissionToken(request));
         if (userId != null) {
             try {
                 List<Map<String, Object>> approvedApplications;
@@ -734,11 +872,6 @@ public class ApplicationServlet extends HttpServlet {
                 request.setAttribute("approvedApplications", Collections.emptyList());
             }
         }
-=======
-    private void prepareCreateFormStateFromRequest(HttpServletRequest request, Integer renewalSourceId, Connection conn) {
-        request.setAttribute("application", buildApplicationFromRequest(request));
-        request.setAttribute("requiredDocuments", buildRequiredDocuments());
->>>>>>> origin/SPPPA
         if (renewalSourceId != null) {
             request.setAttribute("renewalMode", true);
             request.setAttribute("renewalSourceApplicationId", renewalSourceId);
@@ -754,7 +887,6 @@ public class ApplicationServlet extends HttpServlet {
 
     private Map<String, Object> buildApplicationFromRequest(HttpServletRequest request) {
         Map<String, Object> app = new HashMap<>();
-<<<<<<< HEAD
         app.put("application_type", getParamUpper(request, "application_type"));
         app.put("supplier_name", getParamUpper(request, "supplier_name"));
         app.put("supplier_email", trim(request.getParameter("supplier_email")));
@@ -783,34 +915,6 @@ public class ApplicationServlet extends HttpServlet {
         app.put("sabah_rep_phone", getParamUpper(request, "sabah_rep_phone"));
         app.put("declaration_name", getParamUpper(request, "declaration_name"));
         app.put("declaration_position", getParamUpper(request, "declaration_position"));
-=======
-        app.put("application_type", trim(request.getParameter("application_type")));
-        app.put("supplier_name", trim(request.getParameter("supplier_name")));
-        app.put("supplier_email", trim(request.getParameter("supplier_email")));
-        app.put("supplier_phone", trim(request.getParameter("supplier_phone")));
-        app.put("supplier_address", trim(request.getParameter("supplier_address")));
-        app.put("manufacturer_name", trim(request.getParameter("manufacturer_name")));
-        app.put("manufacturer_address", trim(request.getParameter("manufacturer_address")));
-        app.put("manufacturer_phone", trim(request.getParameter("manufacturer_phone")));
-        app.put("principal_name", trim(request.getParameter("principal_name")));
-        app.put("principal_address", trim(request.getParameter("principal_address")));
-        app.put("principal_phone", trim(request.getParameter("principal_phone")));
-        app.put("product_name", getPrimaryParam(request, "product_name"));
-        app.put("product_category", getPrimaryParam(request, "product_category"));
-        app.put("brand", getPrimaryParam(request, "brand"));
-        app.put("standard_name", getPrimaryParam(request, "standard_name"));
-        app.put("certification_license", getPrimaryParam(request, "certification_license"));
-        app.put("certification_valid_until", getPrimaryParam(request, "certification_valid_until"));
-        app.put("test_report_reference", getPrimaryParam(request, "test_report_reference"));
-        app.put("test_report_date", getPrimaryParam(request, "test_report_date"));
-        app.put("warranty_years", getPrimaryParam(request, "warranty_years"));
-        app.put("product_description", getPrimaryParam(request, "product_description"));
-        app.put("sabah_rep_name", trim(request.getParameter("sabah_rep_name")));
-        app.put("sabah_rep_address", trim(request.getParameter("sabah_rep_address")));
-        app.put("sabah_rep_phone", trim(request.getParameter("sabah_rep_phone")));
-        app.put("declaration_name", trim(request.getParameter("declaration_name")));
-        app.put("declaration_position", trim(request.getParameter("declaration_position")));
->>>>>>> origin/SPPPA
         return app;
     }
 
@@ -866,10 +970,7 @@ public class ApplicationServlet extends HttpServlet {
             HttpSession session, int sourceApplicationId) throws ServletException, IOException {
         Integer userId = (Integer) session.getAttribute("user_id");
         try (Connection conn = DatabaseConfig.getConnection()) {
-<<<<<<< HEAD
             request.setAttribute("approvedApplications", fetchApprovedApplicationsForUser(conn, userId));
-=======
->>>>>>> origin/SPPPA
             Map<String, Object> app = loadRenewalSourceApplication(conn, sourceApplicationId, userId);
             if (app == null || app.isEmpty()) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Permohonan asal yang diluluskan tidak ditemui");
@@ -882,6 +983,7 @@ public class ApplicationServlet extends HttpServlet {
             request.setAttribute("existingDocumentKeys", fetchExistingDocumentKeys(conn, sourceApplicationId));
             request.setAttribute("renewalMode", true);
             request.setAttribute("renewalSourceApplicationId", sourceApplicationId);
+            request.setAttribute("submission_token", createFormSubmissionToken(request));
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
         } catch (SQLException e) {
             LOGGER.severe("Failed to load renewal form source application #" + sourceApplicationId + ": " + e.getMessage());
@@ -935,16 +1037,12 @@ public class ApplicationServlet extends HttpServlet {
                 app.put("warranty_years", firstNonBlank(
                         rs.getBigDecimal("warranty_years") == null ? "" : rs.getBigDecimal("warranty_years").toPlainString(),
                         extractFieldFromSummary(productSummary, "Tempoh Jaminan:")));
-<<<<<<< HEAD
                 String summaryPerihal = extractFieldFromSummary(productSummary, "Perihal Produk:");
                 String summaryClass = extractFieldFromSummary(productSummary, "Class Produk:");
                 String summarySize = extractFieldFromSummary(productSummary, "Saiz Produk:");
                 app.put("product_model", extractFieldFromSummary(productSummary, "Model:"));
                 app.put("product_series", extractFieldFromSummary(productSummary, "Siri:"));
                 app.put("product_description", composeDescriptionWithClassAndSize(summaryPerihal, summaryClass, summarySize));
-=======
-                app.put("product_description", extractFieldFromSummary(productSummary, "Perihal Produk:"));
->>>>>>> origin/SPPPA
                 app.put("sabah_rep_name", rs.getString("sabah_rep_name"));
                 app.put("sabah_rep_address", rs.getString("sabah_rep_address"));
                 app.put("sabah_rep_phone", rs.getString("sabah_rep_phone"));
@@ -959,10 +1057,7 @@ public class ApplicationServlet extends HttpServlet {
             HttpSession session, int applicationId) throws ServletException, IOException {
         Integer userId = (Integer) session.getAttribute("user_id");
         try (Connection conn = DatabaseConfig.getConnection()) {
-<<<<<<< HEAD
             request.setAttribute("approvedApplications", fetchApprovedApplicationsForUser(conn, userId));
-=======
->>>>>>> origin/SPPPA
             String status = getUserApplicationStatus(conn, applicationId, userId);
             if (status == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -1019,16 +1114,12 @@ public class ApplicationServlet extends HttpServlet {
                         app.put("warranty_years", firstNonBlank(
                             rs.getBigDecimal("warranty_years") == null ? "" : rs.getBigDecimal("warranty_years").toPlainString(),
                             extractFieldFromSummary(productSummary, "Tempoh Jaminan:")));
-<<<<<<< HEAD
                         String summaryPerihal = extractFieldFromSummary(productSummary, "Perihal Produk:");
                         String summaryClass = extractFieldFromSummary(productSummary, "Class Produk:");
                         String summarySize = extractFieldFromSummary(productSummary, "Saiz Produk:");
                         app.put("product_model", extractFieldFromSummary(productSummary, "Model:"));
                         app.put("product_series", extractFieldFromSummary(productSummary, "Siri:"));
                         app.put("product_description", composeDescriptionWithClassAndSize(summaryPerihal, summaryClass, summarySize));
-=======
-                        app.put("product_description", extractFieldFromSummary(productSummary, "Perihal Produk:"));
->>>>>>> origin/SPPPA
                     app.put("sabah_rep_name", rs.getString("sabah_rep_name"));
                     app.put("sabah_rep_address", rs.getString("sabah_rep_address"));
                     app.put("sabah_rep_phone", rs.getString("sabah_rep_phone"));
@@ -1042,6 +1133,7 @@ public class ApplicationServlet extends HttpServlet {
             request.setAttribute("editMode", true);
             request.setAttribute("formAction", request.getContextPath() + "/applications/" + applicationId + "/edit");
             request.setAttribute("requiredDocuments", buildRequiredDocuments());
+            request.setAttribute("submission_token", createFormSubmissionToken(request));
             request.getRequestDispatcher("/application-form.jsp").forward(request, response);
         } catch (SQLException e) {
             LOGGER.severe("Failed to load edit form for application #" + applicationId + ": " + e.getMessage());
@@ -1068,7 +1160,6 @@ public class ApplicationServlet extends HttpServlet {
         return "-".equals(extracted) ? "" : extracted;
     }
 
-<<<<<<< HEAD
     private List<Map<String, Object>> fetchApprovedApplicationsForUser(Connection conn, int userId) throws SQLException {
         List<Map<String, Object>> approvedApps = new ArrayList<>();
         String sql = "SELECT a.id, a.product_name, a.product_category, a.product_description, a.company_name, a.company_address, a.contact_number, a.email, "
@@ -1128,8 +1219,6 @@ public class ApplicationServlet extends HttpServlet {
         return approvedApps;
     }
 
-=======
->>>>>>> origin/SPPPA
     private String firstNonBlank(String... values) {
         if (values == null) {
             return "";
@@ -1142,7 +1231,7 @@ public class ApplicationServlet extends HttpServlet {
         return "";
     }
 
-    private Integer parseInteger(String value) {
+    private static Integer parseInteger(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }
@@ -1151,6 +1240,13 @@ public class ApplicationServlet extends HttpServlet {
         } catch (NumberFormatException ex) {
             return null;
         }
+    }
+
+    private boolean isSupportedApplicationType(String applicationType) {
+        String normalized = trim(applicationType).toUpperCase(Locale.ROOT);
+        return APPLICATION_TYPE_KEMASKINI.equals(normalized)
+                || APPLICATION_TYPE_BAHARU.equals(normalized)
+                || APPLICATION_TYPE_PEMBAHARUAN.equals(normalized);
     }
 
     private boolean isEditPath(String pathInfo) {
@@ -1192,7 +1288,7 @@ public class ApplicationServlet extends HttpServlet {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS application_details ("
                     + "id INT AUTO_INCREMENT PRIMARY KEY,"
                     + "application_id INT NOT NULL,"
-                    + "application_type ENUM('BAHARU','PEMBAHARUAN') NOT NULL,"
+                    + "application_type ENUM('KEMASKINI','BAHARU','PEMBAHARUAN') NOT NULL,"
                     + "supplier_name VARCHAR(255) NOT NULL,"
                     + "supplier_address TEXT NOT NULL,"
                     + "supplier_phone VARCHAR(50),"
@@ -1232,6 +1328,10 @@ public class ApplicationServlet extends HttpServlet {
                     + "INDEX idx_document_type (document_type),"
                     + "FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE)"
             );
+
+            // Ensure workflow statuses are accepted by legacy ENUM schema.
+            stmt.executeUpdate("ALTER TABLE applications MODIFY COLUMN status ENUM('DRAFT','NEW','DIRECTOR_REVIEW','UNDER_REVIEW','IN_PROGRESS','MENUNGGU_TINDAKAN_PENGARAH','MENUNGGU_SETERUSNYA_DILULUSKAN','MENUNGGU_SETERUSNYA_GAGAL','MENUNGGU_SETERUSNYA_GANTUNG','MENUNGGU_SETERUSNYA_BATAL','DILULUSKAN_PENGARAH','APPROVED','REJECTED','SUSPENDED','ARCHIVED','KUERI') NOT NULL DEFAULT 'NEW'");
+            stmt.executeUpdate("ALTER TABLE application_details MODIFY COLUMN application_type ENUM('KEMASKINI','BAHARU','PEMBAHARUAN') NOT NULL");
         }
     }
 
@@ -1239,8 +1339,9 @@ public class ApplicationServlet extends HttpServlet {
         Map<String, String> docs = new LinkedHashMap<>();
         docs.put("official_application_letter", "Surat permohonan rasmi kepada Pengarah JANS");
         docs.put("principal_appointment_letter", "Surat pelantikan pembekal dari prinsipal/pemilik produk");
-        docs.put("renewal_certificate", "Salinan sijil/perakuan lama bagi pembaharuan");
+        docs.put("renewal_certificate", "Salinan sijil/perakuan sedia ada (wajib untuk kemaskini dan pembaharuan)");
         docs.put("certification_license_file", "Lesen persijilan produk (SIRIM/IKRAM/dll)");
+        docs.put("specification_document", "Dokumen Spesifikasi");
         docs.put("test_report_file", "Laporan pengujian yang masih sah");
         docs.put("brochure_catalogue", "Brosur atau katalog produk");
         docs.put("price_list", "Senarai harga semasa");
@@ -1262,10 +1363,12 @@ public class ApplicationServlet extends HttpServlet {
         mandatoryDocs.add("price_list");
         mandatoryDocs.add("product_benefit_summary");
         mandatoryDocs.add("project_reference");
+        mandatoryDocs.add("specification_document");
         mandatoryDocs.add("sop_document");
         mandatoryDocs.add("performance_monitoring_program");
 
-        if ("PEMBAHARUAN".equalsIgnoreCase(trim(applicationType))) {
+        if (APPLICATION_TYPE_PEMBAHARUAN.equalsIgnoreCase(trim(applicationType))
+                || APPLICATION_TYPE_KEMASKINI.equalsIgnoreCase(trim(applicationType))) {
             mandatoryDocs.add("renewal_certificate");
         }
         return mandatoryDocs;
@@ -1297,7 +1400,6 @@ public class ApplicationServlet extends HttpServlet {
     }
 
     private String buildApplicationSummary(HttpServletRequest request) {
-<<<<<<< HEAD
         List<String> productNames = getParamListUpper(request, "product_name");
         List<String> productCategories = getParamListUpper(request, "product_category");
         List<String> brands = getParamListUpper(request, "brand");
@@ -1310,18 +1412,6 @@ public class ApplicationServlet extends HttpServlet {
         List<String> productModels = getParamListUpper(request, "product_model");
         List<String> productSeries = getParamListUpper(request, "product_series");
         List<String> productDescriptions = getParamListUpper(request, "product_description");
-=======
-        List<String> productNames = getParamList(request, "product_name");
-        List<String> productCategories = getParamList(request, "product_category");
-        List<String> brands = getParamList(request, "brand");
-        List<String> standards = getParamList(request, "standard_name");
-        List<String> certificationLicenses = getParamList(request, "certification_license");
-        List<String> certificationValidUntil = getParamList(request, "certification_valid_until");
-        List<String> testReportReferences = getParamList(request, "test_report_reference");
-        List<String> testReportDates = getParamList(request, "test_report_date");
-        List<String> warrantyYears = getParamList(request, "warranty_years");
-        List<String> productDescriptions = getParamList(request, "product_description");
->>>>>>> origin/SPPPA
 
         int productCount = productNames.size();
         productCount = Math.max(productCount, productCategories.size());
@@ -1332,11 +1422,8 @@ public class ApplicationServlet extends HttpServlet {
         productCount = Math.max(productCount, testReportReferences.size());
         productCount = Math.max(productCount, testReportDates.size());
         productCount = Math.max(productCount, warrantyYears.size());
-<<<<<<< HEAD
         productCount = Math.max(productCount, productModels.size());
         productCount = Math.max(productCount, productSeries.size());
-=======
->>>>>>> origin/SPPPA
         productCount = Math.max(productCount, productDescriptions.size());
         StringBuilder productLines = new StringBuilder();
         for (int i = 0; i < productCount; i++) {
@@ -1349,20 +1436,13 @@ public class ApplicationServlet extends HttpServlet {
             String testReportReference = getValueAt(testReportReferences, i);
             String testReportDate = getValueAt(testReportDates, i);
             String warranty = getValueAt(warrantyYears, i);
-<<<<<<< HEAD
             String model = getValueAt(productModels, i);
             String series = getValueAt(productSeries, i);
-=======
->>>>>>> origin/SPPPA
             String description = getValueAt(productDescriptions, i);
             if (name.isEmpty() && category.isEmpty() && brand.isEmpty() && standard.isEmpty()
                     && certificationLicense.isEmpty() && certificationUntil.isEmpty()
                     && testReportReference.isEmpty() && testReportDate.isEmpty()
-<<<<<<< HEAD
                     && warranty.isEmpty() && model.isEmpty() && series.isEmpty() && description.isEmpty()) {
-=======
-                    && warranty.isEmpty() && description.isEmpty()) {
->>>>>>> origin/SPPPA
                 continue;
             }
             if (productLines.length() > 0) {
@@ -1378,7 +1458,6 @@ public class ApplicationServlet extends HttpServlet {
                     .append(" | No. Laporan Ujian: ").append(testReportReference.isEmpty() ? "-" : testReportReference)
                     .append(" | Tarikh Laporan Ujian: ").append(testReportDate.isEmpty() ? "-" : testReportDate)
                     .append(" | Tempoh Jaminan: ").append(warranty.isEmpty() ? "-" : warranty)
-<<<<<<< HEAD
                     .append(" | Model: ").append(model.isEmpty() ? "-" : model)
                     .append(" | Siri: ").append(series.isEmpty() ? "-" : series)
                     .append(" | Perihal Produk: ").append(description.isEmpty() ? "-" : description);
@@ -1404,13 +1483,6 @@ public class ApplicationServlet extends HttpServlet {
             segments.add("Saiz: " + safeSize);
         }
         return String.join(" | ", segments);
-=======
-                    .append(" | Perihal Produk: ").append(description.isEmpty() ? "-" : description);
-        }
-
-        return "Jenis Permohonan: " + trim(request.getParameter("application_type"))
-                + "\nSenarai Produk:\n" + (productLines.length() == 0 ? "-" : productLines);
->>>>>>> origin/SPPPA
     }
 
     private String extractSubmittedFileName(Part part) {
@@ -1421,11 +1493,493 @@ public class ApplicationServlet extends HttpServlet {
         return Path.of(submitted).getFileName().toString();
     }
 
-    private String trim(String value) {
+    private static String trim(String value) {
         return value == null ? "" : value.trim();
     }
 
-<<<<<<< HEAD
+    private void sendDirectorReviewNotification(HttpServletRequest request, Connection conn, int applicationId) {
+        // Fungsi ini hantar emel notifikasi kepada semua pengguna role DIRECTOR yang aktif.
+        // Ia dipanggil selepas permohonan berjaya dihantar ke status menunggu tindakan Pengarah.
+        // Penting: jika SMTP tak lengkap atau tiada pengarah aktif, fungsi akan skip secara selamat.
+        try {
+            ensureSmtpSettingsTable(conn);
+            Map<String, String> smtpSettings = loadSmtpSettings(conn);
+
+            String smtpHost = coalesceSmtpValue(smtpSettings.get("smtp_host"), getContextParam(request, "smtp.host", ""));
+            int smtpPort = parsePositiveIntOrDefault(
+                    coalesceSmtpValue(smtpSettings.get("smtp_port"), getContextParam(request, "smtp.port", "587")),
+                    587);
+            boolean smtpAuth = parseBoolean(
+                    coalesceSmtpValue(smtpSettings.get("smtp_auth"), getContextParam(request, "smtp.auth", "true")),
+                    true);
+            boolean smtpTls = parseBoolean(
+                    coalesceSmtpValue(smtpSettings.get("smtp_tls"), getContextParam(request, "smtp.tls", "true")),
+                    true);
+            String smtpUser = coalesceSmtpValue(smtpSettings.get("smtp_username"), getContextParam(request, "smtp.username", ""));
+            String smtpPass = coalesceSmtpValue(smtpSettings.get("smtp_password"), getContextParam(request, "smtp.password", ""));
+            String smtpFrom = coalesceSmtpValue(smtpSettings.get("smtp_from"), getContextParam(request, "smtp.from", smtpUser));
+
+            if (smtpHost.isBlank()) {
+                LOGGER.info("Director notification skipped: SMTP host not configured.");
+                return;
+            }
+            if (smtpAuth && (smtpUser.isBlank() || smtpPass.isBlank())) {
+                LOGGER.info("Director notification skipped: SMTP auth credentials incomplete.");
+                return;
+            }
+            if (smtpFrom.isBlank()) {
+                smtpFrom = smtpUser;
+            }
+
+            Map<String, Object> applicationData = loadApplicationForDirectorEmail(conn, applicationId);
+            if (applicationData.isEmpty()) {
+                return;
+            }
+
+            List<Map<String, String>> directorRecipients = loadDirectorRecipients(conn);
+            if (directorRecipients.isEmpty()) {
+                LOGGER.info("Director notification skipped: no active director recipients.");
+                return;
+            }
+
+            String companyName = String.valueOf(applicationData.getOrDefault("company_name", "-")).trim();
+            String productName = String.valueOf(applicationData.getOrDefault("product_name", "-")).trim();
+            String applicantName = String.valueOf(applicationData.getOrDefault("full_name", "-")).trim();
+            String submittedAt = String.valueOf(applicationData.getOrDefault("submitted_at", "-")).trim();
+
+            EmailUtil emailUtil = new EmailUtil(smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, smtpAuth, smtpTls);
+            String appRef = String.format("PPP%03d", applicationId);
+
+            for (Map<String, String> recipient : directorRecipients) {
+                String toEmail = recipient.getOrDefault("email", "");
+                if (toEmail.isBlank()) {
+                    continue;
+                }
+                Integer directorId = parseInteger(recipient.get("id"));
+                if (directorId == null) {
+                    LOGGER.warning("Director notification skipped: recipient id missing for email " + toEmail);
+                    continue;
+                }
+                String accessUrl = buildDirectorAccessUrl(request, directorId, toEmail, applicationId);
+                String directorName = recipient.getOrDefault("full_name", "Pengarah");
+                Map<String, String> vars = new LinkedHashMap<>();
+                vars.put("director_name", escapeHtml(directorName));
+                vars.put("app_ref", escapeHtml(appRef));
+                vars.put("applicant_name", escapeHtml(applicantName));
+                vars.put("company_name", escapeHtml(companyName));
+                vars.put("product_name", escapeHtml(productName));
+                vars.put("submitted_at", escapeHtml(submittedAt));
+                vars.put("review_stage_label", "tindakan");
+                vars.put("action_intro", "Terdapat permohonan baharu yang memerlukan tindakan Pengarah.");
+                vars.put("dashboard_url", escapeHtml(accessUrl));
+                vars.put("dashboard_link_html", buildHtmlLink(accessUrl, "Klik Di Sini"));
+
+                String fallbackSubject = "Permohonan Baharu Menunggu Tindakan Pengarah";
+                String fallbackBody = "<div style=\"font-family:Segoe UI,Tahoma,Arial,sans-serif;font-size:14px;line-height:1.6;color:#183244;\">"
+                    + "<p>Tuan/Puan Pengarah " + escapeHtml(directorName) + ",</p>"
+                    + "<p><strong>PERMOHONAN UNTUK TINDAKAN PENGARAH</strong></p>"
+                    + "<p>Dengan hormatnya perkara di atas adalah dirujuk.</p>"
+                    + "<p>2. Adalah dimaklumkan bahawa terdapat permohonan baharu yang memerlukan tindakan Pengarah bagi rujukan <strong>"
+                    + escapeHtml(appRef) + "</strong>.</p>"
+                    + "<p>3. Butiran permohonan adalah seperti berikut:<br>"
+                    + "Pemohon: " + escapeHtml(applicantName) + "<br>"
+                    + "Syarikat: " + escapeHtml(companyName) + "<br>"
+                    + "Produk: " + escapeHtml(productName) + "<br>"
+                    + "Tarikh Hantar: " + escapeHtml(submittedAt) + "</p>"
+                    + "<p>4. Sila akses modul Pengarah melalui pautan berikut untuk tindakan lanjut: "
+                    + buildHtmlLink(accessUrl, "Klik Di Sini") + "</p>"
+                    + "<p style=\"font-size:12px;color:#577084;\">Pautan ini sah selama 7 hari dari tarikh emel dihantar. Jika pautan tidak berfungsi, salin URL ini ke pelayar: "
+                    + escapeHtml(accessUrl) + "</p>"
+                    + "<p>Sekian, terima kasih.</p>"
+                    + "<p>Urusetia<br>Sistem Pendaftaran Produk Air</p>"
+                    + "<p>Surat ini merupakan cetakan komputer dan tidak memerlukan tandatangan.</p>"
+                    + "</div>";
+                String subject = TemplateService.renderEmailSubject(conn, "DIRECTOR_ACTION_REQUEST", vars, fallbackSubject);
+                String body = TemplateService.renderEmailBody(conn, "DIRECTOR_ACTION_REQUEST", vars, fallbackBody);
+                emailUtil.sendHtml(toEmail, subject, body);
+            }
+        } catch (Exception ex) {
+            LOGGER.warning("Failed to send director review notification for application #" + applicationId + ": " + ex.getMessage());
+        }
+    }
+
+    private Map<String, Object> loadApplicationForDirectorEmail(Connection conn, int applicationId) throws SQLException {
+        String sql = "SELECT a.company_name, a.product_name, DATE_FORMAT(a.submitted_at, '%d/%m/%Y') AS submitted_date, u.full_name "
+                + "FROM applications a "
+                + "JOIN users u ON u.id = a.user_id "
+                + "WHERE a.id = ? LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, applicationId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return Collections.emptyMap();
+                }
+                Map<String, Object> row = new HashMap<>();
+                row.put("company_name", rs.getString("company_name"));
+                row.put("product_name", rs.getString("product_name"));
+                row.put("submitted_at", rs.getString("submitted_date"));
+                row.put("full_name", rs.getString("full_name"));
+                return row;
+            }
+        }
+    }
+
+    private String buildHtmlLink(String url, String label) {
+        if (url == null || url.isBlank()) {
+            return "";
+        }
+        String safeUrl = escapeHtml(url);
+        String safeLabel = escapeHtml(label == null || label.isBlank() ? url : label);
+        return "<a href=\"" + safeUrl + "\" target=\"_blank\" rel=\"noopener noreferrer\">" + safeLabel + "</a>";
+    }
+
+    private List<Map<String, String>> loadDirectorRecipients(Connection conn) throws SQLException {
+        List<Map<String, String>> recipients = new ArrayList<>();
+        String sql = "SELECT id, full_name, email FROM users "
+                + "WHERE role = 'DIRECTOR' AND status = 'ACTIVE' AND email IS NOT NULL AND TRIM(email) <> '' "
+                + "ORDER BY id ASC";
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Map<String, String> row = new HashMap<>();
+                row.put("id", String.valueOf(rs.getInt("id")));
+                row.put("full_name", trim(rs.getString("full_name")));
+                row.put("email", trim(rs.getString("email")));
+                recipients.add(row);
+            }
+        }
+        return recipients;
+    }
+
+    public static String buildDirectorAccessUrl(HttpServletRequest request, Integer directorId, String directorEmail, int applicationId) {
+        // Jana pautan khas sekali-klik untuk Pengarah.
+        // Pautan ini bawa token bertandatangan (id user + email + app id + expiry)
+        // supaya pengarah boleh terus buka rekod tanpa perlu cari manual dalam dashboard.
+        String normalizedEmail = directorEmail == null ? "" : directorEmail.trim().toLowerCase(Locale.ROOT);
+        long expiresAt = Instant.now().getEpochSecond() + DIRECTOR_LINK_VALIDITY_SECONDS;
+        String payload = directorId + "|" + normalizedEmail + "|" + applicationId + "|" + expiresAt;
+        String signature = signDirectorPayload(payload, resolveDirectorLinkSecret(request.getServletContext()));
+        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(payload.getBytes(StandardCharsets.UTF_8))
+                + "." + signature;
+        String base = resolvePublicAppBaseUrl(request);
+        return base + "/director/access?token=" + java.net.URLEncoder.encode(token, StandardCharsets.UTF_8);
+    }
+
+    public static DirectorAccessTokenPayload validateDirectorAccessToken(String token, ServletContext servletContext) {
+        if (token == null || token.isBlank()) {
+            LOGGER.warning("[DirectorToken] Token null or blank");
+            return null;
+        }
+
+        String normalizedToken = normalizeDirectorToken(token);
+        LOGGER.info("[DirectorToken] Normalized: " + normalizedToken);
+        String[] parts = splitDirectorToken(normalizedToken);
+        if (parts.length != 2) {
+            LOGGER.warning("[DirectorToken] Split failed, parts=" + parts.length + " token=" + normalizedToken);
+            return null;
+        }
+
+        String payloadEncoded = parts[0];
+        String signature = trim(parts[1]);
+        if (payloadEncoded == null || payloadEncoded.isBlank() || signature == null || signature.isBlank()) {
+            LOGGER.warning("[DirectorToken] Empty payload or signature after split");
+            return null;
+        }
+
+        String payloadRaw = decodeDirectorPayload(payloadEncoded);
+        if (payloadRaw == null || payloadRaw.isBlank()) {
+            LOGGER.warning("[DirectorToken] Failed to decode payload: " + payloadEncoded);
+            return null;
+        }
+        LOGGER.info("[DirectorToken] Decoded payload: " + payloadRaw);
+
+        String secret = resolveDirectorLinkSecret(servletContext);
+        String expectedSignature = signDirectorPayload(payloadRaw, secret);
+        if (!constantTimeEquals(signature.toLowerCase(Locale.ROOT), expectedSignature.toLowerCase(Locale.ROOT))) {
+            LOGGER.warning("[DirectorToken] Signature mismatch. Got=" + signature + " Expected=" + expectedSignature);
+            return null;
+        }
+
+        String[] payloadParts = payloadRaw.split("\\|");
+        if (payloadParts.length != 4) {
+            return null;
+        }
+
+        Integer userId = parseInteger(payloadParts[0]);
+        Integer applicationIdValue = parseInteger(payloadParts[2]);
+        int applicationId = applicationIdValue == null ? -1 : applicationIdValue;
+        long expiresAt;
+        try {
+            expiresAt = Long.parseLong(payloadParts[3]);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+
+        long now = Instant.now().getEpochSecond();
+        if (userId == null || applicationId <= 0) {
+            LOGGER.warning("[DirectorToken] Invalid userId or applicationId in payload: " + payloadRaw);
+            return null;
+        }
+        if (expiresAt < now) {
+            LOGGER.warning("[DirectorToken] Token EXPIRED. expiresAt=" + expiresAt + " now=" + now + " (expired " + (now - expiresAt) + "s ago)");
+            return null;
+        }
+
+        String email = trim(payloadParts[1]).toLowerCase(Locale.ROOT);
+        return new DirectorAccessTokenPayload(userId, email, applicationId, expiresAt);
+    }
+
+    private static String normalizeDirectorToken(String token) {
+        String value = trim(token);
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+
+        if (value.startsWith("token=")) {
+            value = value.substring("token=".length());
+        }
+        if (value.startsWith("amp;token=")) {
+            value = value.substring("amp;token=".length());
+        }
+
+        // Some clients/proxies may double-encode query params.
+        for (int i = 0; i < 2; i++) {
+            if (value.indexOf('%') < 0) {
+                break;
+            }
+            try {
+                String decoded = URLDecoder.decode(value, StandardCharsets.UTF_8);
+                if (decoded.equals(value)) {
+                    break;
+                }
+                value = decoded;
+            } catch (IllegalArgumentException ex) {
+                break;
+            }
+        }
+
+        return trim(value);
+    }
+
+    private static String[] splitDirectorToken(String token) {
+        if (token == null || token.isBlank()) {
+            return new String[0];
+        }
+        if (token.contains(".")) {
+            return token.split("\\.", 2);
+        }
+        // Legacy fallback: payload and signature separated by colon.
+        if (token.contains(":")) {
+            return token.split(":", 2);
+        }
+        return new String[0];
+    }
+
+    private static String decodeDirectorPayload(String payloadEncoded) {
+        if (payloadEncoded == null || payloadEncoded.isBlank()) {
+            return null;
+        }
+
+        if (payloadEncoded.contains("|")) {
+            return payloadEncoded;
+        }
+
+        String candidate = payloadEncoded.trim();
+        try {
+            return new String(Base64.getUrlDecoder().decode(candidate), StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException ignored) {
+            // try legacy base64 variants below
+        }
+
+        String plusCandidate = candidate.replace(' ', '+');
+        try {
+            return new String(Base64.getDecoder().decode(plusCandidate), StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException ignored) {
+            // try normalized url/base64 alphabet conversion
+        }
+
+        String normalized = candidate.replace('-', '+').replace('_', '/').replace(' ', '+');
+        int mod = normalized.length() % 4;
+        if (mod > 0) {
+            normalized += "=".repeat(4 - mod);
+        }
+        try {
+            return new String(Base64.getDecoder().decode(normalized), StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
+    private static String signDirectorPayload(String payload, String secret) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] digest = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte b : digest) {
+                String part = Integer.toHexString(b & 0xff);
+                if (part.length() == 1) {
+                    hex.append('0');
+                }
+                hex.append(part);
+            }
+            return hex.toString();
+        } catch (GeneralSecurityException ex) {
+            throw new IllegalStateException("Unable to sign director access payload", ex);
+        }
+    }
+
+    private static String resolveDirectorLinkSecret(ServletContext servletContext) {
+        String envSecret = System.getenv("DIRECTOR_LINK_SECRET");
+        if (envSecret != null && !envSecret.isBlank()) {
+            return envSecret.trim();
+        }
+        String contextSecret = servletContext.getInitParameter("director.link.secret");
+        if (contextSecret != null && !contextSecret.isBlank()) {
+            return contextSecret.trim();
+        }
+        return "SPPA_DIRECTOR_LINK_SECRET_CHANGE_ME";
+    }
+
+    private static boolean constantTimeEquals(String a, String b) {
+        byte[] left = (a == null ? "" : a).getBytes(StandardCharsets.UTF_8);
+        byte[] right = (b == null ? "" : b).getBytes(StandardCharsets.UTF_8);
+        if (left.length != right.length) {
+            return false;
+        }
+        int result = 0;
+        for (int i = 0; i < left.length; i++) {
+            result |= left[i] ^ right[i];
+        }
+        return result == 0;
+    }
+
+    public static record DirectorAccessTokenPayload(int userId, String email, int applicationId, long expiresAt) {}
+
+    private static String resolvePublicAppBaseUrl(HttpServletRequest request) {
+        return PublicUrlResolver.resolveBaseUrl(request, getContextParam(request, "app.base.url", ""));
+    }
+
+    private String buildRequestBaseUrl(HttpServletRequest request) {
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int port = request.getServerPort();
+        String contextPath = request.getContextPath();
+        boolean defaultPort = ("http".equalsIgnoreCase(scheme) && port == 80)
+                || ("https".equalsIgnoreCase(scheme) && port == 443);
+        return normalizeBaseUrl(scheme + "://" + serverName + (defaultPort ? "" : ":" + port) + contextPath);
+    }
+
+    private static String normalizeBaseUrl(String baseUrl) {
+        String value = trim(baseUrl);
+        while (value.endsWith("/")) {
+            value = value.substring(0, value.length() - 1);
+        }
+        return value;
+    }
+
+    private boolean isLocalHostUrl(String url) {
+        String value = trim(url).toLowerCase(Locale.ROOT);
+        return value.startsWith("http://localhost")
+                || value.startsWith("https://localhost")
+                || value.startsWith("http://127.0.0.1")
+                || value.startsWith("https://127.0.0.1")
+                || value.startsWith("http://0.0.0.0")
+                || value.startsWith("https://0.0.0.0")
+                || value.startsWith("http://[::1]")
+                || value.startsWith("https://[::1]");
+    }
+
+    private boolean isLocalHostName(String hostName) {
+        String value = trim(hostName).toLowerCase(Locale.ROOT);
+        return "localhost".equals(value)
+                || "127.0.0.1".equals(value)
+                || "0.0.0.0".equals(value)
+                || "::1".equals(value)
+                || "[::1]".equals(value);
+    }
+
+    private Map<String, String> loadSmtpSettings(Connection conn) throws SQLException {
+        Map<String, String> settings = new LinkedHashMap<>();
+        String sql = "SELECT setting_key, setting_value FROM smtp_settings WHERE enabled = 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String key = rs.getString("setting_key");
+                String value = rs.getString("setting_value");
+                if (key != null && !key.isBlank()) {
+                    settings.put(key.trim(), value == null ? "" : value.trim());
+                }
+            }
+        }
+        return settings;
+    }
+
+    private void ensureSmtpSettingsTable(Connection conn) throws SQLException {
+        String ddl = "CREATE TABLE IF NOT EXISTS smtp_settings ("
+                + "id INT AUTO_INCREMENT PRIMARY KEY,"
+                + "setting_key VARCHAR(100) NOT NULL,"
+                + "setting_value VARCHAR(255) NOT NULL,"
+                + "enabled TINYINT(1) NOT NULL DEFAULT 1,"
+                + "description VARCHAR(255),"
+                + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+                + "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+                + "UNIQUE KEY uniq_smtp_setting_key (setting_key),"
+                + "INDEX idx_smtp_enabled (enabled)"
+                + ")";
+        try (PreparedStatement stmt = conn.prepareStatement(ddl)) {
+            stmt.execute();
+        }
+    }
+
+    private static String getContextParam(HttpServletRequest request, String name, String defaultValue) {
+        String value = request.getServletContext().getInitParameter(name);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        return value.trim();
+    }
+
+    private String coalesceSmtpValue(String preferred, String fallback) {
+        if (preferred != null && !preferred.isBlank()) {
+            return preferred.trim();
+        }
+        return fallback == null ? "" : fallback.trim();
+    }
+
+    private boolean parseBoolean(String raw, boolean defaultValue) {
+        if (raw == null || raw.isBlank()) {
+            return defaultValue;
+        }
+        String normalized = raw.trim().toLowerCase(java.util.Locale.ROOT);
+        if ("true".equals(normalized) || "1".equals(normalized) || "yes".equals(normalized) || "on".equals(normalized)) {
+            return true;
+        }
+        if ("false".equals(normalized) || "0".equals(normalized) || "no".equals(normalized) || "off".equals(normalized)) {
+            return false;
+        }
+        return defaultValue;
+    }
+
+    private int parsePositiveIntOrDefault(String raw, int defaultValue) {
+        Integer parsed = parseInteger(raw);
+        if (parsed == null || parsed <= 0) {
+            return defaultValue;
+        }
+        return parsed;
+    }
+
+    private String escapeHtml(String text) {
+        if (text == null) {
+            return "";
+        }
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+
     private String toUpperInfo(String value) {
         String cleaned = trim(value);
         return cleaned.isEmpty() ? cleaned : cleaned.toUpperCase(Locale.ROOT);
@@ -1435,8 +1989,6 @@ public class ApplicationServlet extends HttpServlet {
         return toUpperInfo(request.getParameter(paramName));
     }
 
-=======
->>>>>>> origin/SPPPA
     private String getPrimaryParam(HttpServletRequest request, String baseName) {
         List<String> values = getParamList(request, baseName);
         if (!values.isEmpty()) {
@@ -1445,13 +1997,10 @@ public class ApplicationServlet extends HttpServlet {
         return "";
     }
 
-<<<<<<< HEAD
     private String getPrimaryParamUpper(HttpServletRequest request, String baseName) {
         return toUpperInfo(getPrimaryParam(request, baseName));
     }
 
-=======
->>>>>>> origin/SPPPA
     private List<String> getParamList(HttpServletRequest request, String baseName) {
         List<String> values = new ArrayList<>();
         String[] arrayValues = request.getParameterValues(baseName + "[]");
@@ -1472,7 +2021,6 @@ public class ApplicationServlet extends HttpServlet {
         return values;
     }
 
-<<<<<<< HEAD
     private List<String> getParamListUpper(HttpServletRequest request, String baseName) {
         List<String> values = getParamList(request, baseName);
         List<String> upperValues = new ArrayList<>(values.size());
@@ -1482,8 +2030,6 @@ public class ApplicationServlet extends HttpServlet {
         return upperValues;
     }
 
-=======
->>>>>>> origin/SPPPA
     private String getValueAt(List<String> values, int index) {
         if (index < 0 || index >= values.size()) {
             return "";
@@ -1507,3 +2053,4 @@ public class ApplicationServlet extends HttpServlet {
         return new java.math.BigDecimal(trimmed);
     }
 }
+

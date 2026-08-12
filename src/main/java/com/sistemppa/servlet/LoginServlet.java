@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas LoginServlet.
+ * Dipanggil melalui URL:  /login (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.filter.RateLimitFilter;
 import jakarta.servlet.ServletException;
@@ -25,26 +31,51 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        if (session.getAttribute("user_id") != null) {
-            response.sendRedirect(request.getContextPath() + "/dashboard");
-        } else {
-            String selectedRole = normalizeRole(request.getParameter("role"));
-            boolean maintenanceMode = Boolean.TRUE.equals(getServletContext().getAttribute("maintenanceMode"));
-            request.setAttribute("selected_role", selectedRole);
-            request.setAttribute("maintenance_mode", maintenanceMode);
-
-            if (request.getParameter("registered") != null) {
-                request.setAttribute("success", "Akaun berjaya didaftarkan. Sila log masuk.");
-            } else if (request.getParameter("verify_pending") != null) {
-                request.setAttribute("success", "Akaun berjaya didaftarkan. Sila semak e-mel anda untuk mengaktifkan akaun.");
-            } else if (request.getParameter("verified") != null) {
-                request.setAttribute("success", "E-mel berjaya disahkan! Sila log masuk.");
-            } else if (request.getParameter("reset") != null) {
-                request.setAttribute("success", "Kata laluan berjaya diset semula. Sila log masuk.");
-            }
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
+        HttpSession session = request.getSession(false);
+        String selectedRole = normalizeRole(request.getParameter("role"));
+        if (selectedRole == null) {
+            selectedRole = normalizeRole(request.getParameter("portal_role"));
         }
+
+        if (session != null && session.getAttribute("user_id") != null) {
+            if (selectedRole == null) {
+                selectedRole = "";
+            }
+
+            String currentRole = trim((String) session.getAttribute("role")).toUpperCase(java.util.Locale.ROOT);
+            String currentEmail = trim((String) session.getAttribute("email"));
+
+            boolean canReuseCurrentSession = selectedRole.equals(currentRole)
+                    || ("USER".equals(selectedRole) && "ADMIN".equals(currentRole))
+                    || ("STAFF".equals(selectedRole)
+                        && ("ADMIN".equals(currentRole) || "STAFF".equals(currentRole))
+                        && isGovernmentEmail(currentEmail));
+
+            if (canReuseCurrentSession) {
+                session.setAttribute("portal_role", selectedRole);
+                response.sendRedirect(request.getContextPath() + "/dashboard");
+                return;
+            }
+        }
+
+        boolean maintenanceMode = Boolean.TRUE.equals(getServletContext().getAttribute("maintenanceMode"));
+        request.setAttribute("selected_role", selectedRole);
+        request.setAttribute("maintenance_mode", maintenanceMode);
+
+        if (request.getParameter("portal_mismatch") != null) {
+            request.setAttribute("error", "Sila log masuk semula melalui portal peranan yang betul.");
+        }
+
+        if (request.getParameter("registered") != null) {
+            request.setAttribute("success", "Akaun berjaya didaftarkan. Sila log masuk.");
+        } else if (request.getParameter("verify_pending") != null) {
+            request.setAttribute("success", "Akaun berjaya didaftarkan. Sila semak e-mel anda untuk mengaktifkan akaun.");
+        } else if (request.getParameter("verified") != null) {
+            request.setAttribute("success", "E-mel berjaya disahkan! Sila log masuk.");
+        } else if (request.getParameter("reset") != null) {
+            request.setAttribute("success", "Kata laluan berjaya diset semula. Sila log masuk.");
+        }
+        request.getRequestDispatcher("/login.jsp").forward(request, response);
     }
 
     @Override
@@ -206,7 +237,7 @@ public class LoginServlet extends HttpServlet {
         }
         // BCrypt hash (starts with $2a$, $2b$, or $2y$)
         if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$")) {
-            // jBCrypt 0.4 only supports $2a$ prefix — normalize $2b$ and $2y$ before checking
+            // jBCrypt 0.4 only supports $2a$ prefix â€” normalize $2b$ and $2y$ before checking
             String normalizedHash = storedPassword.replaceFirst("^\\$2[by]\\$", "\\$2a\\$");
             try {
                 return BCrypt.checkpw(inputPassword, normalizedHash);
@@ -249,3 +280,4 @@ public class LoginServlet extends HttpServlet {
         }
     }
 }
+

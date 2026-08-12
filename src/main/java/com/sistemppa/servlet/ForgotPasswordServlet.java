@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas ForgotPasswordServlet.
+ * Dipanggil melalui URL:  /forgot-password (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.config.DatabaseConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -105,3 +111,4 @@ public class ForgotPasswordServlet extends HttpServlet {
         return value == null ? "" : value.trim();
     }
 }
+

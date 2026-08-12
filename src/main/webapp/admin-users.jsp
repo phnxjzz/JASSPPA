@@ -1,3 +1,4 @@
+﻿<%-- NOTA ALIRAN KOD: Fail admin-users.jsp. Halaman ini biasa dipanggil terus melalui UI atau navigation ke /admin-users.jsp. Tujuan nota ni supaya orang seterusnya terus nampak konteks fail ni. --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
@@ -16,7 +17,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
-    <title>Senarai Pengguna &ndash; SPPPA Admin</title>
+    <title>Senarai Pengguna &ndash; SPPPBA Admin</title>
     <style>
 :root {
             --brand-blue: #2A9D8F;
@@ -40,9 +41,9 @@
         .navbar a { color: white; text-decoration: none; margin-left: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border-radius: 8px; transition: background 0.18s ease; }
         .navbar a:hover { background: rgba(255,255,255,0.14); }
         .icon-inline { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
-        .icon-link { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.38); transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; }
-        .icon-link img { width: 20px; height: 20px; object-fit: contain; }
-        .icon-link:hover { transform: translateY(-1px) scale(1.03); background: rgba(255,255,255,0.26); }
+        .icon-link { width: 54px; height: 54px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: #0f4f8f; border: 2px solid #0b3f72; transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22); }
+        .icon-link .icon-glyph { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", sans-serif; font-size: 30px; font-weight: 700; line-height: 1; color: #ffffff; text-shadow: none; }
+        .icon-link:hover { transform: translateY(-1px) scale(1.03); background: #1263b5; }
         .container { max-width: 1200px; margin: 28px auto; padding: 0 20px 40px; }
         .page-header { margin-bottom: 20px; }
         .page-header h2 { margin: 0 0 4px; font-size: 26px; color: var(--brand-navy); }
@@ -68,7 +69,11 @@
         .search-form-icon {
             width: 20px;
             height: 20px;
-            object-fit: contain;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            line-height: 1;
             opacity: 0.9;
             margin-left: 4px;
         }
@@ -219,7 +224,7 @@
             box-shadow: none;
         }
         .action-trigger:hover { background: #e1edf6; }
-        .action-trigger::after { content: "▾"; font-size: 12px; opacity: 0.85; }
+        .action-trigger::after { content: "â–¾"; font-size: 12px; opacity: 0.85; }
         .action-dropdown {
             display: none;
             position: absolute;
@@ -267,7 +272,7 @@
         .audit-meta { margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; color: #708798; font-size: 11px; }
         .audit-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
         .audit-toggle-btn { width: 34px; height: 34px; border: 1px solid #c9dcea; border-radius: 8px; background: #f7fbff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
-        .audit-toggle-btn img { width: 18px; height: 18px; object-fit: contain; }
+        .audit-toggle-btn .icon-inline { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; }
         .audit-content.is-hidden { display: none; }
         .kpp-panel { margin-top: 18px; }
         .kpp-form { display: grid; grid-template-columns: 1.1fr 1fr 1fr auto; gap: 10px; margin-bottom: 12px; align-items: end; }
@@ -295,17 +300,17 @@
     </div>
     <div>
         <span>Selamat datang, <%= session.getAttribute("username") %></span>
-        <a class="icon-link" href="${pageContext.request.contextPath}/dashboard" title="Dashboard" aria-label="Dashboard"><img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard"></a>
-        <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
-        <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
+        <a class="icon-link" href="${pageContext.request.contextPath}/dashboard" title="Dashboard" aria-label="Dashboard"><span class="icon-glyph" aria-hidden="true">&#9638;</span></a>
+        <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><svg class="icon-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10.5L12 3l9 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V21h13V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><svg class="icon-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 5H5v14h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 12h8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
 </div>
 
 <div class="container">
 
     <div class="page-header">
-        <h2><img src="${pageContext.request.contextPath}/assets/images/User.png" style="width:28px;height:28px;object-fit:contain;vertical-align:middle;margin-right:8px;"> Senarai Pengguna</h2>
-        <p>Urus akaun pengguna yang berdaftar dalam sistem SPPPA.</p>
+        <h2><span class="search-form-icon" aria-hidden="true" style="margin-right:8px;">&#128100;</span> Senarai Pengguna</h2>
+        <p>Urus akaun pengguna yang berdaftar dalam sistem SPPPBA.</p>
     </div>
 
     <%
@@ -315,11 +320,8 @@
         String roleUpdated = request.getParameter("role_updated");
         String phoneUpdated = request.getParameter("phone_updated");
         String emailUpdated = request.getParameter("email_updated");
-<<<<<<< HEAD
         String kppAdded = request.getParameter("kpp_added");
         String kppDeleted = request.getParameter("kpp_deleted");
-=======
->>>>>>> origin/SPPPA
         String tempPw  = request.getParameter("tempPw");
         String error   = request.getParameter("error");
     %>
@@ -368,7 +370,6 @@
                 <button type="button" class="success-ok" data-close-success-popup>OK</button>
             </div>
         </div>
-<<<<<<< HEAD
     <% } else if ("1".equals(kppAdded)) { %>
         <div id="successPopup" class="success-popup show" role="dialog" aria-live="polite" aria-label="Notifikasi berjaya">
             <img class="success-gif" src="${pageContext.request.contextPath}/assets/images/success.png" alt="Berjaya">
@@ -387,8 +388,6 @@
                 <button type="button" class="success-ok" data-close-success-popup>OK</button>
             </div>
         </div>
-=======
->>>>>>> origin/SPPPA
     <% } else if ("cannot_delete_self".equals(error)) { %>
         <div class="alert alert-error">&#10007; Anda tidak boleh memadam akaun anda sendiri.</div>
     <% } else if ("cannot_suspend_self".equals(error)) { %>
@@ -409,7 +408,6 @@
         <div class="alert alert-error">&#10007; Format e-mel tidak sah.</div>
     <% } else if ("email_exists".equals(error)) { %>
         <div class="alert alert-error">&#10007; E-mel sudah digunakan oleh pengguna lain.</div>
-<<<<<<< HEAD
     <% } else if ("kpp_invalid".equals(error)) { %>
         <div class="alert alert-error">&#10007; Maklumat KPP tidak lengkap atau tidak sah.</div>
     <% } else if ("kpp_invalid_email".equals(error)) { %>
@@ -418,8 +416,6 @@
         <div class="alert alert-error">&#10007; E-mel KPP sudah wujud dalam senarai.</div>
     <% } else if ("kpp_not_found".equals(error)) { %>
         <div class="alert alert-error">&#10007; Rekod KPP tidak ditemui.</div>
-=======
->>>>>>> origin/SPPPA
     <% } else if ("db_error".equals(error)) { %>
         <div class="alert alert-error">&#10007; Ralat semasa memproses permintaan. Sila cuba lagi.</div>
     <% } %>
@@ -449,7 +445,7 @@
         %>
         <div class="users-toolbar">
             <form class="search-form" method="get" action="${pageContext.request.contextPath}/admin/users">
-                <img class="search-form-icon" src="${pageContext.request.contextPath}/icon/search.png" alt="Cari pengguna">
+                <span class="search-form-icon" aria-hidden="true">&#128269;</span>
                 <input type="text" name="search" value="<%= esc(searchQuery) %>" placeholder="Cari nama, username atau e-mel">
                 <button type="submit" class="btn btn-secondary">Cari</button>
                 <% if (searchQuery != null && !searchQuery.isBlank()) { %>
@@ -477,11 +473,7 @@
             </thead>
             <tbody>
             <% if (users == null || users.isEmpty()) { %>
-<<<<<<< HEAD
                 <tr><td colspan="10" class="empty">Tiada pengguna dijumpai.</td></tr>
-=======
-                <tr><td colspan="9" class="empty">Tiada pengguna dijumpai.</td></tr>
->>>>>>> origin/SPPPA
             <% } else {
                 int idx = 1;
                 for (Map<String, Object> u : users) {
@@ -534,7 +526,6 @@
                                 </button>
                                 <form method="post" action="${pageContext.request.contextPath}/admin/users" style="margin:0;">
                                     <input type="hidden" name="_csrf" value="${csrf_token}">
-<<<<<<< HEAD
                                     <input type="hidden" name="action" value="set_status">
                                     <input type="hidden" name="status" value="ACTIVE">
                                     <input type="hidden" name="userId" value="<%= userId %>">
@@ -546,11 +537,6 @@
                                     <input type="hidden" name="status" value="SUSPENDED">
                                     <input type="hidden" name="userId" value="<%= userId %>">
                                     <button type="submit" class="action-item" <%= !isActive ? "disabled" : "" %>>Nyahaktifkan</button>
-=======
-                                    <input type="hidden" name="action" value="toggle_status">
-                                    <input type="hidden" name="userId" value="<%= userId %>">
-                                    <button type="submit" class="action-item"><%= toggleLabel %></button>
->>>>>>> origin/SPPPA
                                 </form>
                                 <button type="button" class="action-item action-item-danger"
                                         onclick="confirmDelete('<%= userId %>', '<%= username %>')">
@@ -636,7 +622,7 @@
         <div class="audit-panel-header">
             <h3 style="margin:0;color:#0f6bae;">Notes: Rekod Tindakan Admin</h3>
             <button type="button" class="audit-toggle-btn" id="toggleAuditBtnUsers" aria-expanded="true" aria-controls="adminAuditContentUsers" title="Sembunyi rekod tindakan admin">
-                <img id="toggleAuditIconUsers" src="${pageContext.request.contextPath}/icon/hide.png" alt="Sembunyikan rekod tindakan admin">
+                <span id="toggleAuditIconUsers" class="icon-inline" aria-hidden="true">&#8722;</span>
             </button>
         </div>
         <div id="adminAuditContentUsers" class="audit-content">
@@ -653,7 +639,7 @@
                     Timestamp actionAt = (Timestamp) auditRow.get("created_at");
             %>
             <li class="audit-item">
-                <strong><%= esc(actorName) %> (<%= esc(actorDisplayId) %>) · <%= esc(actionDisplay) %></strong>
+                <strong><%= esc(actorName) %> (<%= esc(actorDisplayId) %>) Â· <%= esc(actionDisplay) %></strong>
                 <p><%= esc(details) %></p>
                 <div class="audit-meta">
                     <span><%= actionAt != null ? sdf.format(actionAt) : "Masa tidak direkod" %></span>
@@ -718,10 +704,8 @@
                 <label for="roleSelect" style="display:block;font-weight:700;margin-bottom:8px;color:#334155;">Peranan</label>
                 <select id="roleSelect" name="role" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;">
                     <option value="USER">USER (Pengguna)</option>
-<<<<<<< HEAD
                     <option value="STAFF">STAFF (Staf Dalaman)</option>
-=======
->>>>>>> origin/SPPPA
+                        <option value="DIRECTOR">DIRECTOR (Pengarah)</option>
                     <option value="ADMIN">ADMIN (Pentadbir)</option>
                 </select>
             </div>
@@ -812,12 +796,8 @@
         document.getElementById('roleUserId').value = userId;
         document.getElementById('roleModalMsg').textContent =
             'Pilih peranan baharu untuk pengguna "' + username + '".';
-<<<<<<< HEAD
         document.getElementById('roleSelect').value =
             currentRole === 'ADMIN' ? 'ADMIN' : (currentRole === 'STAFF' ? 'STAFF' : 'USER');
-=======
-        document.getElementById('roleSelect').value = currentRole === 'ADMIN' ? 'ADMIN' : 'USER';
->>>>>>> origin/SPPPA
         document.getElementById('roleModal').classList.add('active');
     }
     function confirmPhone(userId, username, currentPhone) {
@@ -877,8 +857,7 @@
         content.classList.toggle('is-hidden', hidden);
         button.setAttribute('aria-expanded', hidden ? 'false' : 'true');
         button.setAttribute('title', hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyi rekod tindakan admin');
-        icon.src = hidden ? '${pageContext.request.contextPath}/icon/unhide.png' : '${pageContext.request.contextPath}/icon/hide.png';
-        icon.alt = hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyikan rekod tindakan admin';
+        icon.textContent = hidden ? '+' : '\u2212';
     }
 
     button.addEventListener('click', function() {
@@ -891,4 +870,5 @@
 
 </body>
 </html>
+
 

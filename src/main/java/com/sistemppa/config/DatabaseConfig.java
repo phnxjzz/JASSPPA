@@ -1,5 +1,11 @@
 package com.sistemppa.config;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas DatabaseConfig.
+ * Dipanggil semasa aplikasi start-up untuk konfigurasi sistem.
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
@@ -22,7 +28,7 @@ public class DatabaseConfig {
         String dbPass = System.getenv("DATABASE_PASSWORD");
 
         if (dbUrl == null || dbUrl.isEmpty()) {
-            LOGGER.warning("DATABASE_URL env var not set – falling back to localhost dev defaults. "
+            LOGGER.warning("DATABASE_URL env var not set â€“ falling back to localhost dev defaults. "
                     + "Set DATABASE_URL / DATABASE_USER / DATABASE_PASSWORD for production.");
             dbUrl  = "jdbc:mysql://localhost:3306/sistemppa";
         }
@@ -56,3 +62,4 @@ public class DatabaseConfig {
         }
     }
 }
+
