@@ -1,3 +1,4 @@
+﻿<%-- NOTA ALIRAN KOD: Fail kpp-guest-verify.jsp. Halaman ini biasa dipanggil terus melalui UI atau navigation ke /kpp-guest-verify.jsp. Tujuan nota ni supaya orang seterusnya terus nampak konteks fail ni. --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.lang.String" %>
 <!DOCTYPE html>
@@ -107,3 +108,4 @@
 </div>
 </body>
 </html>
+

@@ -1,3 +1,4 @@
+﻿<%-- NOTA ALIRAN KOD: Fail renewal-survey.jsp. Halaman ini biasa dipanggil terus melalui UI atau navigation ke /renewal-survey.jsp. Tujuan nota ni supaya orang seterusnya terus nampak konteks fail ni. --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.List" %>
@@ -6,16 +7,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Borang KSPP Pembaharuan</title>
     <style>
-* { box-sizing: border-box; }
-        body { margin: 0; font-family: inherit; background: #edf1f5; color: #111; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Poppins', sans-serif; background: #edf1f5; color: #111; }
         .screen-bar {
             background: #1b2a52; color: #fff; padding: 10px 22px;
             display: flex; justify-content: space-between; align-items: center; font-size: 14px;
         }
         .screen-bar a { color: #fff; text-decoration: none; margin-left: 14px; }
+        .icon-glyph {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            line-height: 1;
+        }
         .btn-row {
             display: flex; gap: 10px; justify-content: center; padding: 16px 18px 12px; flex-wrap: wrap;
         }
@@ -81,6 +88,7 @@
 <body>
 <%
     Map<String, Object> renewalApp = (Map<String, Object>) request.getAttribute("renewalApp");
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     List<String> questions = (List<String>) request.getAttribute("questions");
     int appId = ((Number) renewalApp.get("id")).intValue();
     String storageKey = "kspp-renewal-form-" + appId;
@@ -93,7 +101,7 @@
     <span style="font-weight:700;">&#128196; Borang KSPP Pembaharuan</span>
     <div>
         <a href="javascript:history.back()">&#8592; Kembali</a>
-        <a href="${pageContext.request.contextPath}/dashboard" title="Dashboard" aria-label="Dashboard"><img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"></a>
+        <a href="${pageContext.request.contextPath}/dashboard" title="Dashboard" aria-label="Dashboard"><span class="icon-glyph" aria-hidden="true">&#9638;</span></a>
     </div>
 </div>
 
@@ -244,3 +252,4 @@
 </script>
 </body>
 </html>
+

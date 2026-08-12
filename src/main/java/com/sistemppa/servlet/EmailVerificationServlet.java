@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas EmailVerificationServlet.
+ * Dipanggil melalui URL:  /verify-email (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.DashboardDataService;
 import jakarta.servlet.ServletException;
@@ -49,3 +55,4 @@ public class EmailVerificationServlet extends HttpServlet {
         }
     }
 }
+

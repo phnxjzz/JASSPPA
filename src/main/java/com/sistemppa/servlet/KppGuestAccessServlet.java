@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas KppGuestAccessServlet.
+ * Dipanggil melalui URL:  /kpp/generate-link, /kpp/guest-access, /kpp/delete-entry (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.KppReminderService;
 import jakarta.servlet.ServletException;
@@ -397,7 +403,7 @@ public class KppGuestAccessServlet extends HttpServlet {
             return null;
         }
         try {
-            return Integer.parseInt(value) + 1;
+            return Integer.parseInt(value);
         } catch (NumberFormatException ex) {
             return null;
         }
@@ -760,3 +766,4 @@ public class KppGuestAccessServlet extends HttpServlet {
             long expiresAt
     ) {}
 }
+

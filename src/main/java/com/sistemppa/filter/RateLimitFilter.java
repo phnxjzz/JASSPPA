@@ -1,5 +1,11 @@
 package com.sistemppa.filter;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas RateLimitFilter.
+ * Dipanggil automatik oleh container melalui filter-mapping dalam WEB-INF/web.xml.
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -146,3 +152,4 @@ public class RateLimitFilter implements Filter {
         RECORDS.clear();
     }
 }
+

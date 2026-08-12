@@ -1,13 +1,13 @@
+﻿<%-- NOTA ALIRAN KOD: Fail register.jsp. Halaman ini biasa dipanggil terus melalui UI atau navigation ke /register.jsp. Tujuan nota ni supaya orang seterusnya terus nampak konteks fail ni. --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
-    <title>Daftar Pemohon - SPPPA</title>
+    <title>Daftar Pemohon - SPPA</title>
     <style>
-:root {
+        :root {
             --brand-blue: #2A9D8F;
             --brand-navy: #0F6BAE;
             --brand-green: #6DBE45;
@@ -15,7 +15,7 @@
             --brand-yellow: #F2F72E;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: inherit; background: url('${pageContext.request.contextPath}/assets/images/login-register-bg.jpg') center/cover no-repeat fixed; min-height: 100vh; display: grid; place-items: center; padding: 24px; position: relative; }
+        body { font-family: 'Poppins', sans-serif; background: url('${pageContext.request.contextPath}/assets/images/login-register-bg.jpg') center/cover no-repeat fixed; min-height: 100vh; display: grid; place-items: center; padding: 24px; position: relative; }
         body::before { content: ''; position: fixed; inset: 0; background: rgba(255,255,255,0.45); z-index: 0; pointer-events: none; }
         .shell { position: relative; z-index: 1; }
         .shell { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 1040px; border-radius: 24px; overflow: hidden; box-shadow: 0 22px 58px rgba(6, 52, 79, 0.2); }
@@ -40,11 +40,9 @@
         .privacy-consent-box { margin: 14px 0 16px; padding: 12px 14px; background: #f5f8fb; border: 1px solid #d7e7ef; border-radius: 12px; }
         .privacy-consent-label { display: flex; align-items: flex-start; gap: 10px; margin: 0; font-weight: 600; color: #173040; line-height: 1.5; font-size: 14px; }
         .privacy-consent-label input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: 0 0 18px; }
-        .privacy-consent-label span { display: block; text-align: justify; text-justify: inter-word; line-height: 1.65; letter-spacing: 0.01em; }
         .footer { margin-top: 18px; text-align: center; color: #64748b; }
         .footer a { color: var(--brand-blue); text-decoration: none; font-weight: 700; }
         @media (max-width: 920px) { .shell { grid-template-columns: 1fr; } .info { display: none; } }
-        @media (max-width: 576px) { .privacy-consent-label { gap: 8px; font-size: 13px; } .privacy-consent-label span { text-align: left; line-height: 1.55; letter-spacing: 0; } }
                     
         button,
         input[type="submit"],
@@ -80,54 +78,46 @@
             border: 1px solid #fff !important;
             box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
         }
-        .top-home-btn {
-            position: fixed;
-            top: 18px;
-            right: 18px;
-            z-index: 20;
-            width: 42px;
-            height: 42px;
+        .floating-home-btn {
+            position: static;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            width: 54px;
+            height: 54px;
+            margin-left: 12px;
             border-radius: 999px;
-            border: 1px solid rgba(255,255,255,0.45);
-            background: rgba(15, 107, 174, 0.62);
-            box-shadow: 0 8px 20px rgba(15, 30, 44, 0.28);
+            border: 2px solid #0b3f72;
+            background: #0f4f8f;
             text-decoration: none;
-            transition: transform 0.16s ease, background 0.16s ease;
+            vertical-align: middle;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+            transition: background 0.18s ease;
         }
-        .top-home-btn img {
-            width: 20px;
-            height: 20px;
-            object-fit: contain;
+        .floating-home-btn:hover { background: #1263b5; }
+        .floating-home-btn .icon-glyph {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            line-height: 1;
+            color: #ffffff;
         }
-        .top-home-btn:hover {
-            transform: translateY(-1px) scale(1.03);
-            background: rgba(15, 107, 174, 0.8);
-        }
-        .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
-        .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; display: inline-flex; align-items: center; gap: 8px; }
-        .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; font-size: 13px; color: #4e6a7c; line-height: 1.45; }
-        .jans-contact-section .contact-icon { width: 13px; height: 13px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
-        .jans-contact-section .contact-line span { line-height: 1.45; }
-        .contact-line-hanging { margin-left: 21px; }
         </style>
 </head>
 <body>
-    <a class="top-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><img src="${pageContext.request.contextPath}/icon/home.png" alt="Laman utama"></a>
     <div class="shell">
         <div class="info">
-            <h1>Daftar Akaun Sistem Pendaftaran Pembekal dan Produk Air</h1>
-            <div class="container" style="padding-top:0;">
-                <div class="jans-contact-section">
-                    <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
-                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
-                <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
+            <h1>Daftar Akaun Sistem Pendaftaran Pembekal dan Produk Bekalan Air</h1>
+            <div class="contact" aria-label="Maklumat hubungan Jabatan Air Sabah">
+                <strong>Hubungi JANS</strong>
+                <p><strong>Alamat</strong><br>SABAH WATER DEPARTMENT / JABATAN AIR SABAH, Jalan Penampang, 88200 Kota Kinabalu, Sabah</p>
+                <p><strong>Telefon</strong><br>+60-88-232364 (HQ)</p>
+                <p><strong>Faks</strong><br>+60-88-232396</p>
+                <p><strong>E-mel</strong><br>jans.hq@sabah.gov.my</p>
             </div>
         </div>
         <div class="card">
@@ -168,7 +158,7 @@
             <div class="privacy-consent-box">
                 <label for="privacy_consent" class="privacy-consent-label">
                     <input id="privacy_consent" name="privacy_consent" type="checkbox" value="1" required>
-                    <span>Segala maklumat yang dikemukakan semasa pendaftaran akan digunakan hanya bagi tujuan pendaftaran akaun. Maklumat peribadi akan dirahsiakan dan tidak akan didedahkan atau dikongsi dengan mana-mana pihak ketiga.</span>
+                    <span>Dengan mendaftar anda bersetuju bahawa maklumat anda hanya akan digunakan untuk tujuan pendaftaran akaun sahaja. Kami menjamin maklumat peribadi anda tidak akan didedahkan atau dikongsi kepada mana-mana pihak ketiga.</span>
                 </label>
             </div>
             <button id="registerSubmitBtn" class="btn" type="submit" disabled>Daftar Akaun</button>
@@ -179,6 +169,7 @@
             </div>
         </div>
     </div>
+    <a class="floating-home-btn" href="${pageContext.request.contextPath}/" aria-label="Laman utama" title="Laman utama"><svg class="icon-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10.5L12 3l9 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V21h13V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
 <script>
 (function() {
     var form = document.querySelector('form[action$="/register"]');
@@ -226,6 +217,3 @@
 </script>
 </body>
 </html>
-
-
-

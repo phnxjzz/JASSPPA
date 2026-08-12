@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas KppReminderJobServlet.
+ * Dipanggil melalui URL:  /internal/kpp-reminder-run (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.google.gson.JsonObject;
 import com.sistemppa.config.DatabaseConfig;
 import com.sistemppa.service.KppReminderService;
@@ -209,3 +215,4 @@ public class KppReminderJobServlet extends HttpServlet {
         return json.toString();
     }
 }
+

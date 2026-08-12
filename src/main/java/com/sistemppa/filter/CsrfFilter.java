@@ -1,5 +1,11 @@
 package com.sistemppa.filter;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas CsrfFilter.
+ * Dipanggil automatik oleh container melalui filter-mapping dalam WEB-INF/web.xml.
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -62,9 +68,19 @@ public class CsrfFilter implements Filter {
         boolean isPost = "POST".equalsIgnoreCase(method);
 
         if (isPost && !isExcluded(request)) {
-            String supplied = request.getParameter(PARAM_NAME);
+            String supplied = null;
+            try {
+                supplied = request.getParameter(PARAM_NAME);
+            } catch (Exception ignored) {
+                // multipart parsing may throw (e.g. file size exceeded); fall through to header/part checks
+            }
             if (supplied == null || supplied.isBlank()) {
                 supplied = request.getHeader(HEADER_NAME);
+            }
+            // Fallback: read directly from multipart part in case getParameter() returned null
+            // (can happen if MultipartConfigElement was not yet available during parseParts()).
+            if (supplied == null || supplied.isBlank()) {
+                supplied = readCsrfFromPart(request);
             }
 
             if (supplied == null || !supplied.equals(token)) {
@@ -81,6 +97,30 @@ public class CsrfFilter implements Filter {
     }
 
     // -------------------------------------------------------------------------
+
+    /**
+     * Fallback: reads the CSRF token directly from the multipart part.
+     * Used when {@link HttpServletRequest#getParameter} returns null for
+     * multipart/form-data requests (e.g. MultipartConfigElement not yet
+     * initialised when parseParts() runs inside the filter).
+     */
+    private static String readCsrfFromPart(HttpServletRequest request) {
+        String ct = request.getContentType();
+        if (ct == null || !ct.toLowerCase(java.util.Locale.ROOT).startsWith("multipart/")) {
+            return null;
+        }
+        try {
+            jakarta.servlet.http.Part part = request.getPart(PARAM_NAME);
+            if (part == null) {
+                return null;
+            }
+            try (java.io.InputStream is = part.getInputStream()) {
+                return new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).trim();
+            }
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
 
     private String ensureToken(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -119,3 +159,4 @@ public class CsrfFilter implements Filter {
     @Override
     public void destroy() {}
 }
+

@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas StaffComplaintServlet.
+ * Dipanggil melalui URL:  /staff/complaints (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.config.DatabaseConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -163,3 +169,4 @@ public class StaffComplaintServlet extends HttpServlet {
         return value == null || value.isBlank() ? "-" : value;
     }
 }
+

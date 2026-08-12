@@ -1,5 +1,11 @@
 package com.sistemppa.util;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas UserDisplayIdUtil.
+ * Dipanggil sebagai util/helper oleh servlet atau service.
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import java.util.Locale;
 
 public final class UserDisplayIdUtil {

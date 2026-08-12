@@ -1,5 +1,11 @@
 package com.sistemppa.config;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas AppLifecycleListener.
+ * Dipanggil semasa aplikasi start-up untuk konfigurasi sistem.
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.mysql.cj.jdbc.AbandonedConnectionCleanupThread;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -40,3 +46,4 @@ public class AppLifecycleListener implements ServletContextListener {
     }
 }
             
+

@@ -1,3 +1,4 @@
+﻿<%-- NOTA ALIRAN KOD: Fail certificate.jsp. Halaman ini biasa dipanggil terus melalui UI atau navigation ke /certificate.jsp. Tujuan nota ni supaya orang seterusnya terus nampak konteks fail ni. --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.List" %>
@@ -33,28 +34,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
     <title>Perakuan Pendaftaran - JANS</title>
     <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: inherit; background: #e8e8e8; color: #111; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, Helvetica, sans-serif; background: #e8e8e8; color: #111; }
 
-        /* ── screen toolbar ── */
+        /* â”€â”€ screen toolbar â”€â”€ */
         .screen-bar {
             background: #1b2a52; color: white; padding: 10px 22px;
             display: flex; justify-content: space-between; align-items: center;
             font-size: 14px;
         }
         .screen-bar a { color: #fff; text-decoration: none; margin-left: 14px; }
+        .icon-glyph {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            line-height: 1;
+        }
 
-        /* ── button row ── */
+        /* â”€â”€ button row â”€â”€ */
         .btn-row {
             display: flex; gap: 10px; justify-content: center;
             padding: 16px 0 12px; flex-wrap: wrap;
         }
         .btn {
             border: none; border-radius: 6px; padding: 10px 24px;
-            font-size: 14px; cursor: pointer; font-family: inherit;
+            font-size: 14px; cursor: pointer; font-family: Arial, sans-serif;
             text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
         }
         .btn-print { background: #1b2a52; color: #fff; }
@@ -62,7 +69,7 @@
         .btn-print:hover { background: #2e4080; }
         .btn-pdf:hover   { background: #1b5e20; }
 
-        /* ── A4 page ── */
+        /* â”€â”€ A4 page â”€â”€ */
         .page-wrap { max-width: 794px; margin: 0 auto 40px; padding: 0 20px; }
 
         .cert-page {
@@ -86,13 +93,13 @@
             opacity: 0.09; pointer-events: none;
         }
 
-        /* ── header ── */
+        /* â”€â”€ header â”€â”€ */
         .cert-header { text-align: center; margin-bottom: 22px; }
         .cert-header img { width: 90px; height: 90px; object-fit: contain; display: block; margin: 0 auto 8px; }
         .cert-org   { font-size: 16px; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 3px; }
         .cert-sub   { font-size: 13px; font-weight: normal; }
 
-        /* ── fields ── */
+        /* â”€â”€ fields â”€â”€ */
         .field-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .field-table tr td { padding: 8px 0 2px; vertical-align: bottom; font-size: 11.5pt; }
         .field-table .lbl { width: 33%; font-weight: bold; padding-left: 2px; }
@@ -101,15 +108,8 @@
             border-bottom: 1px solid #111;
             padding-bottom: 3px;
         }
-        .field-table .val-multiline {
-            white-space: pre-line;
-            vertical-align: top;
-            line-height: 1.25;
-            padding-top: 4px;
-            padding-bottom: 6px;
-        }
 
-        /* ── product table ── */
+        /* â”€â”€ product table â”€â”€ */
         .prod-wrap { margin-top: 22px; }
         .prod-table { width: 100%; border-collapse: collapse; }
         .prod-table th, .prod-table td {
@@ -121,7 +121,7 @@
         .prod-table th { font-weight: bold; text-align: center; padding: 8px 4px; }
         .prod-table td { height: 50px; vertical-align: top; padding-top: 6px; }
 
-        /* ── print ── */
+        /* â”€â”€ print â”€â”€ */
         @media print {
             body { background: #fff; }
             .screen-bar, .btn-row { display: none !important; }
@@ -144,9 +144,7 @@
     String productName  = String.valueOf(certApp.get("product_name"));
     String productCat   = String.valueOf(certApp.get("product_category"));
     String stdName      = certApp.get("standard_name")       != null ? String.valueOf(certApp.get("standard_name"))       : "";
-    String classSizeModel = certApp.get("certificate_class_size_model") != null ? String.valueOf(certApp.get("certificate_class_size_model")) : "";
-    String brandName      = certApp.get("certificate_brand") != null ? String.valueOf(certApp.get("certificate_brand")) : "";
-    String productBrief   = certApp.get("certificate_product_brief") != null ? String.valueOf(certApp.get("certificate_product_brief")) : "";
+    String prodDesc     = certApp.get("product_description") != null ? String.valueOf(certApp.get("product_description")) : "";
 
     DateTimeFormatter fmtMs = DateTimeFormatter.ofPattern("dd MMMM yyyy", new java.util.Locale("ms", "MY"));
     java.sql.Date issuedAtSql   = (java.sql.Date) certApp.get("issued_at");
@@ -158,10 +156,10 @@
 %>
 
 <div class="screen-bar">
-    <span style="font-weight:bold;">Perakuan Pendaftaran Produk Air Jabatan Air Sabah</span>
+    <span style="font-weight:bold;">&#128196; Perakuan Pendaftaran JANS</span>
     <div>
-        <a href="#" onclick="goBackOrDashboard(event)">&#8592; Kembali</a>
-        <a href="${pageContext.request.contextPath}/dashboard" title="Dashboard" aria-label="Dashboard"><img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"></a>
+        <a href="javascript:history.back()">&#8592; Kembali</a>
+        <a href="${pageContext.request.contextPath}/dashboard" title="Dashboard" aria-label="Dashboard"><span class="icon-glyph" aria-hidden="true">&#9638;</span></a>
     </div>
 </div>
 
@@ -218,12 +216,12 @@
         <tr>
             <td class="lbl">Kelas/Saiz/Model</td>
             <td class="colon">:</td>
-            <td class="val"><%= classSizeModel %></td>
+            <td class="val">&nbsp;</td>
         </tr>
         <tr>
             <td class="lbl">Jenama</td>
             <td class="colon">:</td>
-            <td class="val"><%= brandName %></td>
+            <td class="val">&nbsp;</td>
         </tr>
         <tr>
             <td class="lbl">Piawaian</td>
@@ -242,8 +240,8 @@
         </tr>
         <tr>
             <td class="lbl">Perihal Produk</td>
-            <td class="colon">:</td>    
-            <td class="val val-multiline"><%= productBrief %></td>
+            <td class="colon">:</td>
+            <td class="val"><%= prodDesc %></td>
         </tr>
     </table>
 
@@ -274,16 +272,6 @@
 </div><!-- /cert-page -->
 </div><!-- /page-wrap -->
 
-<script>
-    function goBackOrDashboard(event) {
-        event.preventDefault();
-        if (window.history.length > 1) {
-            window.history.back();
-            return;
-        }
-        window.location.href = '<%= request.getContextPath() %>/dashboard';
-    }
-</script>
-
 </body>
 </html>
+

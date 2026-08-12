@@ -1,7 +1,9 @@
+﻿<%-- NOTA ALIRAN KOD: Fail admin-application.jsp. Halaman ini biasa dipanggil terus melalui UI atau navigation ke /admin-application.jsp. Tujuan nota ni supaya orang seterusnya terus nampak konteks fail ni. --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.sql.Timestamp" %>
+<%@ page import="com.sistemppa.service.StatusConfigService" %>
 <%!
     private String esc(String value) {
         if (value == null) return "";
@@ -11,6 +13,108 @@
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
     }
+
+    private String formatDateValue(Object value) {
+        java.time.LocalDate date = null;
+        if (value instanceof java.sql.Timestamp) {
+            date = ((java.sql.Timestamp) value).toLocalDateTime().toLocalDate();
+        } else if (value instanceof java.sql.Date) {
+            date = ((java.sql.Date) value).toLocalDate();
+        } else if (value != null) {
+            String raw = String.valueOf(value).trim();
+            if (!raw.isEmpty() && !"-".equals(raw)) {
+                String normalized = raw.replace('T', ' ');
+                try {
+                    if (normalized.length() >= 10) {
+                        date = java.time.LocalDate.parse(normalized.substring(0, 10));
+                    }
+                } catch (Exception ignored) {
+                    date = null;
+                }
+            }
+        }
+        if (date == null) {
+            return "-";
+        }
+        return date.format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+    }
+
+    private String formatDateTimeValue(Object value) {
+        java.time.LocalDateTime dateTime = null;
+        if (value instanceof java.sql.Timestamp) {
+            dateTime = ((java.sql.Timestamp) value).toLocalDateTime();
+        } else if (value instanceof java.sql.Date) {
+            dateTime = ((java.sql.Date) value).toLocalDate().atStartOfDay();
+        } else if (value != null) {
+            String raw = String.valueOf(value).trim();
+            if (!raw.isEmpty() && !"-".equals(raw)) {
+                String normalized = raw.replace('T', ' ');
+                try {
+                    if (normalized.length() >= 19) {
+                        dateTime = java.time.LocalDateTime.parse(
+                                normalized.substring(0, 19),
+                                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    } else if (normalized.length() >= 10) {
+                        dateTime = java.time.LocalDate.parse(normalized.substring(0, 10)).atStartOfDay();
+                    }
+                } catch (Exception ignored) {
+                    dateTime = null;
+                }
+            }
+        }
+        if (dateTime == null) {
+            return "-";
+        }
+        return dateTime.format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
+    }
+
+    private String displayStatusLabel(String status) {
+        return displayStatusLabel(status, null);
+    }
+
+    private String displayStatusLabel(String status, Map<String, String> labelMap) {
+        if (status == null) {
+            return "";
+        }
+        String normalized = status.trim().toUpperCase(java.util.Locale.ROOT);
+        if (labelMap != null) {
+            String fromDb = labelMap.get(normalized);
+            if (fromDb != null && !fromDb.isBlank()) {
+                return fromDb.replace('_', ' ').trim();
+            }
+        }
+        if ("APPROVED".equals(normalized) || "DILULUSKAN".equals(normalized)) {
+            return "DILULUSKAN";
+        }
+        if ("REJECTED".equals(normalized) || "DITOLAK".equals(normalized)) {
+            return "DITOLAK";
+        }
+        if ("KUERI".equals(normalized)) {
+            return "KUERI";
+        }
+        if ("SUSPENDED".equals(normalized) || "DIGANTUNG".equals(normalized)) {
+            return "DIGANTUNG";
+        }
+        if ("DRAFT".equals(normalized) || "DRAF".equals(normalized)) {
+            return "DRAF";
+        }
+        if ("ARCHIVED".equals(normalized) || "DIARKIB".equals(normalized)) {
+            return "DIARKIB";
+        }
+        if ("UNDER_REVIEW".equals(normalized) || "DALAM_SEMAKAN".equals(normalized) || "DALAM SEMAKAN".equals(normalized)) {
+            return "DALAM SEMAKAN";
+        }
+        if ("MENUNGGU_TINDAKAN_PENGARAH".equals(normalized)) {
+            return "MENUNGGU TINDAKAN PENGARAH";
+        }
+        if (normalized.startsWith("MENUNGGU_SETERUSNYA_")) {
+            return "MENUNGGU SETERUSNYA";
+        }
+        if ("IN_PROGRESS".equals(normalized) || "DALAM_PROSES".equals(normalized) || "DALAM PROSES".equals(normalized)) {
+            return "DALAM PROSES";
+        }
+        return normalized.replace('_', ' ');
+    }
 %>
 <!DOCTYPE html>
 <html lang="ms">
@@ -18,7 +122,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
-    <title>Semakan Permohonan - SPPPA</title>
+    <title>Semakan Permohonan - SPPPBA</title>
     <style>
 * { box-sizing: border-box; }
         body { font-family: inherit; background: linear-gradient(180deg, #eff8ff 0%, #f7fbfd 100%); margin: 0; color: #1e293b; }
@@ -42,6 +146,8 @@
         .approve { background: #15803d; }
         .reject { background: #b91c1c; }
         .suspend { background: #9a3412; }
+        .final-action { background: #d97706; }
+        .next-step { background: #ea580c; }
         .under-review { background: #0369a1; }
         .in-progress { background: #7c3aed; }
         .secondary { background: #475569; text-decoration: none; display: inline-block; }
@@ -53,7 +159,7 @@
         .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
         .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; }
         .jans-contact-section .contact-line { display: flex; align-items: flex-start; gap: 8px; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; min-width: 0; }
-        .jans-contact-section .contact-icon { display: inline-block; width: 10px; height: 10px; background: #0f6bae; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .jans-contact-section .contact-icon { width: 12px; height: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; color: #0f6bae; flex-shrink: 0; margin-top: 2px; }
         .jans-contact-section .contact-line span { line-height: 1.45; }
         .contact-line-hanging { margin-left: 21px; }
                     /* Enforce visible white border on all clickable buttons */
@@ -91,10 +197,10 @@
             border: 1px solid #fff !important;
             box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.18) !important;
         }
-        .icon-inline { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; }
-        .icon-link { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.38); transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; }
-        .icon-link img { width: 20px; height: 20px; object-fit: contain; }
-        .icon-link:hover { transform: translateY(-1px) scale(1.03); background: rgba(255,255,255,0.26); }
+        .icon-inline { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; vertical-align: middle; }
+        .icon-link { width: 54px; height: 54px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: #0f4f8f; border: 2px solid #0b3f72; transition: transform 0.18s ease, background 0.18s ease; text-decoration: none; margin-left: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22); }
+        .icon-link .icon-glyph { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", sans-serif; font-size: 30px; font-weight: 700; line-height: 1; color: #ffffff; text-shadow: none; }
+        .icon-link:hover { transform: translateY(-1px) scale(1.03); background: #1263b5; }
         .doc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
         .doc-actions .btn {
             padding: 8px 12px;
@@ -108,8 +214,8 @@
             justify-content: center;
             transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
         }
-        .doc-actions .btn img,
-        #documentDownloadBtn img {
+        .doc-actions .btn .icon-inline,
+        #documentDownloadBtn .icon-inline {
             width: 20px;
             height: 20px;
         }
@@ -245,7 +351,7 @@
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
-        .inprogress-field input,
+        .inprogress-field input:not([type="checkbox"]):not([type="radio"]),
         .inprogress-field textarea {
             width: 100%;
             border: 1px solid #cbd5e1;
@@ -315,11 +421,15 @@
         .decision-gif {
             width: 92px;
             height: 92px;
-            object-fit: contain;
-            margin: 8px auto 12px;
             display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+            line-height: 1;
+            color: #15803d;
+            margin: 8px auto 12px;
         }
-        .decision-gif.show { display: block; }
+        .decision-gif.show { display: inline-flex; }
         .decision-actions {
             margin-top: 14px;
             display: flex;
@@ -330,9 +440,13 @@
         .decision-confirm-gif {
             width: 92px;
             height: 92px;
-            object-fit: contain;
             margin: 6px auto 10px;
-            display: block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+            line-height: 1;
+            color: #0f6bae;
         }
         .action-toolbar-sticky {
             position: sticky;
@@ -357,15 +471,15 @@
         <div class="brand">
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
-                <strong>SPPPA - Semakan Permohonan</strong>
+                <strong>SPPPBA - Semakan Permohonan</strong>
                 <span>Jabatan Air Negeri Sabah</span>
             </div>
         </div>
         <div>
             <a class="icon-link" href="${pageContext.request.contextPath}/dashboard" title="
-             Dashboard" aria-label="Kembali ke Dashboard"><img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Dashboard"></a>
-            <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
-            <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
+             Dashboard" aria-label="Kembali ke Dashboard"><span class="icon-glyph" aria-hidden="true">&#9638;</span></a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><svg class="icon-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10.5L12 3l9 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V21h13V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><svg class="icon-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 5H5v14h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 12h8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
         </div>
     </div>
 
@@ -375,7 +489,20 @@
             Map<String, Object> detail = (Map<String, Object>) request.getAttribute("applicationDetail");
             List<Map<String, Object>> documents = (List<Map<String, Object>>) request.getAttribute("documents");
             List<Map<String, Object>> adminAuditLogs = (List<Map<String, Object>>) request.getAttribute("admin_audit_logs");
+            List<Map<String, Object>> kppUsers = (List<Map<String, Object>>) request.getAttribute("kpp_users");
+            Map<String, Object> latestPresentationInvite = (Map<String, Object>) request.getAttribute("latest_presentation_invite");
+            @SuppressWarnings("unchecked")
+            Map<String, String> statusLabelMap = (Map<String, String>) request.getAttribute("status_label_map");
             String adminError = request.getAttribute("error") == null ? null : String.valueOf(request.getAttribute("error"));
+            String currentStatusValue = applicationData.get("status") == null ? "" : String.valueOf(applicationData.get("status"));
+            String normalizedCurrentStatusValue = currentStatusValue.trim().toUpperCase(java.util.Locale.ROOT).replace(' ', '_').replace('-', '_');
+            boolean showNextStepButton = normalizedCurrentStatusValue.startsWith("MENUNGGU_SETERUSNYA_");
+            boolean isWaitingForDirector = "MENUNGGU_TINDAKAN_PENGARAH".equals(normalizedCurrentStatusValue);
+            boolean isDirectorApprovedStage = "DILULUSKAN_PENGARAH".equals(normalizedCurrentStatusValue);
+            boolean isInitialAdminReview = "NEW".equals(normalizedCurrentStatusValue);
+            boolean isUnderReviewStage = "UNDER_REVIEW".equals(normalizedCurrentStatusValue);
+            boolean isInProgressStage = "IN_PROGRESS".equals(normalizedCurrentStatusValue);
+            boolean canRejectAtCurrentStage = isInitialAdminReview || isUnderReviewStage || isInProgressStage;
         %>
 
         <div class="top-action-wrapper">
@@ -386,14 +513,31 @@
                 <input type="hidden" name="presentation_time" id="presentationTimeHidden">
                 <input type="hidden" name="presentation_venue" id="presentationVenueHidden">
                 <input type="hidden" name="presentation_message" id="presentationMessageHidden">
+                <input type="hidden" name="kpp_invite_emails" id="kppInviteEmailsHidden">
+                <input type="hidden" name="kpp_invite_memo" id="kppInviteMemoHidden">
+                <input type="hidden" name="invite_mode" id="inviteModeHidden" value="new">
+                <input type="hidden" name="replace_invite_id" id="replaceInviteIdHidden" value="">
                 <div class="action-toolbar-sticky">
                     <div class="actions">
-                        <button class="btn under-review" type="submit" name="action" value="dalam_semakan">Dalam Semakan</button>
-                        <button class="btn in-progress" type="button" id="openInProgressModal">Dalam Proses</button>
-                        <button class="btn suspend" type="submit" name="action" value="suspend_application">Gantung Permohonan</button>
-                        <button class="btn suspend" type="submit" name="action" value="suspend_user">Gantung Pengguna</button>
-                        <button class="btn approve" type="submit" name="action" value="approve">Luluskan</button>
-                        <button class="btn reject" type="submit" name="action" value="reject" onclick="return validateRejectReason();">Tolak</button>
+                        <% if (isWaitingForDirector) { %>
+                        <button class="btn final-action" type="button"
+                            onclick="if(confirm('Hantar semula email notifikasi kepada Pengarah?')){var a=document.createElement('input');a.type='hidden';a.name='action';a.value='resend_director';document.getElementById('adminActionForm').appendChild(a);document.getElementById('adminActionForm').submit();}">&#128231; Hantar Semula Email Pengarah</button>
+                        <% } else { %>
+                        <% if (isInitialAdminReview) { %>
+                        <button class="btn approve" type="button" id="acceptApplicationBtn">Terima</button>
+                        <% } %>
+                        <% if (canRejectAtCurrentStage) { %>
+                        <button class="btn reject" type="button" id="rejectApplicationBtn">Tolak</button>
+                        <% } %>
+                        <% if (isDirectorApprovedStage || isUnderReviewStage || isInProgressStage) { %>
+                        <button class="btn in-progress" type="button" id="openInProgressModal"><%= isInProgressStage ? "Urus Jemputan Pembentangan" : "Panggil Pemohon dan KPP ke Pembentangan" %></button>
+                        <% } %>
+                        <% if (showNextStepButton) { %>
+                        <button class="btn next-step" type="button" id="nextStepBtn">Seterusnya</button>
+                        <% } else if (isInProgressStage) { %>
+                        <button class="btn final-action" type="button" id="finalActionBtn">Tindakan Akhir</button>
+                        <% } %>
+                        <% } %>
                         <a class="btn secondary" href="${pageContext.request.contextPath}/dashboard">Kembali</a>
                     </div>
                 </div>
@@ -402,7 +546,7 @@
 
         <div class="panel">
             <h2>Permohonan <%= String.format("PPP%03d", ((Number)applicationData.get("id")).intValue()) %></h2>
-            <p>Status semasa: <span class="status"><%= applicationData.get("status") %></span></p>
+            <p>Status semasa: <span class="status"><%= displayStatusLabel(String.valueOf(applicationData.get("status")), statusLabelMap) %></span></p>
             <div class="grid">
                 <div>
                     <div class="label">Pemohon</div>
@@ -426,7 +570,7 @@
                 </div>
                 <div>
                     <div class="label">Dihantar Pada</div>
-                    <div class="value"><%= applicationData.get("submitted_at") %></div>
+                    <div class="value"><%= formatDateTimeValue(applicationData.get("submitted_at")) %></div>
                 </div>
                 <div class="full">
                     <div class="label">Ringkasan Permohonan</div>
@@ -449,7 +593,7 @@
                 <div class="full"><div class="label">Alamat Prinsipal</div><div class="value"><%= detail.get("principal_address") %></div></div>
                 <div><div class="label">Standard</div><div class="value"><%= detail.get("standard_name") %></div></div>
                 <div><div class="label">No. Lesen Persijilan</div><div class="value"><%= detail.get("certification_license") %></div></div>
-                <div><div class="label">Sah Sehingga</div><div class="value"><%= detail.get("certification_valid_until") %></div></div>
+                <div><div class="label">Sah Sehingga</div><div class="value"><%= formatDateValue(detail.get("certification_valid_until")) %></div></div>
                 <div><div class="label">No. Laporan Ujian</div><div class="value"><%= detail.get("test_report_reference") %></div></div>
                 <div><div class="label">Tarikh Laporan Ujian</div><div class="value"><%= detail.get("test_report_date") %></div></div>
                 <div><div class="label">Jaminan Produk</div><div class="value"><%= detail.get("warranty_years") %></div></div>
@@ -489,7 +633,7 @@
                                     Lihat
                                 </button>
                                 <a class="btn btn-download" href="${pageContext.request.contextPath}/documents/download?id=<%= doc.get("id") %>" title="Muat Turun" aria-label="Muat Turun">
-                                    <img class="icon-inline" src="${pageContext.request.contextPath}/icon/download.png" alt="Muat Turun">
+                                    <span class="icon-inline" aria-hidden="true">&#8681;</span>
                                 </a>
                             </div>
                         </td>
@@ -504,7 +648,7 @@
             <% if (adminError != null && !adminError.isBlank()) { %>
             <div class="alert-error"><%= adminError %></div>
             <% } %>
-            <div class="label">Sebab Penolakan / Nota Pentadbir (wajib jika Tolak)</div>
+            <div class="label">Nota Pentadbir</div>
             <textarea form="adminActionForm" name="admin_notes" id="adminNotes"><%= applicationData.get("admin_notes") != null ? applicationData.get("admin_notes") : "" %></textarea>
         </div>
 
@@ -512,7 +656,7 @@
             <div class="audit-panel-header">
                 <h3 style="margin:0;">Tindakan Admin (Permohonan Ini)</h3>
                 <button type="button" class="audit-toggle-btn" id="toggleAuditBtnApplication" aria-expanded="true" aria-controls="adminAuditContentApplication" title="Sembunyi rekod tindakan admin">
-                    <img id="toggleAuditIconApplication" src="${pageContext.request.contextPath}/icon/hide.png" alt="Sembunyikan rekod tindakan admin">
+                    <span id="toggleAuditIconApplication" class="icon-inline" aria-hidden="true">&#8722;</span>
                 </button>
             </div>
             <div id="adminAuditContentApplication" class="audit-content">
@@ -529,10 +673,10 @@
                         Timestamp actionAt = (Timestamp) auditRow.get("created_at");
                 %>
                 <li class="audit-item">
-                    <strong><%= esc(actorName) %> (<%= esc(actorDisplayId) %>) · <%= esc(actionDisplay) %></strong>
+                    <strong><%= esc(actorName) %> (<%= esc(actorDisplayId) %>) Â· <%= esc(actionDisplay) %></strong>
                     <p><%= esc(details) %></p>
                     <div class="audit-meta">
-                        <span><%= actionAt == null ? "Masa tidak direkod" : esc(actionAt.toString()) %></span>
+                        <span><%= actionAt == null ? "Masa tidak direkod" : esc(formatDateTimeValue(actionAt)) %></span>
                     </div>
                 </li>
                 <%      }
@@ -547,45 +691,92 @@
         </div>
 
         <div id="inProgressModal" class="inprogress-modal-overlay" aria-hidden="true">
-            <div class="inprogress-modal-card" role="dialog" aria-modal="true" aria-label="Makluman pembentangan produk air">
+            <div class="inprogress-modal-card" role="dialog" aria-modal="true" aria-label="Urus jemputan pembentangan produk air">
                 <div class="inprogress-modal-head">
-                    <h4>Tindakan Dalam Proses: Makluman Pembentangan</h4>
+                    <h4>Urus Jemputan Pembentangan</h4>
                     <button type="button" class="btn secondary" id="closeInProgressModal">Tutup</button>
                 </div>
+                <div class="panel" style="margin-bottom:10px;padding:12px;border-radius:10px;background:#f8fbff;border:1px solid #dce8f3;">
+                    <h4 style="margin:0 0 8px;color:#0f6bae;font-size:15px;">1. Jemputan Pembentangan - Pemohon</h4>
                 <div class="inprogress-grid">
                     <div class="inprogress-field">
-                        <label for="presentationDate">Tarikh Pembentangan</label>
+                        <label for="presentationDate">Tarikh</label>
                         <input type="date" id="presentationDate">
                     </div>
                     <div class="inprogress-field">
-                        <label for="presentationTime">Masa Pembentangan</label>
+                        <label for="presentationTime">Masa</label>
                         <input type="time" id="presentationTime">
                     </div>
                     <div class="inprogress-field">
-                        <label for="presentationVenue">Tempat Pembentangan</label>
+                        <label for="presentationVenue">Tempat</label>
                         <input type="text" id="presentationVenue" placeholder="Contoh: Bilik Mesyuarat JANS, Tingkat 6">
                     </div>
                 </div>
                 <div class="inprogress-field">
-                    <label for="presentationMessage">Teks Makluman Kepada Pemohon (Boleh Edit)</label>
+                        <label for="presentationMessage">Memo kepada pemohon (boleh edit)</label>
                     <textarea id="presentationMessage"></textarea>
                 </div>
+                    <div class="inprogress-field" style="margin-top:10px;">
+                        <label>Maklum balas pemohon terkini</label>
+                        <% if (latestPresentationInvite == null) { %>
+                        <div class="value">Belum ada rekod jemputan pembentangan untuk permohonan ini.</div>
+                        <% } else { %>
+                        <div class="value" style="line-height:1.6;">
+                            <strong>Status:</strong> <%= latestPresentationInvite.get("invite_status") == null ? "MENUNGGU MAKLUM BALAS" : displayStatusLabel(String.valueOf(latestPresentationInvite.get("invite_status")), statusLabelMap) %><br>
+                            <strong>Wakil Hadir:</strong> <%= latestPresentationInvite.get("applicant_rep_name") == null ? "-" : latestPresentationInvite.get("applicant_rep_name") %><br>
+                            <strong>Bilangan Peserta:</strong> <%= latestPresentationInvite.get("applicant_attendee_count") == null ? "-" : latestPresentationInvite.get("applicant_attendee_count") %><br>
+                            <strong>Sebab Tidak Hadir:</strong> <%= latestPresentationInvite.get("applicant_absence_reason") == null ? "-" : latestPresentationInvite.get("applicant_absence_reason") %>
+                        </div>
+                        <% } %>
+                    </div>
+                    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+                        <input type="checkbox" id="rescheduleMode">
+                        Penjadualan semula (gunakan apabila pemohon tidak hadir)
+                    </label>
+                </div>
+
+                <div class="panel" style="margin-bottom:10px;padding:12px;border-radius:10px;background:#f8fbff;border:1px solid #dce8f3;">
+                    <h4 style="margin:0 0 8px;color:#0f6bae;font-size:15px;">2. Jemputan Pembentangan - Ketua Penolong Pengarah (KPP)</h4>
+                    <div class="inprogress-field">
+                        <label for="kppRecipientChecklist">Pilih KPP berkaitan (checklist)</label>
+                        <div id="kppRecipientChecklist" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;padding:6px;border:1px solid #d3e2ee;border-radius:8px;background:#f8fafb;">
+                            <% if (kppUsers == null || kppUsers.isEmpty()) { %>
+                            <div style="color:#64748b;font-size:12px;padding:8px;text-align:center;background:#fff;border-radius:4px;">Tiada rekod KPP dijumpai dalam fail Senarai KPP.csv.</div>
+                            <% } else {
+                                for (Map<String, Object> kppUser : kppUsers) { %>
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;border-radius:4px;background:#fff;border:1px solid #e2e8f0;cursor:pointer;transition:all 0.2s;">
+                                <input type="checkbox" class="kpp-recipient-check" data-email="<%= esc(String.valueOf(kppUser.get("email") == null ? "" : kppUser.get("email"))) %>" style="cursor:pointer;flex-shrink:0;margin:0;">
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-weight:500;color:#1f3347;font-size:12px;margin:0;line-height:1.3;"><%= esc(String.valueOf(kppUser.get("full_name") == null ? "-" : kppUser.get("full_name"))) %></div>
+                                    <div style="font-size:10px;color:#64748b;margin:1px 0 0 0;line-height:1.2;"><%= esc(String.valueOf(kppUser.get("role") == null ? "-" : kppUser.get("role"))) %> Â· <%= esc(String.valueOf(kppUser.get("email") == null ? "-" : kppUser.get("email"))) %></div>
+                                </div>
+                            </label>
+                            <%  }
+                               } %>
+                        </div>
+                    </div>
+                    <div class="inprogress-field" style="margin-top:10px;">
+                        <label for="kppInviteMemo">Memo jemputan KPP (boleh edit)</label>
+                        <textarea id="kppInviteMemo" placeholder="Memo ini akan digunakan untuk sistem/e-mel KPP"></textarea>
+                    </div>
+                </div>
+
                 <div class="inprogress-actions">
                     <button type="button" class="btn secondary" id="cancelInProgressSubmit">Batal</button>
-                    <button type="button" class="btn in-progress" id="confirmInProgressSubmit">Simpan & Tukar Ke Dalam Proses</button>
+                    <button type="button" class="btn in-progress" id="confirmInProgressSubmit">Simpan & Hantar Jemputan</button>
                 </div>
             </div>
         </div>
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
-                <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <h3>Hubungi Jabatan Air Sabah</h3>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#128205;</span><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
                 <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
                 <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#9742;</span><span>Tel: +60-88-232364 (HQ)</span></p>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#128224;</span><span>Faks: +60-88-232396</span></p>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#9993;</span><span>Emel: produk.air@sabah.gov.my</span></p></div>
         </div>
     </div>
 
@@ -602,7 +793,7 @@
             </div>
             <div class="doc-modal-footer">
                 <a id="documentDownloadBtn" class="btn btn-download" href="#" title="Muat Turun Dokumen" aria-label="Muat Turun Dokumen">
-                    <img class="icon-inline" src="${pageContext.request.contextPath}/icon/download.png" alt="Muat Turun Dokumen">
+                    <span class="icon-inline" aria-hidden="true">&#8681;</span>
                 </a>
             </div>
         </div>
@@ -610,19 +801,19 @@
 
     <div id="approveConfirmModal" class="decision-modal-overlay" aria-hidden="true">
         <div class="decision-modal-card" role="dialog" aria-modal="true" aria-label="Pengesahan tindakan permohonan">
-            <img class="decision-confirm-gif" src="${pageContext.request.contextPath}/icon/quiz.gif" alt="Pengesahan tindakan">
+            <span class="decision-confirm-gif" aria-hidden="true">&#10067;</span>
             <h4 id="actionConfirmTitle">Pengesahan Tindakan</h4>
             <p id="actionConfirmMessage">Adakah anda ingin teruskan tindakan ini?</p>
             <div class="decision-actions">
-                <button type="button" class="btn approve" id="approveConfirmYes">Ya, teruskan</button>
-                <button type="button" class="btn secondary" id="approveConfirmBack">Kembali</button>
+                <button type="button" class="btn approve" id="approveConfirmYes">Ya</button>
+                <button type="button" class="btn secondary" id="approveConfirmBack">Tidak, Kembali</button>
             </div>
         </div>
     </div>
 
     <div id="decisionResultModal" class="decision-modal-overlay" aria-hidden="true">
         <div class="decision-modal-card" role="dialog" aria-modal="true" aria-label="Notifikasi tindakan permohonan">
-            <img id="decisionResultGif" class="decision-gif" src="${pageContext.request.contextPath}/icon/stamp.gif" alt="Cop kelulusan">
+            <span id="decisionResultGif" class="decision-gif" aria-hidden="true">&#9989;</span>
             <h4 id="decisionResultTitle">Permohonan Diluluskan!</h4>
             <div class="decision-actions">
                 <button type="button" class="btn secondary" id="decisionResultClose">Tutup</button>
@@ -647,6 +838,8 @@
 
         (function () {
             var form = document.getElementById('adminActionForm');
+            var acceptBtn = document.getElementById('acceptApplicationBtn');
+            var rejectBtn = document.getElementById('rejectApplicationBtn');
             var openBtn = document.getElementById('openInProgressModal');
             var modal = document.getElementById('inProgressModal');
             var closeBtn = document.getElementById('closeInProgressModal');
@@ -660,7 +853,15 @@
             var timeHidden = document.getElementById('presentationTimeHidden');
             var venueHidden = document.getElementById('presentationVenueHidden');
             var messageHidden = document.getElementById('presentationMessageHidden');
+            var kppInviteEmailsHidden = document.getElementById('kppInviteEmailsHidden');
+            var kppInviteMemoHidden = document.getElementById('kppInviteMemoHidden');
+            var inviteModeHidden = document.getElementById('inviteModeHidden');
+            var replaceInviteIdHidden = document.getElementById('replaceInviteIdHidden');
+            var rescheduleMode = document.getElementById('rescheduleMode');
+            var kppInviteMemo = document.getElementById('kppInviteMemo');
+            var kppRecipientChecks = Array.prototype.slice.call(document.querySelectorAll('.kpp-recipient-check'));
             var notesField = document.getElementById('adminNotes');
+            var latestInviteId = '<%= latestPresentationInvite != null && latestPresentationInvite.get("id") != null ? String.valueOf(latestPresentationInvite.get("id")) : "" %>';
 
             function formatDateHuman(value) {
                 if (!value) return '';
@@ -673,11 +874,25 @@
                 var dateVal = formatDateHuman(dateInput.value);
                 var timeVal = timeInput.value || '[Masa belum ditetapkan]';
                 var venueVal = (venueInput.value || '').trim() || '[Tempat belum ditetapkan]';
-                var base = 'Pemohon dimaklumkan untuk bersedia dan menghadiri sesi Pembentangan Produk Air yang didaftarkan.'
+                var base = 'Pemohon dimaklumkan bahawa jemputan pembentangan telah dijadualkan.'
                     + '\nTarikh: ' + (dateVal || '[Tarikh belum ditetapkan]')
                     + '\nMasa: ' + timeVal
                     + '\nTempat: ' + venueVal;
                 messageInput.value = base;
+            }
+
+            function collectKppEmails() {
+                return kppRecipientChecks
+                    .filter(function (input) {
+                        return !!input && !!input.checked;
+                    })
+                    .map(function (input) {
+                        return (input.getAttribute('data-email') || '').trim();
+                    })
+                    .filter(function (email) {
+                        return !!email;
+                    })
+                    .join(',');
             }
 
             function openModal() {
@@ -686,14 +901,58 @@
                 modal.setAttribute('aria-hidden', 'false');
             }
 
+            function submitAdminAction(actionName, needsNotes) {
+                if (!form) return;
+                if (needsNotes && !(notesField && notesField.value && notesField.value.trim())) {
+                    alert('Sila isi sebab penolakan sebelum menolak permohonan.');
+                    if (notesField) notesField.focus();
+                    return;
+                }
+                var actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = actionName;
+                form.appendChild(actionInput);
+                form.submit();
+            }
+
             function closeModal() {
                 modal.classList.remove('open');
                 modal.setAttribute('aria-hidden', 'true');
             }
 
-            if (!form || !openBtn || !modal) return;
+            if (!form) return;
 
-            openBtn.addEventListener('click', openModal);
+            if (acceptBtn) {
+                acceptBtn.addEventListener('click', function () {
+                    if (typeof window.requestAdminActionProceed === 'function') {
+                        window.requestAdminActionProceed('approve', function () {
+                            submitAdminAction('approve', false);
+                        });
+                        return;
+                    }
+                    submitAdminAction('approve', false);
+                });
+            }
+
+            if (rejectBtn) {
+                rejectBtn.addEventListener('click', function () {
+                    if (!validateRejectReason()) {
+                        return;
+                    }
+                    if (typeof window.requestAdminActionProceed === 'function') {
+                        window.requestAdminActionProceed('reject', function () {
+                            submitAdminAction('reject', true);
+                        });
+                        return;
+                    }
+                    submitAdminAction('reject', true);
+                });
+            }
+
+            if (openBtn && modal) {
+                openBtn.addEventListener('click', openModal);
+            }
             if (closeBtn) closeBtn.addEventListener('click', closeModal);
             if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
@@ -712,6 +971,18 @@
                         timeHidden.value = timeInput.value;
                         venueHidden.value = venueInput.value.trim();
                         messageHidden.value = (messageInput.value || '').trim();
+                        if (kppInviteEmailsHidden) {
+                            kppInviteEmailsHidden.value = collectKppEmails();
+                        }
+                        if (kppInviteMemoHidden) {
+                            kppInviteMemoHidden.value = kppInviteMemo ? (kppInviteMemo.value || '').trim() : '';
+                        }
+                        if (inviteModeHidden) {
+                            inviteModeHidden.value = rescheduleMode && rescheduleMode.checked ? 'reschedule' : 'new';
+                        }
+                        if (replaceInviteIdHidden) {
+                            replaceInviteIdHidden.value = (rescheduleMode && rescheduleMode.checked) ? latestInviteId : '';
+                        }
 
                         var actionInput = document.createElement('input');
                         actionInput.type = 'hidden';
@@ -730,9 +1001,11 @@
                 });
             }
 
-            modal.addEventListener('click', function (event) {
-                if (event.target === modal) closeModal();
-            });
+            if (modal) {
+                modal.addEventListener('click', function (event) {
+                    if (event.target === modal) closeModal();
+                });
+            }
         })();
 
         (function () {
@@ -846,8 +1119,7 @@
                 content.classList.toggle('is-hidden', hidden);
                 button.setAttribute('aria-expanded', hidden ? 'false' : 'true');
                 button.setAttribute('title', hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyi rekod tindakan admin');
-                icon.src = hidden ? '${pageContext.request.contextPath}/icon/unhide.png' : '${pageContext.request.contextPath}/icon/hide.png';
-                icon.alt = hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyikan rekod tindakan admin';
+                icon.textContent = hidden ? '+' : '\u2212';
             }
 
             button.addEventListener('click', function () {
@@ -863,6 +1135,8 @@
 
             var approveButton = form.querySelector('button[name="action"][value="approve"]');
             var rejectButton = form.querySelector('button[name="action"][value="reject"]');
+            var finalActionBtn = document.getElementById('finalActionBtn');
+            var nextStepBtn = document.getElementById('nextStepBtn');
             var currentStatus = (form.getAttribute('data-current-status') || '').trim().toLowerCase();
 
             var approveConfirmModal = document.getElementById('approveConfirmModal');
@@ -881,21 +1155,19 @@
             var bypassGuard = false;
 
             var actionLabels = {
-                dalam_semakan: 'Dalam Semakan',
-                dalam_proses: 'Dalam Proses',
-                suspend_application: 'Digantung',
-                suspend_user: 'Pengguna Digantung',
-                approve: 'Lulus',
-                reject: 'Ditolak'
+                approve: 'Terima',
+                reject: 'Tolak',
+                dalam_tindakan: 'Dalam Tindakan',
+                tindakan_akhir: 'Tindakan Akhir',
+                seterusnya: 'Seterusnya'
             };
 
             var statusAliases = {
-                dalam_semakan: ['dalam_semakan', 'dalam semakan'],
-                dalam_proses: ['dalam_proses', 'dalam proses'],
-                suspend_application: ['suspended', 'digantung'],
-                suspend_user: ['suspended', 'digantung'],
-                approve: ['approved', 'lulus', 'diluluskan'],
-                reject: ['rejected', 'ditolak']
+                approve: ['under_review', 'dalam_semakan', 'dalam semakan'],
+                reject: ['rejected', 'ditolak'],
+                dalam_tindakan: ['in_progress', 'dalam_proses', 'dalam proses', 'dalam_tindakan', 'dalam tindakan'],
+                tindakan_akhir: ['under_review', 'new'],
+                seterusnya: ['menunggu_seterusnya_diluluskan', 'menunggu_seterusnya_gagal', 'menunggu_seterusnya_gantung', 'menunggu_seterusnya_batal']
             };
 
             function setModalOpen(modal, isOpen) {
@@ -978,6 +1250,30 @@
                 });
             }
 
+            if (finalActionBtn) {
+                finalActionBtn.addEventListener('click', function () {
+                    if (typeof window.requestAdminActionProceed === 'function') {
+                        window.requestAdminActionProceed('tindakan_akhir', function () {
+                            submitWithAction('final_action');
+                        });
+                        return;
+                    }
+                    submitWithAction('final_action');
+                });
+            }
+
+            if (nextStepBtn) {
+                nextStepBtn.addEventListener('click', function () {
+                    if (typeof window.requestAdminActionProceed === 'function') {
+                        window.requestAdminActionProceed('seterusnya', function () {
+                            submitWithAction('next_step');
+                        });
+                        return;
+                    }
+                    submitWithAction('next_step');
+                });
+            }
+
             form.addEventListener('submit', function (event) {
                 if (bypassGuard) {
                     return;
@@ -1051,8 +1347,42 @@
             }
         })();
     </script>
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search || '');
+            if (params.get('updated') !== '1') {
+                return;
+            }
+
+            var popup = document.createElement('div');
+            popup.setAttribute('role', 'status');
+            popup.setAttribute('aria-live', 'polite');
+            popup.style.position = 'fixed';
+            popup.style.top = '20px';
+            popup.style.right = '20px';
+            popup.style.zIndex = '9999';
+            popup.style.maxWidth = '360px';
+            popup.style.padding = '14px 16px';
+            popup.style.borderRadius = '12px';
+            popup.style.border = '1px solid #a7f3d0';
+            popup.style.background = '#ecfdf5';
+            popup.style.color = '#065f46';
+            popup.style.boxShadow = '0 12px 28px rgba(6, 95, 70, 0.18)';
+            popup.style.fontSize = '14px';
+            popup.style.lineHeight = '1.5';
+            popup.innerHTML = '<strong style="display:block;margin-bottom:4px;">Berjaya!</strong><span>Tindakan pentadbir telah berjaya direkodkan.</span>';
+
+            document.body.appendChild(popup);
+            setTimeout(function () {
+                if (popup.parentNode) {
+                    popup.parentNode.removeChild(popup);
+                }
+            }, 3200);
+        })();
+    </script>
 </body>
 </html>
+
 
 
 

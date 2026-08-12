@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas RenewalSurveyServlet.
+ * Dipanggil melalui URL:  /renewal-form (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.config.DatabaseConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -170,3 +176,4 @@ public class RenewalSurveyServlet extends HttpServlet {
         return value == null ? "" : String.valueOf(value).trim();
     }
 }
+

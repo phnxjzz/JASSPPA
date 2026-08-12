@@ -1,5 +1,11 @@
 package com.sistemppa.service;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas DashboardDataService.
+ * Dipanggil oleh servlet untuk proses logik bisnes.
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.util.UserDisplayIdUtil;
 
 import java.sql.Connection;
@@ -18,23 +24,35 @@ import java.util.regex.Pattern;
 
 public final class DashboardDataService {
     private static final Pattern LEGACY_ADMIN_ID_PATTERN = Pattern.compile("Admin\\s*#(\\d+)");
+        private static final String APPLICATION_STATUS_ENUM = "ENUM('DRAFT', 'NEW', 'UNDER_REVIEW', 'IN_PROGRESS', "
+            + "'MENUNGGU_TINDAKAN_PENGARAH', 'MENUNGGU_SETERUSNYA_DILULUSKAN', "
+            + "'MENUNGGU_SETERUSNYA_GAGAL', 'MENUNGGU_SETERUSNYA_GANTUNG', "
+            + "'MENUNGGU_SETERUSNYA_BATAL', 'DILULUSKAN_PENGARAH', 'APPROVED', 'REJECTED', 'SUSPENDED', 'ARCHIVED', 'KUERI')";
 
     private DashboardDataService() {
     }
 
+    public static void ensureApplicationWorkflowSchema(Connection conn) throws SQLException {
+        ensureApplicationStatusColumn(conn);
+        ensureStatusHistoryTable(conn);
+        ensureStatusHistoryColumnWidths(conn);
+    }
+
     public static Map<String, Integer> loadAdminStats(Connection conn) throws SQLException {
         ensureApplicationArchiveTable(conn);
+        ensureUserProfileReviewColumns(conn);
 
         Map<String, Integer> stats = new HashMap<>();
 
         String sql = "SELECT "
                 + "COUNT(CASE WHEN aa.application_id IS NULL THEN 1 END) AS total_applications, "
-            + "SUM(CASE WHEN aa.application_id IS NULL AND a.status IN ('NEW', 'DRAFT') THEN 1 ELSE 0 END) AS pending_count, "
+            + "SUM(CASE WHEN aa.application_id IS NULL AND ((COALESCE(ad.application_type, 'BAHARU') IN ('BAHARU', 'PEMBAHARUAN') AND a.status = 'DILULUSKAN_PENGARAH') OR (COALESCE(ad.application_type, 'BAHARU') = 'KEMASKINI' AND a.status IN ('NEW', 'DRAFT', 'UNDER_REVIEW'))) THEN 1 ELSE 0 END) AS pending_count, "
                 + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count, "
                 + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected_count, "
                 + "SUM(CASE WHEN aa.application_id IS NULL AND a.status = 'SUSPENDED' THEN 1 ELSE 0 END) AS suspended_count, "
                 + "SUM(CASE WHEN aa.application_id IS NOT NULL THEN 1 ELSE 0 END) AS archived_count "
                 + "FROM applications a "
+                + "LEFT JOIN application_details ad ON ad.application_id = a.id "
                 + "LEFT JOIN application_archives aa ON aa.application_id = a.id";
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -52,14 +70,17 @@ public final class DashboardDataService {
                 "SELECT COUNT(*) FROM users WHERE status = 'ACTIVE'"));
         stats.put("registered_users", countRegisteredUsers(conn, false));
         stats.put("new_registered_users", countRegisteredUsers(conn, true));
+        stats.put("profile_pending_count", countByQuery(conn,
+            "SELECT COUNT(*) FROM users WHERE role = 'USER' AND profile_review_status = 'PENDING_REVIEW'"));
         stats.put("total_products", countProducts(conn, null, null));
         return stats;
     }
 
     public static List<Map<String, Object>> loadRegisteredUsers(Connection conn, String search,
                                                                  boolean onlyNew, int limit) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT id, username, full_name, email, role, role_seq, status, created_at "
-                + "FROM users WHERE role = 'USER'");
+        ensureUserProfileReviewColumns(conn);
+        StringBuilder sql = new StringBuilder("SELECT id, username, full_name, email, phone_number, role, role_seq, status, avatar_url, supporting_document_url, profile_review_status, profile_submitted_at, profile_reviewed_at, profile_reviewed_by, profile_review_notes, created_at "
+            + "FROM users WHERE role = 'USER'");
         List<Object> parameters = new ArrayList<>();
 
         if (search != null && !search.isBlank()) {
@@ -93,10 +114,18 @@ public final class DashboardDataService {
                     row.put("username", rs.getString("username"));
                     row.put("full_name", rs.getString("full_name"));
                     row.put("email", rs.getString("email"));
+                    row.put("phone_number", rs.getString("phone_number"));
                         row.put("display_id", UserDisplayIdUtil.format(
                             rs.getInt("id"),
                             rs.getString("role"),
                             rs.getObject("role_seq", Integer.class)));
+                    row.put("avatar_url", rs.getString("avatar_url"));
+                    row.put("supporting_document_url", rs.getString("supporting_document_url"));
+                    row.put("profile_review_status", rs.getString("profile_review_status"));
+                    row.put("profile_submitted_at", rs.getTimestamp("profile_submitted_at"));
+                    row.put("profile_reviewed_at", rs.getTimestamp("profile_reviewed_at"));
+                    row.put("profile_reviewed_by", rs.getObject("profile_reviewed_by"));
+                    row.put("profile_review_notes", rs.getString("profile_review_notes"));
                     row.put("status", rs.getString("status"));
                     row.put("created_at", rs.getTimestamp("created_at"));
                     users.add(row);
@@ -114,8 +143,9 @@ public final class DashboardDataService {
     }
 
     public static Map<String, Object> loadUserSummary(Connection conn, int userId) throws SQLException {
+        ensureUserProfileReviewColumns(conn);
         Map<String, Object> user = new HashMap<>();
-        String sql = "SELECT username, full_name, email, avatar_url, status, created_at "
+        String sql = "SELECT username, full_name, email, phone_number, avatar_url, supporting_document_url, profile_review_status, profile_submitted_at, profile_reviewed_at, profile_reviewed_by, profile_review_notes, status, created_at "
                 + "FROM users WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
@@ -124,7 +154,14 @@ public final class DashboardDataService {
                     user.put("username", rs.getString("username"));
                     user.put("full_name", rs.getString("full_name"));
                     user.put("email", rs.getString("email"));
+                    user.put("phone_number", rs.getString("phone_number"));
                     user.put("avatar_url", rs.getString("avatar_url"));
+                    user.put("supporting_document_url", rs.getString("supporting_document_url"));
+                    user.put("profile_review_status", rs.getString("profile_review_status"));
+                    user.put("profile_submitted_at", rs.getTimestamp("profile_submitted_at"));
+                    user.put("profile_reviewed_at", rs.getTimestamp("profile_reviewed_at"));
+                    user.put("profile_reviewed_by", rs.getObject("profile_reviewed_by"));
+                    user.put("profile_review_notes", rs.getString("profile_review_notes"));
                     user.put("status", rs.getString("status"));
                     user.put("created_at", rs.getTimestamp("created_at"));
                 }
@@ -145,8 +182,63 @@ public final class DashboardDataService {
 
     public static int countPendingUserApplications(Connection conn, int userId) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(
-                "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status = 'NEW'")) {
+                "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status IN ('DIRECTOR_REVIEW', 'NEW')")) {
             stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public static int countApplicationsByStatuses(Connection conn, String... statuses) throws SQLException {
+        ensureApplicationArchiveTable(conn);
+        if (statuses == null || statuses.length == 0) return 0;
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < statuses.length; i++) {
+            if (i > 0) placeholders.append(',');
+            placeholders.append('?');
+        }
+        String sql = "SELECT COUNT(*) FROM applications a LEFT JOIN application_archives aa ON aa.application_id = a.id "
+            + "WHERE aa.application_id IS NULL AND UPPER(a.status) IN (" + placeholders.toString() + ")";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < statuses.length; i++) {
+                stmt.setString(i + 1, statuses[i].toUpperCase(java.util.Locale.ROOT));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public static int countApplicationsByAdminNotesPattern(Connection conn, String pattern) throws SQLException {
+        if (pattern == null || pattern.isBlank()) return 0;
+        String sql = "SELECT COUNT(*) FROM applications WHERE admin_notes IS NOT NULL AND LOWER(admin_notes) LIKE ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, pattern.toLowerCase(java.util.Locale.ROOT));
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public static int countUserApplicationsByStatus(Connection conn, int userId, String status) throws SQLException {
+        if (status == null || status.isBlank()) return 0;
+        String sql = "SELECT COUNT(*) FROM applications WHERE user_id = ? AND UPPER(status) = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setString(2, status.toUpperCase(java.util.Locale.ROOT));
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public static int countNotificationsByType(Connection conn, int userId, String type) throws SQLException {
+        if (type == null || type.isBlank()) return 0;
+        String sql = "SELECT COUNT(*) FROM notifications WHERE user_id = ? AND UPPER(type) = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setString(2, type.toUpperCase(java.util.Locale.ROOT));
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
             }
@@ -180,12 +272,21 @@ public final class DashboardDataService {
         ensureApplicationArchiveTable(conn);
 
         QueryParts queryParts = buildApplicationFilter(search, status, dateFrom, dateTo);
-        String sql = "SELECT a.id, a.company_name, a.product_category, a.product_name, a.product_description, "
+        String sql = "SELECT a.id, a.company_name, a.company_address, a.contact_number, a.email AS supplier_email, "
+            + "a.product_category, a.product_name, a.product_description, "
             + "CASE WHEN aa.application_id IS NOT NULL THEN 'ARCHIVED' ELSE a.status END AS display_status, "
             + "a.submitted_at, aa.archived_at, aa.archive_notes, aa.archived_by, "
-                + "u.full_name, u.email AS user_email "
+                + "u.full_name, u.email AS user_email, "
+                + "ad.application_type, ad.supplier_name, ad.supplier_address, ad.supplier_phone, "
+                + "ad.manufacturer_name, ad.manufacturer_address, ad.manufacturer_phone, "
+                + "ad.principal_name, ad.principal_address, ad.principal_phone, "
+                + "ad.standard_name, ad.certification_license, ad.certification_valid_until, "
+                + "ad.test_report_reference, ad.test_report_date, ad.warranty_years, "
+                + "ad.sabah_rep_name, ad.sabah_rep_address, ad.sabah_rep_phone, "
+                + "ad.declaration_name, ad.declaration_position "
                 + "FROM applications a "
                 + "JOIN users u ON u.id = a.user_id "
+            + "LEFT JOIN application_details ad ON ad.application_id = a.id "
             + "LEFT JOIN application_archives aa ON aa.application_id = a.id "
                 + queryParts.clause
                 + " ORDER BY COALESCE(aa.archived_at, a.created_at) DESC";
@@ -204,21 +305,459 @@ public final class DashboardDataService {
                     Map<String, Object> row = new HashMap<>();
                     row.put("id", rs.getInt("id"));
                     row.put("company_name", rs.getString("company_name"));
+                    row.put("company_address", rs.getString("company_address"));
+                    row.put("contact_number", rs.getString("contact_number"));
+                    row.put("supplier_email", rs.getString("supplier_email"));
                     row.put("product_category", rs.getString("product_category"));
                     row.put("product_name", rs.getString("product_name"));
                     row.put("product_description", rs.getString("product_description"));
-                    row.put("status", rs.getString("display_status"));
+                    String displayStatus = rs.getString("display_status");
+                    row.put("status", displayStatus);
+                    row.put("director_action_pending", isDirectorActionPendingStatus(displayStatus));
                     row.put("submitted_at", rs.getTimestamp("submitted_at"));
                     row.put("archived_at", rs.getTimestamp("archived_at"));
                     row.put("archive_notes", rs.getString("archive_notes"));
                     row.put("archived_by", rs.getObject("archived_by"));
                     row.put("full_name", rs.getString("full_name"));
                     row.put("user_email", rs.getString("user_email"));
+                    row.put("application_type", rs.getString("application_type"));
+                    row.put("supplier_name", rs.getString("supplier_name"));
+                    row.put("supplier_address", rs.getString("supplier_address"));
+                    row.put("supplier_phone", rs.getString("supplier_phone"));
+                    row.put("manufacturer_name", rs.getString("manufacturer_name"));
+                    row.put("manufacturer_address", rs.getString("manufacturer_address"));
+                    row.put("manufacturer_phone", rs.getString("manufacturer_phone"));
+                    row.put("principal_name", rs.getString("principal_name"));
+                    row.put("principal_address", rs.getString("principal_address"));
+                    row.put("principal_phone", rs.getString("principal_phone"));
+                    row.put("standard_name", rs.getString("standard_name"));
+                    row.put("certification_license", rs.getString("certification_license"));
+                    row.put("certification_valid_until", rs.getDate("certification_valid_until"));
+                    row.put("test_report_reference", rs.getString("test_report_reference"));
+                    row.put("test_report_date", rs.getDate("test_report_date"));
+                    row.put("warranty_years", rs.getBigDecimal("warranty_years"));
+                    row.put("sabah_rep_name", rs.getString("sabah_rep_name"));
+                    row.put("sabah_rep_address", rs.getString("sabah_rep_address"));
+                    row.put("sabah_rep_phone", rs.getString("sabah_rep_phone"));
+                    row.put("declaration_name", rs.getString("declaration_name"));
+                    row.put("declaration_position", rs.getString("declaration_position"));
                     applications.add(row);
                 }
             }
         }
         return applications;
+    }
+
+    public static int countDirectorActionPendingForAdmin(Connection conn) throws SQLException {
+        return countApplicationsByStatuses(conn,
+                "MENUNGGU_SETERUSNYA_DILULUSKAN",
+                "MENUNGGU_SETERUSNYA_GAGAL",
+                "MENUNGGU_SETERUSNYA_GANTUNG",
+                "MENUNGGU_SETERUSNYA_BATAL");
+    }
+
+    public static List<Map<String, Object>> loadDirectorProcessedApplications(Connection conn, int directorUserId,
+            String search, String dateFrom, String dateTo, int limit) throws SQLException {
+        ensureApplicationArchiveTable(conn);
+
+        StringBuilder clause = new StringBuilder(" WHERE a.reviewed_by = ? AND a.status <> 'DIRECTOR_REVIEW'");
+        List<Object> parameters = new ArrayList<>();
+        parameters.add(directorUserId);
+
+        if (search != null && !search.isBlank()) {
+            clause.append(" AND (a.company_name LIKE ? OR a.product_name LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?)");
+            String keyword = "%" + search.trim() + "%";
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+        }
+
+        if (dateFrom != null && !dateFrom.isBlank()) {
+            clause.append(" AND DATE(a.submitted_at) >= ?");
+            parameters.add(dateFrom.trim());
+        }
+        if (dateTo != null && !dateTo.isBlank()) {
+            clause.append(" AND DATE(a.submitted_at) <= ?");
+            parameters.add(dateTo.trim());
+        }
+
+        String sql = "SELECT a.id, a.company_name, a.company_address, a.contact_number, a.email AS supplier_email, "
+            + "a.product_category, a.product_name, a.product_description, "
+            + "CASE WHEN aa.application_id IS NOT NULL THEN 'ARCHIVED' ELSE a.status END AS display_status, "
+            + "a.submitted_at, a.reviewed_at, a.reviewed_by, a.admin_notes, aa.archived_at, aa.archive_notes, aa.archived_by, "
+            + "u.full_name, u.email AS user_email, "
+            + "ad.application_type, ad.supplier_name, ad.supplier_address, ad.supplier_phone, "
+            + "ad.manufacturer_name, ad.manufacturer_address, ad.manufacturer_phone, "
+            + "ad.principal_name, ad.principal_address, ad.principal_phone, "
+            + "ad.standard_name, ad.certification_license, ad.certification_valid_until, "
+            + "ad.test_report_reference, ad.test_report_date, ad.warranty_years, "
+            + "ad.sabah_rep_name, ad.sabah_rep_address, ad.sabah_rep_phone, "
+            + "ad.declaration_name, ad.declaration_position "
+            + "FROM applications a "
+            + "JOIN users u ON u.id = a.user_id "
+            + "LEFT JOIN application_details ad ON ad.application_id = a.id "
+            + "LEFT JOIN application_archives aa ON aa.application_id = a.id "
+            + clause.toString()
+            + " ORDER BY COALESCE(a.reviewed_at, a.created_at) DESC";
+        if (limit > 0) {
+            sql += " LIMIT ?";
+        }
+
+        List<Map<String, Object>> applications = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int index = 1;
+            for (Object parameter : parameters) {
+                stmt.setObject(index++, parameter);
+            }
+            if (limit > 0) {
+                stmt.setInt(index, limit);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("company_name", rs.getString("company_name"));
+                    row.put("company_address", rs.getString("company_address"));
+                    row.put("contact_number", rs.getString("contact_number"));
+                    row.put("supplier_email", rs.getString("supplier_email"));
+                    row.put("product_category", rs.getString("product_category"));
+                    row.put("product_name", rs.getString("product_name"));
+                    row.put("product_description", rs.getString("product_description"));
+                    row.put("status", rs.getString("display_status"));
+                    row.put("submitted_at", rs.getTimestamp("submitted_at"));
+                    row.put("reviewed_at", rs.getTimestamp("reviewed_at"));
+                    row.put("reviewed_by", rs.getObject("reviewed_by"));
+                    row.put("admin_notes", rs.getString("admin_notes"));
+                    row.put("archived_at", rs.getTimestamp("archived_at"));
+                    row.put("archive_notes", rs.getString("archive_notes"));
+                    row.put("archived_by", rs.getObject("archived_by"));
+                    row.put("full_name", rs.getString("full_name"));
+                    row.put("user_email", rs.getString("user_email"));
+                    row.put("application_type", rs.getString("application_type"));
+                    row.put("supplier_name", rs.getString("supplier_name"));
+                    row.put("supplier_address", rs.getString("supplier_address"));
+                    row.put("supplier_phone", rs.getString("supplier_phone"));
+                    row.put("manufacturer_name", rs.getString("manufacturer_name"));
+                    row.put("manufacturer_address", rs.getString("manufacturer_address"));
+                    row.put("manufacturer_phone", rs.getString("manufacturer_phone"));
+                    row.put("principal_name", rs.getString("principal_name"));
+                    row.put("principal_address", rs.getString("principal_address"));
+                    row.put("principal_phone", rs.getString("principal_phone"));
+                    row.put("standard_name", rs.getString("standard_name"));
+                    row.put("certification_license", rs.getString("certification_license"));
+                    row.put("certification_valid_until", rs.getDate("certification_valid_until"));
+                    row.put("test_report_reference", rs.getString("test_report_reference"));
+                    row.put("test_report_date", rs.getDate("test_report_date"));
+                    row.put("warranty_years", rs.getBigDecimal("warranty_years"));
+                    row.put("sabah_rep_name", rs.getString("sabah_rep_name"));
+                    row.put("sabah_rep_address", rs.getString("sabah_rep_address"));
+                    row.put("sabah_rep_phone", rs.getString("sabah_rep_phone"));
+                    row.put("declaration_name", rs.getString("declaration_name"));
+                    row.put("declaration_position", rs.getString("declaration_position"));
+                    applications.add(row);
+                }
+            }
+        }
+        return applications;
+    }
+
+    public static int countDirectorProcessedApplications(Connection conn, int directorUserId, String search,
+            String dateFrom, String dateTo) throws SQLException {
+        ensureApplicationArchiveTable(conn);
+
+        StringBuilder clause = new StringBuilder(" WHERE a.reviewed_by = ? AND a.status <> 'DIRECTOR_REVIEW'");
+        List<Object> parameters = new ArrayList<>();
+        parameters.add(directorUserId);
+
+        if (search != null && !search.isBlank()) {
+            clause.append(" AND (a.company_name LIKE ? OR a.product_name LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?)");
+            String keyword = "%" + search.trim() + "%";
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+        }
+
+        if (dateFrom != null && !dateFrom.isBlank()) {
+            clause.append(" AND DATE(a.submitted_at) >= ?");
+            parameters.add(dateFrom.trim());
+        }
+        if (dateTo != null && !dateTo.isBlank()) {
+            clause.append(" AND DATE(a.submitted_at) <= ?");
+            parameters.add(dateTo.trim());
+        }
+
+        String sql = "SELECT COUNT(*) FROM applications a "
+                + "JOIN users u ON u.id = a.user_id "
+                + "LEFT JOIN application_archives aa ON aa.application_id = a.id"
+                + clause;
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int index = 1;
+            for (Object parameter : parameters) {
+                stmt.setObject(index++, parameter);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public static int countDirectorProcessedApplicationsByStatus(Connection conn, int directorUserId, String status,
+            String search, String dateFrom, String dateTo) throws SQLException {
+        ensureApplicationArchiveTable(conn);
+
+        String normalizedStatus = normalizeApplicationStatusFilter(status);
+        if (normalizedStatus == null || "DIRECTOR_REVIEW".equals(normalizedStatus)) {
+            return 0;
+        }
+
+        String historyStatus = normalizedStatus;
+        if ("APPROVED".equals(normalizedStatus)) {
+            historyStatus = "NEW";
+        }
+
+        StringBuilder clause = new StringBuilder(
+                " WHERE ash.changed_by = ? AND ash.new_status = ? AND ash.id = latest.max_id");
+        List<Object> parameters = new ArrayList<>();
+        parameters.add(directorUserId);
+        parameters.add(historyStatus);
+
+        if (search != null && !search.isBlank()) {
+            clause.append(" AND (a.company_name LIKE ? OR a.product_name LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?)");
+            String keyword = "%" + search.trim() + "%";
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+        }
+
+        if (dateFrom != null && !dateFrom.isBlank()) {
+            clause.append(" AND DATE(a.submitted_at) >= ?");
+            parameters.add(dateFrom.trim());
+        }
+        if (dateTo != null && !dateTo.isBlank()) {
+            clause.append(" AND DATE(a.submitted_at) <= ?");
+            parameters.add(dateTo.trim());
+        }
+
+        String sql = "SELECT COUNT(*) FROM application_status_history ash "
+                + "JOIN (SELECT application_id, MAX(id) AS max_id FROM application_status_history WHERE changed_by = ? GROUP BY application_id) latest ON latest.max_id = ash.id "
+                + "JOIN applications a ON a.id = ash.application_id "
+                + "JOIN users u ON u.id = a.user_id "
+                + "LEFT JOIN application_archives aa ON aa.application_id = a.id"
+                + clause;
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int index = 1;
+            stmt.setInt(index++, directorUserId);
+            for (Object parameter : parameters) {
+                stmt.setObject(index++, parameter);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public static List<Map<String, Object>> loadDirectorAdminApplications(Connection conn, String search,
+            String dateFrom, String dateTo, int limit) throws SQLException {
+        return loadDirectorAdminApplications(conn, search, dateFrom, dateTo, limit, null, null);
+    }
+
+    public static List<Map<String, Object>> loadDirectorAdminApplications(Connection conn, String search,
+            String dateFrom, String dateTo, int limit, String reviewType) throws SQLException {
+        return loadDirectorAdminApplications(conn, search, dateFrom, dateTo, limit, reviewType, null);
+    }
+
+    /**
+     * @param fromAdmin null = no filter, true = only applications forwarded by ADMIN, false = only applications NOT from ADMIN
+     */
+    public static List<Map<String, Object>> loadDirectorAdminApplications(Connection conn, String search,
+            String dateFrom, String dateTo, int limit, String reviewType, Boolean fromAdmin) throws SQLException {
+        ensureApplicationArchiveTable(conn);
+        ensureStatusHistoryTable(conn);
+
+        StringBuilder clause = new StringBuilder(" WHERE a.status = 'MENUNGGU_TINDAKAN_PENGARAH'");
+        // Exclude KEMASKINI application type from director dashboard
+        clause.append(" AND (ad.application_type IS NULL OR UPPER(ad.application_type) <> 'KEMASKINI')");
+        if (reviewType != null && !reviewType.isBlank()) {
+            clause.append(" AND a.director_review_type = '").append(reviewType.toUpperCase().replace("'","")).append("'");
+        }
+        if (Boolean.TRUE.equals(fromAdmin)) {
+            clause.append(" AND actor.role = 'ADMIN'");
+        } else if (Boolean.FALSE.equals(fromAdmin)) {
+            clause.append(" AND (actor.role IS NULL OR actor.role <> 'ADMIN')");
+        }
+        List<Object> parameters = new ArrayList<>();
+
+        if (search != null && !search.isBlank()) {
+            clause.append(" AND (a.company_name LIKE ? OR a.product_name LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?)");
+            String keyword = "%" + search.trim() + "%";
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+        }
+
+        if (dateFrom != null && !dateFrom.isBlank()) {
+            clause.append(" AND DATE(a.submitted_at) >= ?");
+            parameters.add(dateFrom.trim());
+        }
+        if (dateTo != null && !dateTo.isBlank()) {
+            clause.append(" AND DATE(a.submitted_at) <= ?");
+            parameters.add(dateTo.trim());
+        }
+
+        String sql = "SELECT a.id, a.company_name, a.company_address, a.contact_number, a.email AS supplier_email, "
+            + "a.product_category, a.product_name, a.product_description, "
+            + "a.status AS display_status, "
+            + "a.submitted_at, a.reviewed_at, a.reviewed_by, a.admin_notes, "
+            + "u.full_name, u.email AS user_email, "
+            + "ad.application_type, ad.supplier_name, ad.supplier_address, ad.supplier_phone, "
+            + "ad.manufacturer_name, ad.manufacturer_address, ad.manufacturer_phone, "
+            + "ad.principal_name, ad.principal_address, ad.principal_phone, "
+            + "ad.standard_name, ad.certification_license, ad.certification_valid_until, "
+            + "ad.test_report_reference, ad.test_report_date, ad.warranty_years, "
+            + "ad.sabah_rep_name, ad.sabah_rep_address, ad.sabah_rep_phone, "
+            + "ad.declaration_name, ad.declaration_position, "
+            + "hist.changed_at AS admin_sent_at, actor.full_name AS last_changed_by_name, actor.role AS last_changed_by_role "
+            + "FROM applications a "
+            + "JOIN users u ON u.id = a.user_id "
+            + "LEFT JOIN (SELECT application_id, MAX(id) AS max_id FROM application_status_history GROUP BY application_id) latest ON latest.application_id = a.id "
+            + "LEFT JOIN application_status_history hist ON hist.id = latest.max_id "
+            + "LEFT JOIN users actor ON actor.id = hist.changed_by "
+            + "LEFT JOIN application_details ad ON ad.application_id = a.id "
+            + "LEFT JOIN application_archives aa ON aa.application_id = a.id "
+            + clause.toString()
+            + " ORDER BY COALESCE(a.reviewed_at, hist.changed_at, a.created_at) DESC";
+        if (limit > 0) {
+            sql += " LIMIT ?";
+        }
+
+        List<Map<String, Object>> applications = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int index = 1;
+            for (Object parameter : parameters) {
+                stmt.setObject(index++, parameter);
+            }
+            if (limit > 0) {
+                stmt.setInt(index, limit);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("company_name", rs.getString("company_name"));
+                    row.put("company_address", rs.getString("company_address"));
+                    row.put("contact_number", rs.getString("contact_number"));
+                    row.put("supplier_email", rs.getString("supplier_email"));
+                    row.put("product_category", rs.getString("product_category"));
+                    row.put("product_name", rs.getString("product_name"));
+                    row.put("product_description", rs.getString("product_description"));
+                    row.put("status", rs.getString("display_status"));
+                    row.put("submitted_at", rs.getTimestamp("submitted_at"));
+                    row.put("reviewed_at", rs.getTimestamp("reviewed_at"));
+                    row.put("reviewed_by", rs.getObject("reviewed_by"));
+                    row.put("admin_notes", rs.getString("admin_notes"));
+                    row.put("full_name", rs.getString("full_name"));
+                    row.put("user_email", rs.getString("user_email"));
+                    row.put("application_type", rs.getString("application_type"));
+                    row.put("supplier_name", rs.getString("supplier_name"));
+                    row.put("supplier_address", rs.getString("supplier_address"));
+                    row.put("supplier_phone", rs.getString("supplier_phone"));
+                    row.put("manufacturer_name", rs.getString("manufacturer_name"));
+                    row.put("manufacturer_address", rs.getString("manufacturer_address"));
+                    row.put("manufacturer_phone", rs.getString("manufacturer_phone"));
+                    row.put("principal_name", rs.getString("principal_name"));
+                    row.put("principal_address", rs.getString("principal_address"));
+                    row.put("principal_phone", rs.getString("principal_phone"));
+                    row.put("standard_name", rs.getString("standard_name"));
+                    row.put("certification_license", rs.getString("certification_license"));
+                    row.put("certification_valid_until", rs.getDate("certification_valid_until"));
+                    row.put("test_report_reference", rs.getString("test_report_reference"));
+                    row.put("test_report_date", rs.getDate("test_report_date"));
+                    row.put("warranty_years", rs.getBigDecimal("warranty_years"));
+                    row.put("sabah_rep_name", rs.getString("sabah_rep_name"));
+                    row.put("sabah_rep_address", rs.getString("sabah_rep_address"));
+                    row.put("sabah_rep_phone", rs.getString("sabah_rep_phone"));
+                    row.put("declaration_name", rs.getString("declaration_name"));
+                    row.put("declaration_position", rs.getString("declaration_position"));
+                    row.put("admin_sent_at", rs.getTimestamp("admin_sent_at"));
+                    row.put("last_changed_by_name", rs.getString("last_changed_by_name"));
+                    row.put("last_changed_by_role", rs.getString("last_changed_by_role"));
+                    applications.add(row);
+                }
+            }
+        }
+        return applications;
+    }
+
+    public static int countDirectorAdminApplications(Connection conn, String search,
+            String dateFrom, String dateTo) throws SQLException {
+        return countDirectorAdminApplications(conn, search, dateFrom, dateTo, null, null);
+    }
+
+    public static int countDirectorAdminApplications(Connection conn, String search,
+            String dateFrom, String dateTo, String reviewType) throws SQLException {
+        return countDirectorAdminApplications(conn, search, dateFrom, dateTo, reviewType, null);
+    }
+
+    /**
+     * @param fromAdmin null = no filter, true = only from ADMIN, false = only NOT from ADMIN
+     */
+    public static int countDirectorAdminApplications(Connection conn, String search,
+            String dateFrom, String dateTo, String reviewType, Boolean fromAdmin) throws SQLException {
+        ensureApplicationArchiveTable(conn);
+        ensureStatusHistoryTable(conn);
+
+        StringBuilder clause = new StringBuilder(" WHERE a.status = 'MENUNGGU_TINDAKAN_PENGARAH'");
+        // Exclude KEMASKINI application type from director dashboard
+        clause.append(" AND (ad.application_type IS NULL OR UPPER(ad.application_type) <> 'KEMASKINI')");
+        if (reviewType != null && !reviewType.isBlank()) {
+            clause.append(" AND a.director_review_type = '").append(reviewType.toUpperCase().replace("'","")).append("'");
+        }
+        if (Boolean.TRUE.equals(fromAdmin)) {
+            clause.append(" AND actor.role = 'ADMIN'");
+        } else if (Boolean.FALSE.equals(fromAdmin)) {
+            clause.append(" AND (actor.role IS NULL OR actor.role <> 'ADMIN')");
+        }
+        List<Object> parameters = new ArrayList<>();
+
+        if (search != null && !search.isBlank()) {
+            clause.append(" AND (a.company_name LIKE ? OR a.product_name LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?)");
+            String keyword = "%" + search.trim() + "%";
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+        }
+
+        if (dateFrom != null && !dateFrom.isBlank()) {
+            clause.append(" AND DATE(a.submitted_at) >= ?");
+            parameters.add(dateFrom.trim());
+        }
+        if (dateTo != null && !dateTo.isBlank()) {
+            clause.append(" AND DATE(a.submitted_at) <= ?");
+            parameters.add(dateTo.trim());
+        }
+
+        String sql = "SELECT COUNT(*) FROM applications a "
+                + "JOIN users u ON u.id = a.user_id "
+                + "LEFT JOIN (SELECT application_id, MAX(id) AS max_id FROM application_status_history GROUP BY application_id) latest ON latest.application_id = a.id "
+                + "LEFT JOIN application_status_history hist ON hist.id = latest.max_id "
+                + "LEFT JOIN users actor ON actor.id = hist.changed_by "
+                + "LEFT JOIN application_details ad ON ad.application_id = a.id "
+                + "LEFT JOIN application_archives aa ON aa.application_id = a.id"
+                + clause;
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int index = 1;
+            for (Object parameter : parameters) {
+                stmt.setObject(index++, parameter);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
     }
 
     public static int countApplications(Connection conn, String search, String status,
@@ -228,6 +767,7 @@ public final class DashboardDataService {
         QueryParts queryParts = buildApplicationFilter(search, status, dateFrom, dateTo);
         String sql = "SELECT COUNT(*) FROM applications a "
                 + "JOIN users u ON u.id = a.user_id "
+            + "LEFT JOIN application_details ad ON ad.application_id = a.id "
                 + "LEFT JOIN application_archives aa ON aa.application_id = a.id"
                 + queryParts.clause;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -747,6 +1287,9 @@ public final class DashboardDataService {
         if ("UJPPP".equals(normalized)) {
             return "Borang UJPPP";
         }
+        if ("SIASATAN_ADUAN".equals(normalized)) {
+            return "Borang Siasatan Aduan Pembekal dan Produk Air";
+        }
         return "Borang KSPP";
     }
 
@@ -838,6 +1381,9 @@ public final class DashboardDataService {
 
         if (normalizedStatus == null) {
             clause.append(" AND aa.application_id IS NULL");
+            clause.append(" AND a.status <> 'DIRECTOR_REVIEW'");
+            // BAHARU/PEMBAHARUAN only appear in admin list after director approval.
+            clause.append(" AND NOT (COALESCE(ad.application_type, 'BAHARU') IN ('BAHARU', 'PEMBAHARUAN') AND a.status = 'MENUNGGU_TINDAKAN_PENGARAH')");
         } else if ("ARCHIVED".equals(normalizedStatus)) {
             clause.append(" AND aa.application_id IS NOT NULL");
         } else {
@@ -892,6 +1438,15 @@ public final class DashboardDataService {
             normalized = "UNDER_REVIEW";
         } else if ("DALAM_PROSES".equals(normalized) || "DALAM PROSES".equals(normalized)) {
             normalized = "IN_PROGRESS";
+        } else if ("PERMOHONAN DITERIMA".equals(normalized)
+                || "DITERIMA".equals(normalized)
+                || "MENUNGGU_PENGARAH".equals(normalized)
+                || "MENUNGGU PENGARAH".equals(normalized)
+                || "DIRECTOR_REVIEW".equals(normalized)) {
+            normalized = "UNDER_REVIEW";
+        } else if ("DILULUSKAN_PENGARAH".equals(normalized)
+                || "DILULUSKAN PENGARAH".equals(normalized)) {
+            normalized = "DILULUSKAN_PENGARAH";
         } else if ("DILULUSKAN".equals(normalized)) {
             normalized = "APPROVED";
         } else if ("DITOLAK".equals(normalized)) {
@@ -903,15 +1458,30 @@ public final class DashboardDataService {
         }
 
         if ("ARCHIVED".equals(normalized)
+            || "DIRECTOR_REVIEW".equals(normalized)
             || "NEW".equals(normalized)
             || "UNDER_REVIEW".equals(normalized)
             || "IN_PROGRESS".equals(normalized)
+            || "MENUNGGU_TINDAKAN_PENGARAH".equals(normalized)
+            || "MENUNGGU_SETERUSNYA_DILULUSKAN".equals(normalized)
+            || "MENUNGGU_SETERUSNYA_GAGAL".equals(normalized)
+            || "MENUNGGU_SETERUSNYA_GANTUNG".equals(normalized)
+            || "MENUNGGU_SETERUSNYA_BATAL".equals(normalized)
+            || "DILULUSKAN_PENGARAH".equals(normalized)
             || "APPROVED".equals(normalized)
             || "REJECTED".equals(normalized)
             || "SUSPENDED".equals(normalized)) {
             return normalized;
         }
         return null;
+    }
+
+    private static boolean isDirectorActionPendingStatus(String status) {
+        if (status == null) {
+            return false;
+        }
+        String normalized = status.trim().toUpperCase(Locale.ROOT).replace(' ', '_').replace('-', '_');
+        return normalized.startsWith("MENUNGGU_SETERUSNYA_");
     }
 
     private static QueryParts buildProductFilter(String search, String productType) {
@@ -1061,7 +1631,7 @@ public final class DashboardDataService {
         }
     }
 
-    // ── Application status history ─────────────────────────────────────────────
+    // Î“Ã¶Ã‡Î“Ã¶Ã‡ Application status history Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡
 
     public static void recordStatusHistory(Connection conn, int applicationId, String oldStatus,
             String newStatus, Integer changedBy, String adminNotes) throws SQLException {
@@ -1127,6 +1697,85 @@ public final class DashboardDataService {
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.execute();
         }
+    }
+
+    private static void ensureApplicationStatusColumn(Connection conn) throws SQLException {
+        String columnType = getColumnType(conn, "applications", "status");
+        if (columnType == null) {
+            return;
+        }
+
+        String normalizedType = columnType.toUpperCase(Locale.ROOT);
+        if (normalizedType.contains("MENUNGGU_TINDAKAN_PENGARAH")
+                && normalizedType.contains("MENUNGGU_SETERUSNYA_DILULUSKAN")
+                && normalizedType.contains("MENUNGGU_SETERUSNYA_GAGAL")
+                && normalizedType.contains("MENUNGGU_SETERUSNYA_GANTUNG")
+                && normalizedType.contains("MENUNGGU_SETERUSNYA_BATAL")) {
+            return;
+        }
+
+        String sql = "ALTER TABLE applications MODIFY status " + APPLICATION_STATUS_ENUM + " NOT NULL DEFAULT 'NEW'";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        }
+    }
+
+    private static void ensureStatusHistoryColumnWidths(Connection conn) throws SQLException {
+        boolean needsOldStatusResize = needsVarcharResize(conn, "application_status_history", "old_status", 64);
+        boolean needsNewStatusResize = needsVarcharResize(conn, "application_status_history", "new_status", 64);
+
+        if (!needsOldStatusResize && !needsNewStatusResize) {
+            return;
+        }
+
+        StringBuilder sql = new StringBuilder("ALTER TABLE application_status_history ");
+        if (needsOldStatusResize) {
+            sql.append("MODIFY old_status VARCHAR(64) NULL");
+        }
+        if (needsNewStatusResize) {
+            if (needsOldStatusResize) {
+                sql.append(", ");
+            }
+            sql.append("MODIFY new_status VARCHAR(64) NOT NULL");
+        }
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            stmt.executeUpdate();
+        }
+    }
+
+    private static boolean needsVarcharResize(Connection conn, String tableName, String columnName, int minimumLength)
+            throws SQLException {
+        String sql = "SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH "
+                + "FROM information_schema.COLUMNS "
+                + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, tableName);
+            stmt.setString(2, columnName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return false;
+                }
+                String dataType = rs.getString("DATA_TYPE");
+                int maximumLength = rs.getInt("CHARACTER_MAXIMUM_LENGTH");
+                return !"varchar".equalsIgnoreCase(dataType) || maximumLength < minimumLength;
+            }
+        }
+    }
+
+    private static String getColumnType(Connection conn, String tableName, String columnName) throws SQLException {
+        String sql = "SELECT COLUMN_TYPE FROM information_schema.COLUMNS "
+                + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, tableName);
+            stmt.setString(2, columnName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("COLUMN_TYPE");
+                }
+            }
+        }
+        return null;
     }
 
     private static void ensureApplicationArchiveTable(Connection conn) throws SQLException {
@@ -1229,7 +1878,557 @@ public final class DashboardDataService {
         return applications;
     }
 
-    // ── In-system notifications ────────────────────────────────────────────────
+    public static List<Map<String, Object>> loadPendingProfileReviews(Connection conn, String search, int limit)
+            throws SQLException {
+        ensureUserProfileReviewColumns(conn);
+        StringBuilder sql = new StringBuilder(
+                "SELECT id, username, full_name, email, phone_number, avatar_url, supporting_document_url, profile_review_status, profile_submitted_at, profile_review_notes, status, created_at "
+                        + "FROM users WHERE role = 'USER' AND profile_review_status IN ('PENDING_REVIEW', 'REJECTED')");
+        List<Object> parameters = new ArrayList<>();
+
+        if (search != null && !search.isBlank()) {
+            sql.append(" AND (username LIKE ? OR full_name LIKE ? OR email LIKE ?)");
+            String keyword = "%" + search.trim() + "%";
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+        }
+
+        sql.append(" ORDER BY COALESCE(profile_submitted_at, created_at) DESC, id DESC");
+        if (limit > 0) {
+            sql.append(" LIMIT ?");
+        }
+
+        List<Map<String, Object>> rows = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            int index = applyParameters(stmt, parameters);
+            if (limit > 0) {
+                stmt.setInt(index, limit);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("username", rs.getString("username"));
+                    row.put("full_name", rs.getString("full_name"));
+                    row.put("email", rs.getString("email"));
+                    row.put("phone_number", rs.getString("phone_number"));
+                    row.put("avatar_url", rs.getString("avatar_url"));
+                    row.put("supporting_document_url", rs.getString("supporting_document_url"));
+                    row.put("profile_review_status", rs.getString("profile_review_status"));
+                    row.put("profile_submitted_at", rs.getTimestamp("profile_submitted_at"));
+                    row.put("profile_review_notes", rs.getString("profile_review_notes"));
+                    row.put("status", rs.getString("status"));
+                    row.put("created_at", rs.getTimestamp("created_at"));
+                    rows.add(row);
+                }
+            }
+        }
+        return rows;
+    }
+
+    public static int countPendingProfileReviews(Connection conn) throws SQLException {
+        ensureUserProfileReviewColumns(conn);
+        return countByQuery(conn,
+                "SELECT COUNT(*) FROM users WHERE role = 'USER' AND profile_review_status IN ('PENDING_REVIEW', 'REJECTED')");
+    }
+
+    public static List<Map<String, Object>> loadUpdateApplicationsForReview(Connection conn, String search, int limit)
+            throws SQLException {
+        ensureApplicationArchiveTable(conn);
+        ensureCertificateColumns(conn);
+
+        StringBuilder clause = new StringBuilder(
+                " WHERE ad.application_type = 'KEMASKINI' AND aa.application_id IS NULL AND a.status IN ('NEW', 'UNDER_REVIEW')");
+        List<Object> parameters = new ArrayList<>();
+
+        if (search != null && !search.isBlank()) {
+            clause.append(" AND (a.company_name LIKE ? OR a.product_name LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?)");
+            String keyword = "%" + search.trim() + "%";
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+            parameters.add(keyword);
+        }
+
+        String sql = "SELECT a.id, a.company_name, a.product_name, a.product_category, a.product_description, a.status, a.submitted_at, "
+                + "a.reviewed_at, a.reviewed_by, a.admin_notes, u.full_name, u.email AS user_email, "
+                + "ad.application_type, ad.supplier_name, ad.supplier_phone, ad.supplier_address, "
+                + "ad.manufacturer_name, ad.manufacturer_address, ad.manufacturer_phone, "
+                + "ad.principal_name, ad.principal_address, ad.principal_phone, "
+                + "ad.standard_name, ad.certification_license, ad.certification_valid_until, "
+                + "ad.test_report_reference, ad.test_report_date, ad.warranty_years, "
+                + "ad.sabah_rep_name, ad.sabah_rep_address, ad.sabah_rep_phone "
+                + "FROM applications a "
+                + "JOIN users u ON u.id = a.user_id "
+                + "LEFT JOIN application_details ad ON ad.application_id = a.id "
+                + "LEFT JOIN application_archives aa ON aa.application_id = a.id "
+                + clause.toString()
+                + " ORDER BY COALESCE(a.reviewed_at, a.created_at) DESC";
+        if (limit > 0) {
+            sql += " LIMIT ?";
+        }
+
+        List<Map<String, Object>> rows = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int index = applyParameters(stmt, parameters);
+            if (limit > 0) {
+                stmt.setInt(index, limit);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("company_name", rs.getString("company_name"));
+                    row.put("product_name", rs.getString("product_name"));
+                    row.put("product_category", rs.getString("product_category"));
+                    row.put("product_description", rs.getString("product_description"));
+                    row.put("status", rs.getString("status"));
+                    row.put("submitted_at", rs.getTimestamp("submitted_at"));
+                    row.put("reviewed_at", rs.getTimestamp("reviewed_at"));
+                    row.put("reviewed_by", rs.getObject("reviewed_by"));
+                    row.put("admin_notes", rs.getString("admin_notes"));
+                    row.put("full_name", rs.getString("full_name"));
+                    row.put("user_email", rs.getString("user_email"));
+                    row.put("application_type", rs.getString("application_type"));
+                    row.put("supplier_name", rs.getString("supplier_name"));
+                    row.put("supplier_phone", rs.getString("supplier_phone"));
+                    row.put("supplier_address", rs.getString("supplier_address"));
+                    row.put("manufacturer_name", rs.getString("manufacturer_name"));
+                    row.put("manufacturer_address", rs.getString("manufacturer_address"));
+                    row.put("manufacturer_phone", rs.getString("manufacturer_phone"));
+                    row.put("principal_name", rs.getString("principal_name"));
+                    row.put("principal_address", rs.getString("principal_address"));
+                    row.put("principal_phone", rs.getString("principal_phone"));
+                    row.put("standard_name", rs.getString("standard_name"));
+                    row.put("certification_license", rs.getString("certification_license"));
+                    row.put("certification_valid_until", rs.getDate("certification_valid_until"));
+                    row.put("test_report_reference", rs.getString("test_report_reference"));
+                    row.put("test_report_date", rs.getDate("test_report_date"));
+                    row.put("warranty_years", rs.getBigDecimal("warranty_years"));
+                    row.put("sabah_rep_name", rs.getString("sabah_rep_name"));
+                    row.put("sabah_rep_address", rs.getString("sabah_rep_address"));
+                    row.put("sabah_rep_phone", rs.getString("sabah_rep_phone"));
+                    rows.add(row);
+                }
+            }
+        }
+        return rows;
+    }
+
+    public static int countUpdateApplicationsForReview(Connection conn) throws SQLException {
+        ensureApplicationArchiveTable(conn);
+        ensureCertificateColumns(conn);
+        String sql = "SELECT COUNT(*) FROM applications a "
+                + "JOIN application_details ad ON ad.application_id = a.id "
+                + "LEFT JOIN application_archives aa ON aa.application_id = a.id "
+                + "WHERE ad.application_type = 'KEMASKINI' AND aa.application_id IS NULL AND a.status IN ('NEW', 'UNDER_REVIEW')";
+        return countByQuery(conn, sql);
+    }
+
+    public static void updateUserProfileReviewStatus(Connection conn, int userId, String status,
+                                                     Integer reviewedBy, String reviewNotes) throws SQLException {
+        ensureUserProfileReviewColumns(conn);
+        String sql = "UPDATE users SET profile_review_status = ?, profile_submitted_at = COALESCE(profile_submitted_at, CURRENT_TIMESTAMP), "
+                + "profile_reviewed_at = CURRENT_TIMESTAMP, profile_reviewed_by = ?, profile_review_notes = ? WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            if (reviewedBy == null) {
+                stmt.setNull(2, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(2, reviewedBy);
+            }
+            if (reviewNotes == null || reviewNotes.isBlank()) {
+                stmt.setNull(3, java.sql.Types.VARCHAR);
+            } else {
+                stmt.setString(3, reviewNotes);
+            }
+            stmt.setInt(4, userId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public static void markUserProfileSubmitted(Connection conn, int userId) throws SQLException {
+        ensureUserProfileReviewColumns(conn);
+        String sql = "UPDATE users SET profile_review_status = 'PENDING_REVIEW', profile_submitted_at = CURRENT_TIMESTAMP, "
+                + "profile_reviewed_at = NULL, profile_reviewed_by = NULL, profile_review_notes = NULL WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private static void ensureUserProfileReviewColumns(Connection conn) throws SQLException {
+        if (!columnExists(conn, "users", "supporting_document_url")) {
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE users ADD COLUMN supporting_document_url VARCHAR(255) NULL AFTER avatar_url");
+            }
+        }
+        if (!columnExists(conn, "users", "profile_review_status")) {
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE users ADD COLUMN profile_review_status ENUM('DRAFT','PENDING_REVIEW','APPROVED','REJECTED') NOT NULL DEFAULT 'DRAFT' AFTER supporting_document_url");
+            }
+        }
+        if (!columnExists(conn, "users", "profile_submitted_at")) {
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE users ADD COLUMN profile_submitted_at TIMESTAMP NULL AFTER profile_review_status");
+            }
+        }
+        if (!columnExists(conn, "users", "profile_reviewed_at")) {
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE users ADD COLUMN profile_reviewed_at TIMESTAMP NULL AFTER profile_submitted_at");
+            }
+        }
+        if (!columnExists(conn, "users", "profile_reviewed_by")) {
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE users ADD COLUMN profile_reviewed_by INT NULL AFTER profile_reviewed_at");
+            }
+        }
+        if (!columnExists(conn, "users", "profile_review_notes")) {
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE users ADD COLUMN profile_review_notes TEXT NULL AFTER profile_reviewed_by");
+            }
+        }
+    }
+
+    public static List<Map<String, Object>> loadAdminRecipients(Connection conn) throws SQLException {
+        List<Map<String, Object>> recipients = new ArrayList<>();
+        String sql = "SELECT id, full_name, username, email FROM users WHERE role = 'ADMIN' AND status = 'ACTIVE' ORDER BY role_seq ASC, id ASC";
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("id", rs.getInt("id"));
+                row.put("full_name", rs.getString("full_name"));
+                row.put("username", rs.getString("username"));
+                row.put("email", rs.getString("email"));
+                recipients.add(row);
+            }
+        }
+        return recipients;
+    }
+
+    // Î“Ã¶Ã‡Î“Ã¶Ã‡ Presentation invitations Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡
+
+    public static long createPresentationInvite(Connection conn,
+            int applicationId,
+            int userId,
+            Integer invitedBy,
+            String presentationDate,
+            String presentationTime,
+            String presentationVenue,
+            String applicantMemo,
+            String kppEmails,
+            String kppMemo,
+            boolean rescheduled,
+            Long replacesInviteId) throws SQLException {
+        ensurePresentationInviteTable(conn);
+
+        if (replacesInviteId != null) {
+            try (PreparedStatement closeStmt = conn.prepareStatement(
+                    "UPDATE presentation_invites SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?")) {
+                closeStmt.setLong(1, replacesInviteId);
+                closeStmt.executeUpdate();
+            }
+        }
+
+        if (replacesInviteId == null) {
+            try (PreparedStatement closeByAppStmt = conn.prepareStatement(
+                    "UPDATE presentation_invites SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE application_id = ? AND is_active = 1")) {
+                closeByAppStmt.setInt(1, applicationId);
+                closeByAppStmt.executeUpdate();
+            }
+        }
+
+        String sql = "INSERT INTO presentation_invites ("
+                + "application_id, user_id, invited_by, presentation_date, presentation_time, presentation_venue, "
+                + "applicant_memo, kpp_emails, kpp_memo, invite_status, applicant_response, reschedule_count, is_active"
+                + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, 1)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, applicationId);
+            stmt.setInt(2, userId);
+            if (invitedBy == null) {
+                stmt.setNull(3, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(3, invitedBy);
+            }
+            stmt.setString(4, presentationDate);
+            stmt.setString(5, presentationTime);
+            stmt.setString(6, presentationVenue);
+            stmt.setString(7, applicantMemo);
+            stmt.setString(8, kppEmails);
+            stmt.setString(9, kppMemo);
+            stmt.setString(10, "MENUNGGU_MAKLUM_BALAS");
+            stmt.setInt(11, rescheduled ? 1 : 0);
+            stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            }
+        }
+
+        return 0L;
+    }
+
+    public static Map<String, Object> loadLatestActivePresentationInviteByUser(Connection conn, int userId) throws SQLException {
+        ensurePresentationInviteTable(conn);
+        String sql = "SELECT pi.id, pi.application_id, pi.user_id, pi.presentation_date, pi.presentation_time, pi.presentation_venue, "
+                + "pi.applicant_memo, pi.kpp_emails, pi.kpp_memo, pi.invite_status, pi.applicant_response, pi.applicant_rep_name, "
+                + "pi.applicant_attendee_count, pi.applicant_absence_reason, pi.reschedule_count, pi.responded_at, pi.created_at, pi.updated_at, "
+                + "a.product_name, a.company_name "
+                + "FROM presentation_invites pi "
+                + "JOIN applications a ON a.id = pi.application_id "
+                + "WHERE pi.user_id = ? AND pi.is_active = 1 "
+                + "ORDER BY pi.updated_at DESC, pi.id DESC LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("application_id", rs.getInt("application_id"));
+                    row.put("user_id", rs.getInt("user_id"));
+                    row.put("presentation_date", rs.getString("presentation_date"));
+                    row.put("presentation_time", rs.getString("presentation_time"));
+                    row.put("presentation_venue", rs.getString("presentation_venue"));
+                    row.put("applicant_memo", rs.getString("applicant_memo"));
+                    row.put("kpp_emails", rs.getString("kpp_emails"));
+                    row.put("kpp_memo", rs.getString("kpp_memo"));
+                    row.put("invite_status", rs.getString("invite_status"));
+                    row.put("applicant_response", rs.getString("applicant_response"));
+                    row.put("applicant_rep_name", rs.getString("applicant_rep_name"));
+                    row.put("applicant_attendee_count", rs.getObject("applicant_attendee_count"));
+                    row.put("applicant_absence_reason", rs.getString("applicant_absence_reason"));
+                    row.put("reschedule_count", rs.getInt("reschedule_count"));
+                    row.put("responded_at", rs.getTimestamp("responded_at"));
+                    row.put("created_at", rs.getTimestamp("created_at"));
+                    row.put("updated_at", rs.getTimestamp("updated_at"));
+                    row.put("product_name", rs.getString("product_name"));
+                    row.put("company_name", rs.getString("company_name"));
+                    return row;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static int countPendingPresentationInvitesByUser(Connection conn, int userId) throws SQLException {
+        ensurePresentationInviteTable(conn);
+        String sql = "SELECT COUNT(*) FROM presentation_invites "
+                + "WHERE user_id = ? AND is_active = 1 AND invite_status IN ('MENUNGGU_MAKLUM_BALAS', 'MENUNGGU_PENJADUALAN_SEMULA')";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public static List<Map<String, Object>> loadPresentationInviteHistoryByUser(Connection conn, int userId, int limit) throws SQLException {
+        ensurePresentationInviteTable(conn);
+        List<Map<String, Object>> rows = new ArrayList<>();
+        String sql = "SELECT pi.id, pi.application_id, pi.user_id, pi.presentation_date, pi.presentation_time, pi.presentation_venue, "
+                + "pi.applicant_memo, pi.kpp_emails, pi.kpp_memo, pi.invite_status, pi.applicant_response, pi.applicant_rep_name, "
+                + "pi.applicant_attendee_count, pi.applicant_absence_reason, pi.reschedule_count, pi.responded_at, pi.created_at, pi.updated_at, "
+                + "a.product_name, a.company_name "
+                + "FROM presentation_invites pi "
+                + "JOIN applications a ON a.id = pi.application_id "
+                + "WHERE pi.user_id = ? "
+                + "ORDER BY pi.updated_at DESC, pi.id DESC "
+                + "LIMIT ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setInt(2, Math.max(1, limit));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("application_id", rs.getInt("application_id"));
+                    row.put("user_id", rs.getInt("user_id"));
+                    row.put("presentation_date", rs.getString("presentation_date"));
+                    row.put("presentation_time", rs.getString("presentation_time"));
+                    row.put("presentation_venue", rs.getString("presentation_venue"));
+                    row.put("applicant_memo", rs.getString("applicant_memo"));
+                    row.put("kpp_emails", rs.getString("kpp_emails"));
+                    row.put("kpp_memo", rs.getString("kpp_memo"));
+                    row.put("invite_status", rs.getString("invite_status"));
+                    row.put("applicant_response", rs.getString("applicant_response"));
+                    row.put("applicant_rep_name", rs.getString("applicant_rep_name"));
+                    row.put("applicant_attendee_count", rs.getObject("applicant_attendee_count"));
+                    row.put("applicant_absence_reason", rs.getString("applicant_absence_reason"));
+                    row.put("reschedule_count", rs.getInt("reschedule_count"));
+                    row.put("responded_at", rs.getTimestamp("responded_at"));
+                    row.put("created_at", rs.getTimestamp("created_at"));
+                    row.put("updated_at", rs.getTimestamp("updated_at"));
+                    row.put("product_name", rs.getString("product_name"));
+                    row.put("company_name", rs.getString("company_name"));
+                    rows.add(row);
+                }
+            }
+        }
+        return rows;
+    }
+
+    public static boolean respondToPresentationInvite(Connection conn,
+            long inviteId,
+            int userId,
+            String response,
+            String representativeName,
+            Integer attendeeCount,
+            String absenceReason) throws SQLException {
+        ensurePresentationInviteTable(conn);
+        String normalizedResponse = response == null ? "" : response.trim().toUpperCase(Locale.ROOT);
+        String status;
+        if ("HADIR".equals(normalizedResponse)) {
+            status = "HADIR";
+        } else if ("TIDAK_HADIR".equals(normalizedResponse)) {
+            status = "TIDAK_HADIR";
+        } else {
+            return false;
+        }
+
+        String sql = "UPDATE presentation_invites SET invite_status = ?, applicant_response = ?, "
+                + "applicant_rep_name = ?, applicant_attendee_count = ?, applicant_absence_reason = ?, "
+                + "responded_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP "
+                + "WHERE id = ? AND user_id = ? AND is_active = 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            stmt.setString(2, normalizedResponse);
+            stmt.setString(3, representativeName);
+            if (attendeeCount == null) {
+                stmt.setNull(4, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(4, attendeeCount);
+            }
+            stmt.setString(5, absenceReason);
+            stmt.setLong(6, inviteId);
+            stmt.setInt(7, userId);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public static List<Map<String, Object>> loadPresentationInvitesForAdmin(Connection conn, int limit) throws SQLException {
+        ensurePresentationInviteTable(conn);
+        List<Map<String, Object>> rows = new ArrayList<>();
+        String sql = "SELECT pi.id, pi.application_id, pi.user_id, pi.presentation_date, pi.presentation_time, pi.presentation_venue, "
+                + "pi.applicant_memo, pi.kpp_emails, pi.kpp_memo, pi.invite_status, pi.applicant_response, pi.applicant_rep_name, "
+                + "pi.applicant_attendee_count, pi.applicant_absence_reason, pi.reschedule_count, pi.responded_at, pi.created_at, pi.updated_at, "
+                + "a.product_name, a.company_name, u.full_name AS applicant_name, u.email AS applicant_email "
+                + "FROM presentation_invites pi "
+                + "JOIN applications a ON a.id = pi.application_id "
+                + "JOIN users u ON u.id = pi.user_id "
+                + "ORDER BY pi.updated_at DESC, pi.id DESC "
+                + "LIMIT ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, Math.max(1, limit));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("application_id", rs.getInt("application_id"));
+                    row.put("user_id", rs.getInt("user_id"));
+                    row.put("presentation_date", rs.getString("presentation_date"));
+                    row.put("presentation_time", rs.getString("presentation_time"));
+                    row.put("presentation_venue", rs.getString("presentation_venue"));
+                    row.put("applicant_memo", rs.getString("applicant_memo"));
+                    row.put("kpp_emails", rs.getString("kpp_emails"));
+                    row.put("kpp_memo", rs.getString("kpp_memo"));
+                    row.put("invite_status", rs.getString("invite_status"));
+                    row.put("applicant_response", rs.getString("applicant_response"));
+                    row.put("applicant_rep_name", rs.getString("applicant_rep_name"));
+                    row.put("applicant_attendee_count", rs.getObject("applicant_attendee_count"));
+                    row.put("applicant_absence_reason", rs.getString("applicant_absence_reason"));
+                    row.put("reschedule_count", rs.getInt("reschedule_count"));
+                    row.put("responded_at", rs.getTimestamp("responded_at"));
+                    row.put("created_at", rs.getTimestamp("created_at"));
+                    row.put("updated_at", rs.getTimestamp("updated_at"));
+                    row.put("product_name", rs.getString("product_name"));
+                    row.put("company_name", rs.getString("company_name"));
+                    row.put("applicant_name", rs.getString("applicant_name"));
+                    row.put("applicant_email", rs.getString("applicant_email"));
+                    rows.add(row);
+                }
+            }
+        }
+        return rows;
+    }
+
+    public static Map<String, Object> loadPresentationInviteById(Connection conn, long inviteId) throws SQLException {
+        ensurePresentationInviteTable(conn);
+        String sql = "SELECT id, application_id, user_id, invited_by, presentation_date, presentation_time, presentation_venue, "
+                + "applicant_memo, kpp_emails, kpp_memo, invite_status, applicant_response, applicant_rep_name, "
+                + "applicant_attendee_count, applicant_absence_reason, reschedule_count, is_active, responded_at, created_at, updated_at "
+                + "FROM presentation_invites WHERE id = ? LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, inviteId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("application_id", rs.getInt("application_id"));
+                    row.put("user_id", rs.getInt("user_id"));
+                    row.put("invited_by", rs.getObject("invited_by"));
+                    row.put("presentation_date", rs.getString("presentation_date"));
+                    row.put("presentation_time", rs.getString("presentation_time"));
+                    row.put("presentation_venue", rs.getString("presentation_venue"));
+                    row.put("applicant_memo", rs.getString("applicant_memo"));
+                    row.put("kpp_emails", rs.getString("kpp_emails"));
+                    row.put("kpp_memo", rs.getString("kpp_memo"));
+                    row.put("invite_status", rs.getString("invite_status"));
+                    row.put("applicant_response", rs.getString("applicant_response"));
+                    row.put("applicant_rep_name", rs.getString("applicant_rep_name"));
+                    row.put("applicant_attendee_count", rs.getObject("applicant_attendee_count"));
+                    row.put("applicant_absence_reason", rs.getString("applicant_absence_reason"));
+                    row.put("reschedule_count", rs.getInt("reschedule_count"));
+                    row.put("is_active", rs.getInt("is_active"));
+                    row.put("responded_at", rs.getTimestamp("responded_at"));
+                    row.put("created_at", rs.getTimestamp("created_at"));
+                    row.put("updated_at", rs.getTimestamp("updated_at"));
+                    return row;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static void ensurePresentationInviteTable(Connection conn) throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS presentation_invites ("
+                + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
+                + "application_id INT NOT NULL, "
+                + "user_id INT NOT NULL, "
+                + "invited_by INT NULL, "
+                + "presentation_date DATE NOT NULL, "
+                + "presentation_time VARCHAR(10) NOT NULL, "
+                + "presentation_venue VARCHAR(255) NOT NULL, "
+                + "applicant_memo TEXT NULL, "
+                + "kpp_emails TEXT NULL, "
+                + "kpp_memo TEXT NULL, "
+                + "invite_status VARCHAR(50) NOT NULL DEFAULT 'MENUNGGU_MAKLUM_BALAS', "
+                + "applicant_response VARCHAR(30) NULL, "
+                + "applicant_rep_name VARCHAR(180) NULL, "
+                + "applicant_attendee_count INT NULL, "
+                + "applicant_absence_reason TEXT NULL, "
+                + "reschedule_count INT NOT NULL DEFAULT 0, "
+                + "is_active TINYINT(1) NOT NULL DEFAULT 1, "
+                + "responded_at TIMESTAMP NULL, "
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, "
+                + "INDEX idx_presentation_invites_user (user_id, is_active), "
+                + "INDEX idx_presentation_invites_app (application_id), "
+                + "INDEX idx_presentation_invites_status (invite_status), "
+                + "CONSTRAINT fk_presentation_invites_app FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE, "
+                + "CONSTRAINT fk_presentation_invites_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, "
+                + "CONSTRAINT fk_presentation_invites_admin FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.execute();
+        }
+    }
+
+    // Î“Ã¶Ã‡Î“Ã¶Ã‡ In-system notifications Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡
 
     public static void insertNotification(Connection conn, int userId, String message, String type) throws SQLException {
         ensureNotificationsTable(conn);
@@ -1285,6 +2484,27 @@ public final class DashboardDataService {
         return null;
     }
 
+    public static Map<String, Object> loadLatestUnreadDecisionNotification(Connection conn, int userId) throws SQLException {
+        ensureNotificationsTable(conn);
+        String sql = "SELECT id, message, type, created_at FROM notifications "
+                + "WHERE user_id = ? AND is_read = 0 AND UPPER(type) IN ('SUCCESS','ERROR','WARNING') "
+                + "ORDER BY created_at DESC LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("message", rs.getString("message"));
+                    row.put("type", rs.getString("type"));
+                    row.put("created_at", rs.getTimestamp("created_at"));
+                    return row;
+                }
+            }
+        }
+        return null;
+    }
+
     public static int countUnreadNotifications(Connection conn, int userId) throws SQLException {
         ensureNotificationsTable(conn);
         try (PreparedStatement stmt = conn.prepareStatement(
@@ -1320,7 +2540,7 @@ public final class DashboardDataService {
         }
     }
 
-    // ── Email verification tokens ──────────────────────────────────────────────
+    // Î“Ã¶Ã‡Î“Ã¶Ã‡ Email verification tokens Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡
 
     public static void storeVerificationToken(Connection conn, int userId, String token, Timestamp expiresAt) throws SQLException {
         ensureVerificationTokensTable(conn);
@@ -1382,3 +2602,4 @@ public final class DashboardDataService {
         }
     }
 }
+

@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas UserAvatarServlet.
+ * Dipanggil melalui URL:  /avatars/view (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.sistemppa.config.DatabaseConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -47,7 +53,7 @@ public class UserAvatarServlet extends HttpServlet {
                     "uploads", "sistemppa");
             Path avatarPath = Path.of(avatarValue).normalize();
 
-            // toRealPath() requires the file to exist – check existence first
+            // toRealPath() requires the file to exist â€“ check existence first
             if (!Files.exists(avatarPath)) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Fail avatar tidak dijumpai");
                 return;
@@ -128,3 +134,4 @@ public class UserAvatarServlet extends HttpServlet {
         return null;
     }
 }
+

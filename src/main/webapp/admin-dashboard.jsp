@@ -1,9 +1,11 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%-- NOTA ALIRAN KOD: Fail admin-dashboard.jsp. Halaman ini dipaparkan oleh aliran /dashboard untuk pengguna role ADMIN. --%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.nio.charset.StandardCharsets" %>
 <%@ page import="java.nio.file.Files" %>
 <%@ page import="java.nio.file.Path" %>
 <%@ page import="java.nio.file.Paths" %>
 <%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.Collections" %>
 <%@ page import="java.util.LinkedHashMap" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
@@ -108,32 +110,182 @@
     }
 
     private String displayStatusLabel(String status) {
+        return displayStatusLabel(status, null);
+    }
+
+    private String displayStatusLabel(String status, Map<String, String> labelMap) {
         if (status == null) {
             return "";
         }
         String normalized = status.trim().toUpperCase(java.util.Locale.ROOT);
+        if (labelMap != null) {
+            String fromDb = labelMap.get(normalized);
+            if (fromDb != null && !fromDb.isBlank()) {
+                return fromDb.replace('_', ' ').trim();
+            }
+        }
         if ("APPROVED".equals(normalized) || "DILULUSKAN".equals(normalized)) {
             return "DILULUSKAN";
         }
         if ("REJECTED".equals(normalized) || "DITOLAK".equals(normalized)) {
             return "DITOLAK";
         }
+        if ("KUERI".equals(normalized)) {
+            return "KUERI";
+        }
         if ("SUSPENDED".equals(normalized) || "DIGANTUNG".equals(normalized)) {
             return "DIGANTUNG";
         }
         if ("DRAFT".equals(normalized) || "DRAF".equals(normalized)) {
-            return "NEW";
+            return "DRAF";
         }
         if ("ARCHIVED".equals(normalized) || "DIARKIB".equals(normalized)) {
             return "DIARKIB";
         }
         if ("UNDER_REVIEW".equals(normalized) || "DALAM_SEMAKAN".equals(normalized) || "DALAM SEMAKAN".equals(normalized)) {
-            return "DALAM SEMAKAN";
+            return "PERMOHONAN DITERIMA";
+        }
+        if ("DILULUSKAN_PENGARAH".equals(normalized)) {
+            return "DILULUSKAN PENGARAH";
+        }
+        if ("MENUNGGU_TINDAKAN_PENGARAH".equals(normalized)) {
+            return "MENUNGGU TINDAKAN PENGARAH";
+        }
+        if (normalized.startsWith("MENUNGGU_SETERUSNYA_")) {
+            return "MENUNGGU SETERUSNYA";
         }
         if ("IN_PROGRESS".equals(normalized) || "DALAM_PROSES".equals(normalized) || "DALAM PROSES".equals(normalized)) {
             return "DALAM PROSES";
         }
-        return status;
+        return normalized.replace('_', ' ');
+    }
+
+    private String formatDateValue(Object value) {
+        java.time.LocalDate date = null;
+        if (value instanceof java.sql.Timestamp) {
+            date = ((java.sql.Timestamp) value).toLocalDateTime().toLocalDate();
+        } else if (value instanceof java.sql.Date) {
+            date = ((java.sql.Date) value).toLocalDate();
+        } else if (value != null) {
+            String raw = String.valueOf(value).trim();
+            if (!raw.isEmpty() && !"-".equals(raw)) {
+                String normalized = raw.replace('T', ' ');
+                try {
+                    if (normalized.length() >= 10) {
+                        date = java.time.LocalDate.parse(normalized.substring(0, 10));
+                    }
+                } catch (Exception ignored) {
+                    date = null;
+                }
+            }
+        }
+        if (date == null) {
+            return "-";
+        }
+        return date.format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+    }
+
+    private String formatDateTimeValue(Object value) {
+        java.time.LocalDateTime dateTime = null;
+        if (value instanceof java.sql.Timestamp) {
+            dateTime = ((java.sql.Timestamp) value).toLocalDateTime();
+        } else if (value instanceof java.sql.Date) {
+            dateTime = ((java.sql.Date) value).toLocalDate().atStartOfDay();
+        } else if (value != null) {
+            String raw = String.valueOf(value).trim();
+            if (!raw.isEmpty() && !"-".equals(raw)) {
+                String normalized = raw.replace('T', ' ');
+                try {
+                    if (normalized.length() >= 19) {
+                        dateTime = java.time.LocalDateTime.parse(
+                                normalized.substring(0, 19),
+                                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    } else if (normalized.length() >= 10) {
+                        dateTime = java.time.LocalDate.parse(normalized.substring(0, 10)).atStartOfDay();
+                    }
+                } catch (Exception ignored) {
+                    dateTime = null;
+                }
+            }
+        }
+        if (dateTime == null) {
+            return "-";
+        }
+        return dateTime.format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
+    }
+
+    private String profileReviewStatusLabel(Object statusObj) {
+        if (statusObj == null) {
+            return "DRAF";
+        }
+        String status = String.valueOf(statusObj).trim().toUpperCase(java.util.Locale.ROOT);
+        if ("APPROVED".equals(status)) {
+            return "DILULUSKAN";
+        }
+        if ("REJECTED".equals(status)) {
+            return "DITOLAK";
+        }
+        if ("PENDING_REVIEW".equals(status)) {
+            return "MENUNGGU SEMAKAN";
+        }
+        return "DRAF";
+    }
+
+    private String profileReviewStatusCss(Object statusObj) {
+        if (statusObj == null) {
+            return "status-draft";
+        }
+        String status = String.valueOf(statusObj).trim().toUpperCase(java.util.Locale.ROOT);
+        if ("APPROVED".equals(status)) {
+            return "status-approved";
+        }
+        if ("REJECTED".equals(status)) {
+            return "status-rejected";
+        }
+        if ("PENDING_REVIEW".equals(status)) {
+            return "status-under_review";
+        }
+        return "status-draft";
+    }
+
+    private String presentationInviteStatusLabel(Object statusObj) {
+        if (statusObj == null) {
+            return "MENUNGGU MAKLUM BALAS";
+        }
+        String status = String.valueOf(statusObj).trim().toUpperCase(java.util.Locale.ROOT);
+        if ("HADIR".equals(status)) {
+            return "HADIR";
+        }
+        if ("TIDAK_HADIR".equals(status) || "TIDAK HADIR".equals(status)) {
+            return "TIDAK HADIR";
+        }
+        if ("MENUNGGU_PENJADUALAN_SEMULA".equals(status) || "MENUNGGU PENJADUALAN SEMULA".equals(status)) {
+            return "MENUNGGU PENJADUALAN SEMULA";
+        }
+        if ("SELESAI".equals(status)) {
+            return "SELESAI";
+        }
+        return "MENUNGGU MAKLUM BALAS";
+    }
+
+    private String presentationInviteStatusCss(Object statusObj) {
+        if (statusObj == null) {
+            return "status-under_review";
+        }
+        String status = String.valueOf(statusObj).trim().toUpperCase(java.util.Locale.ROOT);
+        if ("HADIR".equals(status)) {
+            return "status-approved";
+        }
+        if ("TIDAK_HADIR".equals(status) || "TIDAK HADIR".equals(status)) {
+            return "status-rejected";
+        }
+        if ("SELESAI".equals(status)) {
+            return "status-resolved";
+        }
+        if ("MENUNGGU_PENJADUALAN_SEMULA".equals(status) || "MENUNGGU PENJADUALAN SEMULA".equals(status)) {
+            return "status-suspended";
+        }
+        return "status-under_review";
     }
 %>
 <!DOCTYPE html>
@@ -142,9 +294,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-typography.css?v=1">
-    <title>Dashboard Pentadbir - SPPPA</title>
+    <title>Dashboard Pentadbir - SPPPBA</title>
     <style>
-/*A��─ Design tokensA��──────────────────────────── */
+
         :root {
             --brand-blue: #0097d9;
             --brand-navy: #06344f;
@@ -158,24 +310,87 @@
         }
         * { box-sizing: border-box; }
         body { margin: 0; font-family: inherit; background: linear-gradient(180deg, #f4fbff 0%, #f9fcfd 100%); color: var(--text); }
-        .navbar { background: linear-gradient(130deg, var(--brand-navy) 0%, var(--brand-blue) 76%, var(--brand-yellow) 190%); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .navbar { background: var(--brand-navy); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; }
         .brand-logo { width: 52px; height: 52px; border-radius: 14px; object-fit: contain; padding: 4px; }
         .brand h1 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.2px; }
         .brand p { margin: 2px 0 0; font-size: 12px; opacity: 0.85; }
-        .navbar a { color: white; text-decoration: none; margin-left: 14px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; opacity: 0.92; transition: opacity var(--tr); }
-        .navbar a:hover { opacity: 1; }
+        .navbar a:not(.nav-icon-link) { color: white; text-decoration: none; margin-left: 14px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; opacity: 0.92; transition: opacity var(--tr); }
+        .navbar a:not(.nav-icon-link):hover { opacity: 1; }
         .navbar > div:last-child { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
         .navbar > div:last-child span { font-size: 13px; font-weight: 600; margin-right: 6px; }
-        .icon-inline { width: 14px; height: 14px; object-fit: contain; vertical-align: middle; }
-        .icon-link { width: 32px; height: 32px; margin-left: 6px; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); display: inline-flex; align-items: center; justify-content: center; padding: 0; }
-        .icon-link img { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; }
+        .icon-inline { width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; line-height: 1; vertical-align: middle; }
+        .nav-icon-link { width: 54px; height: 54px; margin-left: 0; border-radius: 999px; background: #0f4f8f; border: 2px solid #0b3f72; display: inline-flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22); color: #ffffff; text-decoration: none; opacity: 1; }
+        .nav-icon {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", sans-serif;
+            font-size: 30px;
+            font-weight: 800;
+            line-height: 1;
+            color: #ffffff;
+            text-shadow: none;
+        }
+        .nav-icon-svg {
+            width: 28px;
+            height: 28px;
+            display: block;
+            stroke: #ffffff;
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .nav-icon-link:hover { background: #1263b5; }
         .panel-expand-btn { background: none; border: none; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; }
-        .panel-expand-btn img { width: 18px; height: 18px; object-fit: contain; }
+        .panel-expand-btn .panel-expand-icon { font-size: 18px; line-height: 1; color: #0f6bae; }
         .container { max-width: 1320px; margin: 28px auto; padding: 0 20px 32px; }
         .left-panel, .right-panel { min-width: 0; }
         .hero { display: grid; grid-template-columns: 1.8fr 1fr; gap: 20px; margin-bottom: 20px; }
         .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 16px 40px rgba(6, 52, 79, 0.08); padding: 22px; }
+            .review-panel { border-top: 4px solid #0f6bae; background: linear-gradient(180deg, #ffffff 0%, #f6fbff 100%); }
+            .review-panel table { min-width: 820px; width: 100%; border-collapse: collapse; }
+            .review-panel table thead th { position: sticky; top: 0; z-index: 1; background: #f6fbff; }
+            .review-panel .review-assets { display: grid; gap: 8px; }
+            .review-panel .review-asset-link {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                padding: 7px 10px;
+                border-radius: 8px;
+                border: 1px solid #bfd8ea;
+                background: #eaf5fc;
+                color: #0f4f79;
+                text-decoration: none;
+                font-size: 12px;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+            .review-panel .review-asset-link:hover { background: #ddedf9; }
+            .review-panel .review-actions { display: grid; gap: 8px; min-width: 220px; }
+            .review-panel .review-actions form { margin: 0; display: flex; gap: 6px; flex-wrap: wrap; }
+            .review-panel .review-actions .btn { min-width: 94px; padding: 8px 10px; font-size: 12px; }
+            .review-panel .review-note-input {
+                width: 100%;
+                border: 1px solid #cfe1ee;
+                border-radius: 10px;
+                background: #f9fcff;
+                color: #214e69;
+                padding: 8px 10px;
+                font: inherit;
+                font-size: 12px;
+            }
+            .review-panel .review-meta {
+                display: grid;
+                gap: 4px;
+                font-size: 12px;
+                color: #5b7485;
+                line-height: 1.45;
+            }
         .hero h2 { margin-top: 0; font-size: 30px; }
         .hero p { color: var(--muted); line-height: 1.7; max-width: 760px; }
         .metric-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
@@ -183,23 +398,59 @@
         .contact-image { width: 100%; border-radius: 16px; border: 1px solid var(--line); padding: 14px; background: #f7fbff; }
         .contact-image strong { display: block; margin-bottom: 8px; color: var(--brand-navy); }
         .contact-image p { margin: 4px 0; color: var(--muted); font-size: 14px; }
-        .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
-        .stat-card { background: var(--surface); padding: 18px; border-radius: 18px; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(6, 52, 79, 0.06); }
-        .stat-card h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
-        .stat-card .number { font-size: 30px; font-weight: 800; color: var(--brand-navy); }
-        .stats .stat-card:nth-child(1) { background: #d9ecff; border-color: #afd3f8; }
-        .stats .stat-card:nth-child(1) h3, .stats .stat-card:nth-child(1) .number { color: #0f4f8f; }
-        .stats .stat-card:nth-child(2) { background: #d9f7df; border-color: #aee5bb; }
-        .stats .stat-card:nth-child(2) h3, .stats .stat-card:nth-child(2) .number { color: #125c2b; }
-        .stats .stat-card:nth-child(3) { background: #fffef5; border-color: #ece7c9; }
-        .stats .stat-card:nth-child(3) h3, .stats .stat-card:nth-child(3) .number { color: #57513a; }
-        .stats .stat-card:nth-child(4) { background: #ffd9e8; border-color: #f6b6d1; }
-        .stats .stat-card:nth-child(4) h3, .stats .stat-card:nth-child(4) .number { color: #7b1f49; }
-        .stats .stat-card:nth-child(5) { background: #fff3a3; border-color: #f7df6b; }
-        .stats .stat-card:nth-child(5) h3, .stats .stat-card:nth-child(5) .number { color: #6a5700; }
-        .stats .stat-card:nth-child(6) { background: #eadcff; border-color: #cdb0f5; }
-        .stats .stat-card:nth-child(6) h3, .stats .stat-card:nth-child(6) .number { color: #5b2491; }
-        .layout { display: grid; grid-template-columns: 1.9fr 1fr; gap: 20px; }
+        .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: var(--surface); padding: 18px; border-radius: 18px; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(6, 52, 79, 0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .stat-card h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); text-align: center; }
+        .stat-card .number { font-size: 30px; font-weight: 800; color: var(--brand-navy); text-align: center; }
+        .stats .stat-total { background: #d9ecff; border-color: #afd3f8; }
+        .stats .stat-total h3, .stats .stat-total .number { color: #0f4f8f; }
+        .stats .stat-pending { background: #d9f7df; border-color: #aee5bb; }
+        .stats .stat-pending h3, .stats .stat-pending .number { color: #125c2b; }
+        .stats .stat-received { background: #fffef5; border-color: #ece7c9; }
+        .stats .stat-received h3, .stats .stat-received .number { color: #57513a; }
+        .stats .stat-rejected { background: #ffd9e8; border-color: #f6b6d1; }
+        .stats .stat-rejected h3, .stats .stat-rejected .number { color: #7b1f49; }
+        .stats .stat-suspended { background: #fff3a3; border-color: #f7df6b; }
+        .stats .stat-suspended h3, .stats .stat-suspended .number { color: #6a5700; }
+        .stats .stat-approved { background: #eadcff; border-color: #cdb0f5; }
+        .stats .stat-approved h3, .stats .stat-approved .number { color: #5b2491; }
+        .stats .stat-not-passed { background: #ffe8cf; border-color: #f5cfa0; }
+        .stats .stat-not-passed h3, .stats .stat-not-passed .number { color: #8a4708; }
+        .stats .stat-query { background: #d9f8f1; border-color: #a9eadf; }
+        .stats .stat-query h3, .stats .stat-query .number { color: #0f5a4f; }
+        .stats .stat-in-action { background: #e6ecff; border-color: #bac8ff; }
+        .stats .stat-in-action h3, .stats .stat-in-action .number { color: #213e99; }
+        .stats .stat-recommendation { background: #f2e9dc; border-color: #ddc8ad; }
+        .stats .stat-recommendation h3, .stats .stat-recommendation .number { color: #6d4d2e; }
+        .stat-card { position: relative; }
+        .stat-card-alert-dot {
+            position: absolute; top: 10px; right: 10px;
+            width: 11px; height: 11px;
+            border-radius: 50%; background: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220,38,38,0.18);
+            animation: pulse-dot 1.6s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(220,38,38,0.18); }
+            50% { box-shadow: 0 0 0 6px rgba(220,38,38,0.07); }
+        }
+        .tr-needs-action { background: #fffbe6 !important; border-left: 4px solid #f59e0b; }
+        .tr-needs-action:hover { background: #fff7d6 !important; }
+        .row-type-badge {
+            display: inline-block; font-size: 10px; font-weight: 700;
+            padding: 1px 7px; border-radius: 20px; vertical-align: middle;
+            margin-left: 5px; text-transform: uppercase; letter-spacing: 0.03em;
+        }
+        .badge-baharu { background: #dbeafe; color: #1e40af; }
+        .badge-kemaskini { background: #fef3c7; color: #92400e; }
+        .badge-pembaharuan { background: #d1fae5; color: #065f46; }
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 860px) minmax(300px, 380px);
+            gap: 20px;
+            align-items: start;
+            justify-content: center;
+        }
         .toolbar { display: grid; grid-template-columns: minmax(220px, 1.6fr) repeat(3, minmax(140px, 1fr)); gap: 12px; align-items: end; margin-bottom: 16px; }
         .status-filter-compact .status-filter-controls {
             display: flex;
@@ -252,7 +503,106 @@
         .btn-secondary { background: #dcecf6; color: var(--brand-navy); }
         .btn-accent { background: #fff7b0; color: #6a5a00; }
         .section-stack { display: grid; gap: 18px; }
-        .announcement-panel { border-top: 4px solid #0097d9; }
+        .left-panel.section-stack {
+            width: 100%;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+        .left-panel.section-stack > .panel {
+            width: 100%;
+        }
+        .workflow-panel { padding: 0; overflow: hidden; }
+        .workflow-panel .panel-fold-header {
+            width: 100%;
+            border: none;
+            background: #f8fcff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 18px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--line);
+        }
+        .workflow-panel .panel-fold-header > span {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            min-width: 0;
+        }
+        .workflow-panel .panel-fold-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: var(--brand-navy);
+            text-align: left;
+            line-height: 1.25;
+        }
+        .panel-title-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .attention-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.14);
+            flex: 0 0 auto;
+        }
+        .workflow-panel .panel-fold-header small {
+            display: block;
+            margin-top: 0;
+            color: #587486;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+        .workflow-panel .panel-fold-header .panel-fold-icon {
+            font-size: 18px;
+            line-height: 1;
+            color: #0f6bae;
+            transition: transform var(--tr);
+        }
+        .workflow-panel .panel-fold-body {
+            padding: 18px;
+            display: block;
+            position: relative;
+            overflow-y: auto;
+            max-height: 560px;
+            transition: max-height 0.26s ease;
+        }
+        .workflow-panel.is-collapsed .panel-fold-body {
+            display: block;
+            max-height: 108px;
+            overflow: hidden;
+        }
+        .workflow-panel.is-collapsed .panel-fold-body::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 42px;
+            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 68%, #ffffff 100%);
+            pointer-events: none;
+        }
+        .workflow-panel.is-collapsed .panel-fold-header .panel-fold-icon {
+            transform: rotate(-90deg);
+        }
+        .workflow-note {
+            margin-bottom: 12px;
+            border: 1px solid #d8e7f2;
+            border-left: 4px solid #0f6bae;
+            border-radius: 10px;
+            background: #f6fbff;
+            padding: 10px 12px;
+            color: #35566a;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .announcement-panel { border-top: 4px solid #0097d9; display: none; }
         .smtp-settings-panel { border-top: 4px solid #0f6bae; margin-bottom: 18px; }
         .smtp-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
         .smtp-form .smtp-span-2 { grid-column: span 2; }
@@ -269,9 +619,41 @@
         .smtp-form-help { margin-top: 4px; font-size: 12px; color: #5c7485; }
         .smtp-form-actions { display: flex; gap: 8px; align-items: center; }
         .smtp-form-note { font-size: 12px; color: #6f8595; }
-        @media (max-width: 860px) {
-            .smtp-form { grid-template-columns: 1fr; }
-            .smtp-form .smtp-span-2 { grid-column: span 1; }
+        .smtp-popup-card {
+            width: min(1320px, calc(100vw - 20px));
+            max-height: calc(100vh - 36px);
+            overflow: auto;
+            text-align: left;
+            padding: 30px 28px 24px;
+        }
+        .smtp-popup-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .smtp-popup-close {
+            border: 1px solid #c8deec;
+            background: #eef7fd;
+            color: #164764;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .smtp-popup-close:hover {
+            background: #e0f0fb;
+        }
+        @media (max-width: 900px) {
+            #smtpSettingsPanel .smtp-form {
+                gap: 16px 18px;
+            }
+            .smtp-popup-card {
+                width: min(98vw, 760px);
+                padding: 18px 16px 16px;
+            }
         }
         .announcement-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
         .announcement-head img { width: 18px; height: 18px; object-fit: contain; }
@@ -305,8 +687,9 @@
         .announcement-form textarea { min-height: 96px; resize: vertical; }
         .announcement-actions { display: flex; gap: 8px; flex-wrap: wrap; }
         .announcement-table td { font-size: 13px; }
-        .icon-btn { width: 13px; height: 13px; object-fit: contain; }
+        .icon-btn { width: 13px; height: 13px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
         .table-card-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+        .table-card-header.single-action { justify-content: flex-end; }
         .section-title { margin: 0; font-size: 17px; color: var(--brand-navy); }
         .table-wrapper { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: 14px; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; background: white; }
@@ -315,6 +698,20 @@
         td { font-size: 13px; }
         .table-check { width: 16px; height: 16px; cursor: pointer; }
         .subtle { color: #607989; font-size: 12px; line-height: 1.4; }
+        .row-alert-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .row-alert-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            color: #b91c1c;
+            font-size: 12px;
+            font-weight: 700;
+        }
         .empty { text-align: center; color: #6e8492; padding: 18px; }
         .status-pill { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 4px 10px; }
         .status-new { background: #dbeafe; color: #1e40af; }
@@ -326,6 +723,8 @@
         .status-suspended { background: #ececf2; color: #4a4a60; }
         .status-draft { background: #e8f0fb; color: #1b4f8f; }
         .status-archived { background: #eef1f4; color: #455867; }
+        .status-menunggu-tindakan-pengarah { background: #fef9c3; color: #854d0e; }
+        [class*="status-menunggu_seterusnya"] { background: #fde8d8; color: #9a3412; }
         .bulk-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
         .bulk-count { margin-left: 6px; color: #5c7788; font-size: 13px; font-weight: 600; }
         .btn-danger { background: #fbe0e3; color: #9f1f2b; border-color: #f4c5cb; }
@@ -403,8 +802,12 @@
         .sent-popup-icon {
             width: 78px;
             height: 78px;
-            object-fit: contain;
-            display: block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 62px;
+            line-height: 1;
+            color: #0a7fbf;
             margin: 0 auto 10px;
         }
         .sent-popup-title {
@@ -452,8 +855,12 @@
         .maintenance-popup-icon {
             width: 84px;
             height: 84px;
-            object-fit: contain;
-            display: block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            line-height: 1;
+            color: #0f6bae;
             margin: 0 auto 10px;
         }
         .maintenance-popup-title {
@@ -496,85 +903,70 @@
         .maintenance-popup-btn-cancel:hover {
             background: #d8e7f3;
         }
-        .aduan-password-popup {
+        .admin-guide-modal {
             position: fixed;
             inset: 0;
-            background: rgba(6, 25, 40, 0.52);
+            background: rgba(4, 25, 40, 0.56);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1680;
-            padding: 16px;
+            z-index: 1660;
+            padding: 14px;
         }
-        .aduan-password-popup.show {
+        .admin-guide-modal.show {
             display: flex;
         }
-        .aduan-password-popup-card {
-            width: min(420px, 100%);
+        .admin-guide-modal-card {
+            width: min(1180px, 100%);
+            height: min(86vh, 920px);
             background: #ffffff;
             border: 1px solid #d8e5ef;
             border-radius: 16px;
-            box-shadow: 0 24px 54px rgba(3, 30, 54, 0.28);
-            padding: 20px 18px 16px;
-            text-align: center;
+            box-shadow: 0 24px 54px rgba(3, 30, 54, 0.32);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        .aduan-password-popup-icon {
-            width: 84px;
-            height: 84px;
-            object-fit: contain;
-            display: block;
-            margin: 0 auto 10px;
+        .admin-guide-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid #dde8f1;
+            background: #f6fbff;
         }
-        .aduan-password-popup-title {
+        .admin-guide-modal-title {
             margin: 0;
-            font-size: 21px;
+            font-size: 16px;
             font-weight: 800;
             color: #0f3f61;
         }
-        .aduan-password-popup-text {
-            margin: 8px 0 12px;
-            color: #3f6278;
-            font-size: 14px;
-        }
-        .aduan-password-popup-input {
-            width: 100%;
-            border: 1px solid #cfe1ee;
-            border-radius: 10px;
-            background: #f9fcff;
-            color: #214e69;
-            padding: 10px 12px;
-            font: inherit;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-        .aduan-password-popup-actions {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .aduan-password-popup-btn {
-            min-width: 120px;
+        .admin-guide-modal-close {
             border: none;
             border-radius: 10px;
+            background: #dcecf8;
+            color: #1f4f70;
             font-weight: 700;
-            font-size: 14px;
-            padding: 10px 14px;
+            font-size: 13px;
+            padding: 7px 12px;
             cursor: pointer;
         }
-        .aduan-password-popup-btn-confirm {
-            background: #0a7fbf;
-            color: #fff;
+        .admin-guide-modal-close:hover {
+            background: #c9e1f2;
         }
-        .aduan-password-popup-btn-confirm:hover {
-            background: #086da5;
+        .admin-guide-modal-body {
+            flex: 1;
+            min-height: 0;
         }
-        .aduan-password-popup-btn-cancel {
-            background: #e8f1f8;
-            color: #24506e;
+        .admin-guide-modal-frame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #ffffff;
         }
-        .aduan-password-popup-btn-cancel:hover {
-            background: #d8e7f3;
+        body.admin-guide-modal-open {
+            overflow: hidden;
         }
         @keyframes toastPulse {
             0% { transform: scale(1); }
@@ -606,6 +998,9 @@
             border-radius: 999px;
             box-shadow: 0 10px 24px rgba(6, 52, 79, 0.18);
             border: 1px solid rgba(255, 255, 255, 0.9);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             flex: 0 0 auto;
             transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
             transform-origin: center;
@@ -620,7 +1015,17 @@
         .quick-actions .btn:active {
             transform: translateY(0) scale(1.04);
         }
-        .quick-action-icon { width: 22px; height: 22px; object-fit: contain; }
+        .quick-action-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            line-height: 1;
+            font-style: normal;
+            font-weight: 700;
+        }
         .quick-btn-blue { background: #d9ecff; color: #0f4f8f; border-color: #afd3f8; }
         .quick-btn-green { background: #d9f7df; color: #125c2b; border-color: #aee5bb; }
         .quick-btn-white { background: #ffffff; color: #1f2937; border-color: #d7dee8; }
@@ -629,20 +1034,6 @@
         .quick-btn-purple { background: #eadcff; color: #5b2491; border-color: #cdb0f5; }
         .quick-btn-red { background: #ffd9d9; color: #8f1d1d; border-color: #f0a9a9; }
         .quick-btn-brown { background: #ead7c4; color: #6f4a2a; border-color: #cfb08f; }
-        .quick-btn-aduan { background: #ef4444; color: #ffffff; border-color: #d02f2f; }
-        .quick-btn-aduan.is-locked { background: #f9c7c7; color: #8f1d1d; border-color: #eaa3a3; }
-        .quick-btn-aduan.has-unread { position: relative; overflow: visible; }
-        .quick-btn-aduan .unread-dot {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ff1b1b;
-            border: 2px solid #ffffff;
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
-        }
         .staff-complaint-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
         .staff-complaint-item { border: 1px solid #dbe7ef; border-radius: 12px; background: #f9fcff; padding: 10px; }
         .staff-complaint-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
@@ -665,12 +1056,31 @@
             color: #4a167f;
             border-color: #b590ef;
         }
-        .notification-list, .activity-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+        .right-panel {
+            display: grid;
+            gap: 18px;
+            align-content: start;
+            width: 100%;
+            max-width: 380px;
+        }
+        .right-panel .panel {
+            padding: 16px;
+            border-radius: 16px;
+        }
+        .right-panel .section-title {
+            font-size: 16px;
+        }
+        .notification-list, .activity-list { list-style: none; margin: 0; padding: 0 4px 0 0; display: grid; gap: 8px; }
+        .notification-list {
+            max-height: 220px;
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+        }
         .notification-item, .activity-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: #f9fcff; }
         .notification-item strong, .activity-item strong { display: block; margin-bottom: 4px; font-size: 13px; color: #0d4f80; }
         .notification-item span, .activity-item span { color: #577082; font-size: 12px; }
         .audit-content {
-            max-height: 420px;
+            max-height: 300px;
             display: flex;
             flex-direction: column;
             min-height: 0;
@@ -713,6 +1123,51 @@
             text-align: center;
         }
         .audit-content.is-hidden { display: none; }
+        .presentation-invite-panel { border-top: 4px solid #1f7eb2; }
+        .presentation-invite-wrap {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 420px;
+            max-width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+        }
+        .presentation-invite-table {
+            width: 100%;
+            min-width: 0;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .presentation-invite-table th,
+        .presentation-invite-table td {
+            padding: 9px 10px;
+            border-bottom: 1px solid #e5edf4;
+            vertical-align: top;
+            font-size: 12px;
+            white-space: normal;
+            word-break: break-word;
+        }
+        .presentation-invite-table th {
+            font-size: 11px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: #4f6776;
+            background: #f6fbff;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .presentation-invite-panel .section-title {
+            line-height: 1.35;
+        }
+        .announcement-table-wrap {
+            overflow-x: auto;
+            max-height: 260px;
+            overflow-y: auto;
+            margin-bottom: 18px;
+            scrollbar-gutter: stable;
+        }
         .notif-warning { border-left: 4px solid #f1b100; }
         .notif-recent { border-left: 4px solid #0f6bae; }
         .status-alert-panel { margin-bottom: 16px; border: 1px solid #ffe6a7; border-left: 5px solid #f4b400; background: #fff9e8; border-radius: 12px; padding: 12px 14px; }
@@ -728,7 +1183,7 @@
         .jans-contact-section { margin-top: 10px; border: 1px solid #d6e5ef; border-radius: 14px; background: #f8fcff; padding: 12px; }
         .jans-contact-section h3 { margin: 0 0 10px; color: #0f6bae; font-size: 16px; font-weight: 700; letter-spacing: 0; display: inline-flex; align-items: center; gap: 8px; }
         .contact-line { display: flex; gap: 8px; align-items: flex-start; margin: 7px 0; color: #4e6a7c; font-size: 13px; line-height: 1.45; }
-        .contact-icon { width: 13px; height: 13px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
+        .contact-icon { width: 13px; height: 13px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
         .jans-contact-section .contact-line span { line-height: 1.45; }
         .contact-line-hanging { margin-left: 21px; }
         .contact-address-link { color: #0f6bae; text-decoration: none; }
@@ -742,7 +1197,7 @@
             backdrop-filter: blur(1.5px);
         }
         body.popup-open .table-card.popup-active,
-        body.popup-open #announcementPanel.popup-active {
+        body.popup-open .panel.popup-active {
             position: fixed;
             top: 20px;
             left: 50%;
@@ -782,12 +1237,13 @@
             table { min-width: 620px; }
             .action-cell { flex-direction: column; }
             body.popup-open .table-card.popup-active,
-            body.popup-open #announcementPanel.popup-active {
+            body.popup-open .panel.popup-active {
                 width: calc(100vw - 10px);
                 max-height: calc(100vh - 12px);
                 border-radius: 12px;
             }
-            .audit-content { max-height: 340px; }
+            .audit-content { max-height: 240px; }
+            .notification-list { max-height: 180px; }
         }
 
         /*A��─ MiscA��───────────────────────────────────── */
@@ -869,6 +1325,74 @@
             border-top: 4px solid #0f6bae;
             background: linear-gradient(180deg, #ffffff 0%, #f6fbff 100%);
         }
+        .kpp-action-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .kpp-action-head.single-action {
+            justify-content: flex-end;
+        }
+        .smtp-settings-trigger {
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            border: 1px solid #c8deec;
+            background: #f4fbff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            padding: 0;
+            overflow: hidden;
+        }
+        .smtp-settings-trigger .smtp-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            line-height: 1;
+            filter: drop-shadow(0 1px 1px rgba(6, 52, 79, 0.18));
+        }
+        .smtp-trigger-fallback {
+            display: none;
+            font-size: 18px;
+            line-height: 1;
+            color: #0f6bae;
+            font-weight: 800;
+        }
+        .smtp-settings-trigger.icon-fallback .smtp-trigger-fallback {
+            display: inline-block;
+        }
+        .smtp-settings-trigger:hover {
+            background: #eef7fd;
+        }
+        .smtp-trigger-label {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: #163b56;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+            padding: 7px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+            box-shadow: 0 10px 20px rgba(9, 36, 56, 0.24);
+            z-index: 40;
+            pointer-events: none;
+        }
+        .smtp-settings-trigger:hover .smtp-trigger-label,
+        .smtp-settings-trigger:focus-visible .smtp-trigger-label {
+            display: inline-flex;
+        }
         .kpp-action-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -882,6 +1406,21 @@
         }
         .kpp-form-span {
             grid-column: 1 / -1;
+        }
+        .kpp-form-list {
+            margin-top: 8px;
+            padding: 8px 10px;
+            border: 1px solid #d7e7f3;
+            border-radius: 10px;
+            background: #f8fcff;
+            font-size: 12px;
+            color: #35566a;
+            line-height: 1.45;
+        }
+        .kpp-form-list strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #0f456f;
         }
         .kpp-draft {
             border: 1px solid #d7e7f3;
@@ -1019,10 +1558,14 @@
             padding: 6px 8px;
             background: #f8fcff;
         }
-        .kpp-search-wrap img {
+        .kpp-search-wrap .kpp-search-icon {
             width: 16px;
             height: 16px;
-            object-fit: contain;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            line-height: 1;
             opacity: 0.85;
         }
         .kpp-search-wrap input {
@@ -1065,10 +1608,10 @@
             padding: 0;
             cursor: pointer;
         }
-        .kpp-action-btn img {
-            width: 16px;
-            height: 16px;
-            object-fit: contain;
+        .kpp-action-btn .kpp-icon {
+            font-size: 16px;
+            line-height: 1;
+            color: #0f6bae;
         }
         .kpp-action-btn:hover {
             background: #eef7fd;
@@ -1295,8 +1838,8 @@
             z-index: 1099;
             display: none;
         }
-        .panel-expand-btn[aria-expanded="true"] img { transform: rotate(180deg); }
-        .panel-expand-btn img { transition: transform var(--tr); }
+        .panel-expand-btn[aria-expanded="true"] .panel-expand-icon { transform: rotate(180deg); }
+        .panel-expand-btn .panel-expand-icon { transition: transform var(--tr); }
         </style>
 </head>
 <body>
@@ -1311,19 +1854,16 @@
         String currentAdminDisplayId = request.getAttribute("current_admin_display_id") == null
             ? "-"
             : String.valueOf(request.getAttribute("current_admin_display_id"));
-        String currentAdminUsername = session.getAttribute("username") == null ? "admin" : String.valueOf(session.getAttribute("username"));
-        String aduanPasswordPromptLabel = currentAdminUsername + " (" + currentAdminDisplayId + ")";
-        boolean canAccessSecureAduan = "ADMIN".equals(String.valueOf(session.getAttribute("role"))) && "ADM001".equals(currentAdminDisplayId);
-        int staffComplaintNewCount = request.getAttribute("staff_complaint_new_count") instanceof Number
-            ? ((Number) request.getAttribute("staff_complaint_new_count")).intValue() : 0;
+        @SuppressWarnings("unchecked")
+        Map<String, String> statusLabelMap = (Map<String, String>) request.getAttribute("status_label_map");
     %>
     <div class="quick-actions-sidebar" aria-label="Tindakan Pantas">
         <div class="quick-actions">
-            <a class="btn quick-btn-blue" href="#kpp-submissions" title="Tindakan Ketua Penolong Pengarah" aria-label="Tindakan Ketua Penolong Pengarah"><img src="${pageContext.request.contextPath}/icon/kpp.png" class="quick-action-icon" alt="Tindakan Ketua Penolong Pengarah"></a>
-            <a class="btn quick-btn-green" href="${pageContext.request.contextPath}/products" title="Senarai Produk" aria-label="Senarai Produk"><img src="${pageContext.request.contextPath}/icon/senarai-produk.png" class="quick-action-icon" alt="Senarai Produk"></a>
-            <a class="btn quick-btn-white" href="${pageContext.request.contextPath}/admin/users" title="Urus Pengguna" aria-label="Urus Pengguna"><img src="${pageContext.request.contextPath}/icon/urus-pengguna.png" class="quick-action-icon" alt="Urus Pengguna"></a>
-            <a class="btn quick-btn-pink" href="#announcementPanel" title="Tambah Pengumuman" aria-label="Tambah Pengumuman"><img src="${pageContext.request.contextPath}/icon/tambah-pengumuman.png" class="quick-action-icon" alt="Tambah Pengumuman"></a>
-            <a class="btn quick-btn-yellow" href="${pageContext.request.contextPath}/profile" title="Kemaskini Profil" aria-label="Kemaskini Profil"><img src="${pageContext.request.contextPath}/icon/kemaskini-profile.png" class="quick-action-icon" alt="Kemaskini Profil"></a>
+            <a class="btn quick-btn-blue" href="#kpp-submissions" title="Tindakan Ketua Penolong Pengarah" aria-label="Tindakan Ketua Penolong Pengarah"><span class="quick-action-icon" aria-hidden="true">&#128101;</span></a>
+            <a class="btn quick-btn-green" href="${pageContext.request.contextPath}/products" title="Senarai Produk" aria-label="Senarai Produk"><span class="quick-action-icon" aria-hidden="true">&#128230;</span></a>
+            <a class="btn quick-btn-white" href="${pageContext.request.contextPath}/admin/users" title="Urus Pengguna" aria-label="Urus Pengguna"><span class="quick-action-icon" aria-hidden="true">&#128100;</span></a>
+            <a class="btn quick-btn-yellow" href="${pageContext.request.contextPath}/profile" title="Kemaskini Profil" aria-label="Kemaskini Profil"><span class="quick-action-icon" aria-hidden="true">&#9998;</span></a>
+            <a class="btn quick-btn-pink" href="${pageContext.request.contextPath}/dashboard?view=settings" title="Tetapan" aria-label="Tetapan"><span class="quick-action-icon" aria-hidden="true">&#9881;</span></a>
             <form id="maintenanceActionForm" method="post" action="${pageContext.request.contextPath}/dashboard">
                 <input type="hidden" name="_csrf" value="${csrf_token}">
                 <input type="hidden" name="maintenance_action" value="<%= maintenanceMode ? "disable" : "enable" %>">
@@ -1334,26 +1874,10 @@
                     title="<%= maintenanceButtonText %>"
                     aria-label="<%= maintenanceButtonText %>"
                     data-maintenance-confirm="<%= maintenanceConfirmText %>">
-                    <img src="${pageContext.request.contextPath}/icon/penyelenggaraan.png" class="quick-action-icon" alt="Penyelenggaraan">
+                    <span class="quick-action-icon" aria-hidden="true">&#128295;</span>
                 </button>
             </form>
-            <a class="btn quick-btn-red" href="${pageContext.request.contextPath}/admin-portal-guide.html" title="Panduan Admin Portal" aria-label="Panduan Admin Portal" target="_blank" rel="noopener"><img src="${pageContext.request.contextPath}/icon/panduan.png" class="quick-action-icon" alt="Panduan Admin Portal"></a>
-            <a class="btn quick-btn-brown" href="${pageContext.request.contextPath}/dashboard?status=DIARKIB" title="Lihat Arkib" aria-label="Lihat Arkib"><img src="${pageContext.request.contextPath}/icon/lihat-arkib.png" class="quick-action-icon" alt="Lihat Arkib"></a>
-            <form id="aduanSecureForm" method="post" action="${pageContext.request.contextPath}/dashboard">
-                <input type="hidden" name="_csrf" value="${csrf_token}">
-                <input type="hidden" name="secure_action" value="access_aduan">
-                <input type="hidden" name="secure_password" id="aduanSecurePassword">
-                <button
-                    id="aduanSecureBtn"
-                    class="btn quick-btn-aduan<%= canAccessSecureAduan ? "" : " is-locked" %><%= staffComplaintNewCount > 0 ? " has-unread" : "" %>"
-                    type="button"
-                    title="Aduan"
-                    aria-label="Aduan"
-                    data-allowed="<%= canAccessSecureAduan ? "1" : "0" %>">
-                    <img src="${pageContext.request.contextPath}/icon/Aduan.png" class="quick-action-icon" alt="Aduan">
-                    <% if (staffComplaintNewCount > 0) { %><span class="unread-dot" aria-hidden="true"></span><% } %>
-                </button>
-            </form>
+            <a class="btn quick-btn-red" id="adminGuideTrigger" href="${pageContext.request.contextPath}/admin-portal-guide.html" title="Panduan Admin Portal" aria-label="Panduan Admin Portal"><span class="quick-action-icon" aria-hidden="true">&#10067;</span></a>
         </div>
     </div>
 
@@ -1362,41 +1886,74 @@
             <img src="${pageContext.request.contextPath}/assets/images/logo-jabatan-air-sabah.png?v=4" class="brand-logo" alt="Logo Jabatan Air Sabah">
             <div>
                 <h1>Dashboard Pentadbir</h1>
-                <p>Pusat kawalan permohonan, produk, dan laporan SPPPA</p>
             </div>
         </div>
         <div>
             <span>Selamat datang, <%= session.getAttribute("username") %></span>
-            <a class="icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama"><img src="${pageContext.request.contextPath}/assets/images/home.png" alt="Home"></a>
-            <a class="icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar"><img src="${pageContext.request.contextPath}/assets/images/Logout.png" alt="Log Keluar"></a>
+            <a class="nav-icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama">
+                <svg class="nav-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 10.5L12 3l9 7.5"></path>
+                    <path d="M5.5 9.5V21h13V9.5"></path>
+                </svg>
+            </a>
+            <a class="nav-icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar">
+                <svg class="nav-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M10 5H5v14h5"></path>
+                    <path d="M13 12h8"></path>
+                    <path d="M18 8l4 4-4 4"></path>
+                </svg>
+            </a>
         </div>
     </div>
 
     <div class="container">
         <div class="stats">
-            <div class="stat-card main">
+            <div class="stat-card stat-total">
                 <h3>Jumlah Permohonan</h3>
                 <div class="number"><%= request.getAttribute("total_applications") != null ? request.getAttribute("total_applications") : "0" %></div>
             </div>
-            <div class="stat-card">
-                <h3>Menunggu</h3>
-                <div class="number"><%= request.getAttribute("pending_count") != null ? request.getAttribute("pending_count") : "0" %></div>
+            <div class="stat-card stat-pending">
+                <%
+                    int _pendingCnt = request.getAttribute("pending_count") instanceof Number ? ((Number)request.getAttribute("pending_count")).intValue() : 0;
+                    int _updateCnt = request.getAttribute("update_application_review_count") instanceof Number ? ((Number)request.getAttribute("update_application_review_count")).intValue() : 0;
+                    int _profileCnt = request.getAttribute("profile_review_count") instanceof Number ? ((Number)request.getAttribute("profile_review_count")).intValue() : 0;
+                    boolean _hasActionable = _pendingCnt > 0 || _updateCnt > 0 || _profileCnt > 0;
+                %>
+                <% if (_hasActionable) { %><span class="stat-card-alert-dot" title="Ada permohonan menunggu tindakan"></span><% } %>
+                <h3>Status Menunggu</h3>
+                <div class="number"><%= _pendingCnt %></div>
             </div>
-            <div class="stat-card">
-                <h3>Diluluskan</h3>
-                <div class="number"><%= request.getAttribute("approved_count") != null ? request.getAttribute("approved_count") : "0" %></div>
+            <div class="stat-card stat-received">
+                <h3>Status Terima</h3>
+                <div class="number"><%= request.getAttribute("terima_count") != null ? request.getAttribute("terima_count") : (request.getAttribute("approved_count") != null ? request.getAttribute("approved_count") : "0") %></div>
             </div>
-            <div class="stat-card">
-                <h3>Ditolak</h3>
+            <div class="stat-card stat-rejected">
+                <h3>Status Tolak</h3>
                 <div class="number"><%= request.getAttribute("rejected_count") != null ? request.getAttribute("rejected_count") : "0" %></div>
             </div>
-            <div class="stat-card">
-                <h3>Produk Berdaftar</h3>
-                <div class="number"><%= request.getAttribute("total_products") != null ? request.getAttribute("total_products") : "0" %></div>
+            <div class="stat-card stat-suspended">
+                <h3>Status Tangguh</h3>
+                <div class="number"><%= request.getAttribute("suspended_count") != null ? request.getAttribute("suspended_count") : (request.getAttribute("archived_count") != null ? request.getAttribute("archived_count") : "0") %></div>
             </div>
-            <div class="stat-card">
-                <h3>Diarkib</h3>
-                <div class="number"><%= request.getAttribute("archived_count") != null ? request.getAttribute("archived_count") : "0" %></div>
+            <div class="stat-card stat-approved">
+                <h3>Status Lulus</h3>
+                <div class="number"><%= request.getAttribute("lulus_count") != null ? request.getAttribute("lulus_count") : (request.getAttribute("approved_count") != null ? request.getAttribute("approved_count") : "0") %></div>
+            </div>
+            <div class="stat-card stat-not-passed">
+                <h3>Status Tidak Lulus</h3>
+                <div class="number"><%= request.getAttribute("tidak_lulus_count") != null ? request.getAttribute("tidak_lulus_count") : "0" %></div>
+            </div>
+            <div class="stat-card stat-query">
+                <h3>Status Kuiri</h3>
+                <div class="number"><%= request.getAttribute("admin_query_count") != null ? request.getAttribute("admin_query_count") : "0" %></div>
+            </div>
+            <div class="stat-card stat-in-action">
+                <h3>Status Dalam Tindakan</h3>
+                <div class="number"><%= request.getAttribute("admin_in_action_count") != null ? request.getAttribute("admin_in_action_count") : "0" %></div>
+            </div>
+            <div class="stat-card stat-recommendation">
+                <h3>Status Pengesyoran</h3>
+                <div class="number"><%= request.getAttribute("admin_recommendation_count") != null ? request.getAttribute("admin_recommendation_count") : "0" %></div>
             </div>
         </div>
 
@@ -1419,8 +1976,20 @@
         </div>
         <% } %>
 
+        <% if (request.getAttribute("profile_review_success") != null) { %>
+        <div class="announce-alert announce-success"><%= request.getAttribute("profile_review_success") %></div>
+        <% } %>
+        <% if (request.getAttribute("profile_review_error") != null) { %>
+        <div class="announce-alert announce-error"><%= request.getAttribute("profile_review_error") %></div>
+        <% } %>
+
         <%
             List<Map<String, Object>> applications = (List<Map<String, Object>>) request.getAttribute("pending_applications");
+                int directorActionPendingCount = request.getAttribute("director_action_pending_count") instanceof Number
+                    ? ((Number) request.getAttribute("director_action_pending_count")).intValue()
+                    : 0;
+            List<Map<String, Object>> updateApplicationReviews = (List<Map<String, Object>>) request.getAttribute("update_application_reviews");
+            List<Map<String, Object>> profileReviewRequests = (List<Map<String, Object>>) request.getAttribute("profile_review_requests");
             List<Map<String, Object>> kppGuestSubmissions = (List<Map<String, Object>>) request.getAttribute("kpp_guest_submissions");
             List<Map<String, Object>> adminAuditLogs = (List<Map<String, Object>>) request.getAttribute("admin_audit_logs");
             List<Map<String, Object>> kppContacts = (List<Map<String, Object>>) request.getAttribute("kpp_contacts");
@@ -1484,8 +2053,7 @@
 
                             Map<String, String> entry = new LinkedHashMap<>();
                             entry.put("name", name);
-                            entry.put("jawatan", jawatan);
-                            entry.put("email", email);
+                            entry.put("jawatan", jawatan);                         entry.put("email", email);
                             kppRecipients.add(entry);
                         }
                     } catch (Exception ignore) {
@@ -1496,17 +2064,108 @@
         %>
 
         <div class="layout">
-            <div class="left-panel">
-                <div class="panel table-card">
-                    <div class="table-card-header">
-                        <h3 class="section-title">Permohonan Terkini</h3>
-                        <button type="button" class="panel-expand-btn" id="toggleLatestPanelBtn" aria-label="Besarkan panel permohonan" title="Expand / Collapse">
-                            <img src="${pageContext.request.contextPath}/assets/images/expand.png" alt="Expand" onerror="this.style.display='none';">
-                        </button>
+            <div class="left-panel section-stack">
+
+                <div class="panel workflow-panel review-panel" id="updateApplicationReviewPanel">
+                    <button type="button" class="panel-fold-header js-workflow-fold-btn" data-target="updateApplicationReviewPanelBody" aria-expanded="false">
+                        <span>
+                            <h3>Semakan Kemaskini Permohonan<% if (_updateCnt > 0) { %><span class="attention-dot" style="display:inline-block;margin-left:7px;vertical-align:middle;" title="Ada permohonan kemaskini menunggu tindakan"></span><% } %></h3>
+                            <small><%= _updateCnt %> permohonan kemaskini menunggu tindakan</small>
+                        </span>
+                        <span class="panel-fold-icon" aria-hidden="true">&#9662;</span>
+                    </button>
+                    <div class="panel-fold-body" id="updateApplicationReviewPanelBody">
+                        <div class="review-table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Pemohon / Syarikat</th>
+                                        <th>Ringkasan</th>
+                                        <th>Status</th>
+                                        <th>Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (updateApplicationReviews == null || updateApplicationReviews.isEmpty()) { %>
+                                    <tr>
+                                        <td colspan="5" class="empty">Tiada permohonan kemaskini menunggu semakan.</td>
+                                    </tr>
+                                    <% } else {
+                                        for (Map<String, Object> reviewRow : updateApplicationReviews) {
+                                            int reviewAppId = reviewRow.get("id") instanceof Number ? ((Number) reviewRow.get("id")).intValue() : 0;
+                                            String reviewAppCode = String.format("PPP%03d", reviewAppId);
+                                            String reviewAppStatus = String.valueOf(reviewRow.get("status") == null ? "NEW" : reviewRow.get("status"));
+                                            String reviewSubmittedAt = reviewRow.get("submitted_at") == null ? "-" : formatDateTimeValue(reviewRow.get("submitted_at"));
+                                            String reviewProduct = reviewRow.get("product_name") == null ? "-" : String.valueOf(reviewRow.get("product_name"));
+                                            String reviewCompany = reviewRow.get("company_name") == null ? "-" : String.valueOf(reviewRow.get("company_name"));
+                                            String reviewNotes = reviewRow.get("admin_notes") == null ? "" : String.valueOf(reviewRow.get("admin_notes"));
+                                    %>
+                                    <tr>
+                                        <td><strong><%= reviewAppCode %></strong></td>
+                                        <td>
+                                            <strong><%= escapeHtml(String.valueOf(reviewRow.get("full_name") == null ? "-" : reviewRow.get("full_name"))) %></strong><br>
+                                            <span class="subtle">
+                                                Email: <%= escapeHtml(String.valueOf(reviewRow.get("user_email") == null ? "-" : reviewRow.get("user_email"))) %><br>
+                                                Syarikat: <%= escapeHtml(reviewCompany) %><br>
+                                                Dihantar: <%= reviewSubmittedAt %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="review-meta">
+                                                <div><strong>Produk:</strong> <%= escapeHtml(reviewProduct) %></div>
+                                                <div><strong>Kategori:</strong> <%= escapeHtml(String.valueOf(reviewRow.get("product_category") == null ? "-" : reviewRow.get("product_category"))) %></div>
+                                                <div><strong>Dokumen:</strong> Semak pada halaman detail</div>
+                                            </div>
+                                            <% if (reviewNotes != null && !reviewNotes.isBlank()) { %>
+                                            <div class="review-meta" style="margin-top:8px;">
+                                                <strong>Catatan Admin</strong>
+                                                <span><%= escapeHtml(reviewNotes) %></span>
+                                            </div>
+                                            <% } %>
+                                        </td>
+                                        <td><span class="status-pill status-<%= String.valueOf(reviewAppStatus).trim().toLowerCase(java.util.Locale.ROOT).replace('_', '-') %>"><%= displayStatusLabel(reviewAppStatus, statusLabelMap) %></span></td>
+                                        <td>
+                                            <div class="review-actions">
+                                                <a class="review-asset-link" href="${pageContext.request.contextPath}/admin/application?id=<%= reviewAppId %>" target="_blank" rel="noopener noreferrer">Semak Detail</a>
+                                                <form method="post" action="${pageContext.request.contextPath}/admin/application">
+                                                    <input type="hidden" name="_csrf" value="${csrf_token}">
+                                                    <input type="hidden" name="id" value="<%= reviewAppId %>">
+                                                    <input type="hidden" name="action" value="approve">
+                                                    <button type="submit" class="btn btn-primary">Terima</button>
+                                                </form>
+                                                <form method="post" action="${pageContext.request.contextPath}/admin/application">
+                                                    <input type="hidden" name="_csrf" value="${csrf_token}">
+                                                    <input type="hidden" name="id" value="<%= reviewAppId %>">
+                                                    <input type="hidden" name="action" value="reject">
+                                                    <input type="text" name="admin_notes" class="review-note-input" placeholder="Sebab tolak" required>
+                                                    <button type="submit" class="btn btn-danger">Tolak</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <%   }
+                                       } %>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                </div>
+
+                <div class="panel workflow-panel table-card" id="workflowPanelReceived">
+                    <button type="button" class="panel-fold-header js-workflow-fold-btn" data-target="workflowPanelReceivedBody" aria-expanded="false">
+                        <span>
+                            <h3 class="panel-title-inline">Permohonan<% if (directorActionPendingCount > 0) { %><span class="attention-dot" title="Terdapat tindakan Pengarah yang menunggu tindakan Admin"></span><% } %></h3>
+                            <% if (directorActionPendingCount > 0) { %>
+                            <small><%= directorActionPendingCount %> permohonan telah diambil tindakan oleh Pengarah dan menunggu tindakan Admin.</small>
+                            <% } %>
+                        </span>
+                        <span class="panel-fold-icon" aria-hidden="true">&#9662;</span>
+                    </button>
+                    <div class="panel-fold-body" id="workflowPanelReceivedBody">
                     <form method="get" action="${pageContext.request.contextPath}/dashboard" class="toolbar">
                     <div class="field">
-                        <label for="q"><img src="${pageContext.request.contextPath}/assets/images/icon-search.png" class="icon-inline" alt="Ikon carian"> Carian</label>
+                        <label for="q"><span class="icon-inline" aria-hidden="true">&#128269;</span> Carian</label>
                         <input id="q" name="q" type="text" value="<%= request.getAttribute("search_query") %>" placeholder="Cari syarikat, produk, pemohon atau email">
                     </div>
                     <div class="field status-filter-compact">
@@ -1514,13 +2173,9 @@
                         <div class="status-filter-controls">
                             <select id="status" name="status">
                                 <option value="">Semua status</option>
-                                <option value="NEW" <%= "NEW".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>NEW</option>
-                                <option value="DALAM_SEMAKAN" <%= "DALAM_SEMAKAN".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DALAM SEMAKAN</option>
-                                <option value="DALAM_PROSES" <%= "DALAM_PROSES".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DALAM PROSES</option>
                                 <option value="DILULUSKAN" <%= "DILULUSKAN".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DILULUSKAN</option>
                                 <option value="DITOLAK" <%= "DITOLAK".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DITOLAK</option>
                                 <option value="DIGANTUNG" <%= "DIGANTUNG".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DIGANTUNG</option>
-                                <option value="DIARKIB" <%= "DIARKIB".equals(request.getAttribute("selected_status")) ? "selected" : "" %>>DIARKIB</option>
                             </select>
                         </div>
                     </div>
@@ -1547,8 +2202,8 @@
                             </optgroup>
                         </select>
                     </div>
-                    <button class="btn btn-secondary" type="button" id="exportDownloadBtn" aria-label="Muat Turun" title="Muat Turun"><img src="${pageContext.request.contextPath}/assets/images/icon-download.png" class="icon-inline" alt="Ikon turun"></button>
-                    <button class="btn btn-secondary btn-archive-main" type="button" id="latestArchiveBtn" aria-label="Arkib" title="Arkib"><img src="${pageContext.request.contextPath}/icon/archive.png" class="icon-inline" alt="Ikon arkib" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/icon-archive.png';"><span id="latestArchiveBtnLabel" class="archive-hover-label">Arkib</span></button>
+                    <button class="btn btn-secondary" type="button" id="exportDownloadBtn" aria-label="Muat Turun" title="Muat Turun"><span class="icon-inline" aria-hidden="true">&#8681;</span></button>
+                    <button class="btn btn-secondary btn-archive-main" type="button" id="latestArchiveBtn" aria-label="Arkib" title="Arkib"><span class="icon-inline" aria-hidden="true">&#128451;</span><span id="latestArchiveBtnLabel" class="archive-hover-label">Arkib</span></button>
                     </form>
 
                     <% if (isAdminRole) { %>
@@ -1590,27 +2245,35 @@
                                 Timestamp archivedAt = (Timestamp) applicationRow.get("archived_at");
                                 String archiveNotes = applicationRow.get("archive_notes") == null ? "" : String.valueOf(applicationRow.get("archive_notes"));
                                 String statusRaw = applicationRow.get("status") == null ? "" : String.valueOf(applicationRow.get("status"));
-                                String status = statusRaw.trim().toLowerCase(java.util.Locale.ROOT);
-                                String statusDisplay = displayStatusLabel(statusRaw);
+                                String status = statusRaw.trim().toLowerCase(java.util.Locale.ROOT).replace('_', '-');
+                                String statusDisplay = displayStatusLabel(statusRaw, statusLabelMap);
                                 int appIdNumeric = applicationRow.get("id") instanceof Number ? ((Number) applicationRow.get("id")).intValue() : 0;
                                 int appIdDisplayNumeric = Math.max(0, appIdNumeric);
                                 String appIdDisplay = String.format("PPP%03d", appIdDisplayNumeric);
                                 boolean isArchivedRow = archivedAt != null;
                                 boolean canArchiveRow = !isArchivedRow;
+                                boolean directorActionPending = Boolean.TRUE.equals(applicationRow.get("director_action_pending"));
+                                                        String appTypeRaw = applicationRow.get("application_type") == null ? "" : String.valueOf(applicationRow.get("application_type")).trim().toUpperCase(java.util.Locale.ROOT);
+                                                        boolean needsAction = !isArchivedRow && ("NEW".equals(statusRaw) || "DRAFT".equals(statusRaw) || "DILULUSKAN_PENGARAH".equals(statusRaw) || directorActionPending);
+                                                        String typeBadgeClass = "KEMASKINI".equals(appTypeRaw) ? "badge-kemaskini" : "PEMBAHARUAN".equals(appTypeRaw) ? "badge-pembaharuan" : "BAHARU".equals(appTypeRaw) ? "badge-baharu" : "";
+                                                        String typeBadgeLabel = "KEMASKINI".equals(appTypeRaw) ? "Kemaskini" : "PEMBAHARUAN".equals(appTypeRaw) ? "Pembaharuan" : "BAHARU".equals(appTypeRaw) ? "Baharu" : "";
                         %>
-                        <tr>
+                        <tr<%= needsAction ? " class=\"tr-needs-action\"" : "" %>>
                             <% if (isAdminRole) { %>
                             <td><input type="checkbox" class="app-row-check table-check" value="<%= applicationRow.get("id") %>" data-can-archive="<%= canArchiveRow ? "1" : "0" %>" data-is-archived="<%= isArchivedRow ? "1" : "0" %>" aria-label="Pilih permohonan"></td>
                             <% } %>
                             <td><strong><%= appIdDisplay %></strong></td>
                             <td>
-                                <strong><%= applicationRow.get("company_name") %></strong><br>
+                                <strong class="row-alert-title"><%= applicationRow.get("company_name") %><% if (directorActionPending) { %><span class="attention-dot" title="Permohonan ini telah diambil tindakan oleh Pengarah"></span><% } %><% if (!typeBadgeLabel.isEmpty()) { %><span class="row-type-badge <%= typeBadgeClass %>"><%= typeBadgeLabel %></span><% } %></strong><br>
                                 <span class="subtle">Pemohon: <%= applicationRow.get("full_name") %><br>Email: <%= applicationRow.get("user_email") %>
                                 <% if (isArchivedRow && archivedAt != null) { %><br>Arkib: <%= archivedAt %><% } %>
                                 </span>
+                                <% if (directorActionPending) { %>
+                                <div class="row-alert-note"><span class="attention-dot"></span>Menunggu tindakan seterusnya oleh Admin</div>
+                                <% } %>
                             </td>
                             <td><span class="status-pill status-<%= status %>"><%= statusDisplay %></span></td>
-                            <td><%= submittedAt != null ? submittedAt.toString() : "Belum dihantar" %></td>
+                            <td><%= submittedAt != null ? formatDateTimeValue(submittedAt) : "Belum dihantar" %></td>
                             <td>
                                 <div class="action-cell">
                                 <a
@@ -1622,7 +2285,7 @@
                                     data-product="<%= escapeHtml(applicationRow.get("product_name") == null ? "" : String.valueOf(applicationRow.get("product_name")) ) %>"
                                     data-description="<%= escapeHtml(applicationRow.get("product_description") == null ? "" : String.valueOf(applicationRow.get("product_description")) ) %>"
                                     data-status="<%= escapeHtml(statusDisplay) %>"
-                                    data-submitted="<%= escapeHtml(submittedAt != null ? submittedAt.toString() : "Belum dihantar") %>"
+                                    data-submitted="<%= escapeHtml(submittedAt != null ? formatDateTimeValue(submittedAt) : "Belum dihantar") %>"
                                     data-user="<%= escapeHtml(applicationRow.get("full_name") == null ? "" : String.valueOf(applicationRow.get("full_name")) ) %>"
                                     data-email="<%= escapeHtml(applicationRow.get("user_email") == null ? "" : String.valueOf(applicationRow.get("user_email")) ) %>"
                                     data-attachment-image="<%= escapeHtml(applicationRow.get("attachment_image_url") == null ? "" : String.valueOf(applicationRow.get("attachment_image_url")) ) %>"
@@ -1638,10 +2301,23 @@
                     </tbody>
                     </table>
                     </div><!-- /table-wrapper -->
-                </div>
+                    </div>
+                    </div>
 
-                <div class="panel kpp-action-panel">
-                    <h3 class="section-title">Tindakan Ketua Penolong Pengarah</h3>
+                <div class="panel workflow-panel kpp-action-panel" id="workflowPanelKpp">
+                    <button type="button" class="panel-fold-header js-workflow-fold-btn" data-target="workflowPanelKppBody" aria-expanded="false">
+                        <span>
+                            <h3>Tindakan Ketua Penolong Pengarah</h3>
+                        </span>
+                        <span class="panel-fold-icon" aria-hidden="true">&#9662;</span>
+                    </button>
+                    <div class="panel-fold-body" id="workflowPanelKppBody">
+                    <div class="kpp-action-head single-action">
+                        <a class="smtp-settings-trigger" href="${pageContext.request.contextPath}/dashboard?view=settings#smtpSettingsCard" title="Tetapan" aria-label="Tetapan">
+                            <span class="smtp-icon" aria-hidden="true">&#9881;</span>
+                            <span class="smtp-trigger-label">Tetapan</span>
+                        </a>
+                    </div>
                     <div class="kpp-action-grid">
                         <div class="kpp-draft">
                             <div class="kpp-form-grid">
@@ -1687,6 +2363,7 @@
                                     <select id="kppActionType">
                                         <option value="KSPP">Isi Borang Kaji Selidik Prestasi Pembekal dan Produk Bekalan Air (Pembaharuan)</option>
                                         <option value="UJPPP">Isi Borang Ulasan Jawatankuasa Pendaftaran Pembekal dan Produk Bekalan Air</option>
+                                        <option value="SIASATAN_ADUAN">Isi Borang Siasatan Aduan Pembekal dan Produk Air</option>
                                         <option value="KSPP_UJPPP">Isi Kedua-dua Borang (KSPP dan UJPPP)</option>
                                     </select>
                                 </div>
@@ -1728,7 +2405,7 @@
                             <h4 class="kpp-submission-title">Senarai Respon Ketua Penolong Pengarah</h4>
                             <form class="kpp-submission-toolbar" method="get" action="${pageContext.request.contextPath}/dashboard#kpp-submissions">
                                 <div class="kpp-search-wrap">
-                                    <img src="${pageContext.request.contextPath}/assets/images/kpp-search.png" alt="Carian">
+                                    <span class="kpp-search-icon" aria-hidden="true">&#128269;</span>
                                     <input type="text" name="kpp_q" value="<%= escapeHtml(String.valueOf(request.getAttribute("kpp_search_query") == null ? "" : request.getAttribute("kpp_search_query"))) %>" placeholder="Cari KPP, emel, atau jenis borang">
                                 </div>
                                 <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#4f6f83;">
@@ -1750,7 +2427,7 @@
                                     <li class="kpp-submission-item">
                                         <div class="kpp-submission-main">
                                             <strong><%= escapeHtml(String.valueOf(kppSubmission.get("kpp_display"))) %> - <%= escapeHtml(String.valueOf(kppSubmission.get("form_display"))) %></strong>
-                                            <span>Tarikh Hantar: <%= submittedAt == null ? "-" : escapeHtml(String.valueOf(submittedAt)) %></span>
+                                            <span>Tarikh Hantar: <%= submittedAt == null ? "-" : escapeHtml(formatDateTimeValue(submittedAt)) %></span>
                                             <span>Emel Penerima: <%= escapeHtml(String.valueOf(kppSubmission.get("recipient_email"))) %></span>
                                             <div class="kpp-submission-actions">
                                             <button
@@ -1764,7 +2441,7 @@
                                                     data-payload="<%= escapeHtml(String.valueOf(kppSubmission.get("form_payload"))) %>">Lihat</button>
 
                                             <a class="kpp-action-btn" title="Download" href="${pageContext.request.contextPath}/dashboard?kpp_download_id=<%= kppSubmission.get("id") %><%= kppSearchQuery.isBlank() ? "" : "&kpp_q=" + java.net.URLEncoder.encode(kppSearchQuery, java.nio.charset.StandardCharsets.UTF_8) %><%= showArchived ? "&kpp_show_archived=1" : "" %>#kpp-submissions">
-                                                <img src="${pageContext.request.contextPath}/assets/images/kpp-download.png" alt="Download">
+                                                <span class="kpp-icon" aria-hidden="true">&#8681;</span>
                                             </a>
 
                                             <form class="kpp-inline-form" method="post" action="${pageContext.request.contextPath}/dashboard#kpp-submissions">
@@ -1774,7 +2451,7 @@
                                                 <input type="hidden" name="kpp_q" value="<%= escapeHtml(kppSearchQuery) %>">
                                                 <% if (showArchived) { %><input type="hidden" name="kpp_show_archived" value="1"><% } %>
                                                 <button class="kpp-action-btn" type="submit" title="<%= kppArchived ? "Keluarkan dari Arkib" : "Arkib" %>">
-                                                    <img src="${pageContext.request.contextPath}/assets/images/kpp-archive.png" alt="<%= kppArchived ? "Keluarkan dari Arkib" : "Arkib" %>">
+                                                    <span class="kpp-icon" aria-hidden="true">&#128451;</span>
                                                 </button>
                                             </form>
 
@@ -1785,7 +2462,7 @@
                                                 <input type="hidden" name="kpp_q" value="<%= escapeHtml(kppSearchQuery) %>">
                                                 <% if (showArchived) { %><input type="hidden" name="kpp_show_archived" value="1"><% } %>
                                                 <button class="kpp-action-btn" type="submit" title="Delete">
-                                                    <img src="${pageContext.request.contextPath}/assets/images/kpp-delete.png" alt="Delete">
+                                                    <span class="kpp-icon" aria-hidden="true">&#128465;</span>
                                                 </button>
                                             </form>
                                             </div>
@@ -1802,37 +2479,161 @@
                             <% } %>
                         </div>
                     </div>
+                    </div>
                 </div>
 
             </div>
 
             <div class="right-panel">
-                <div class="panel">
-                    <h3 class="section-title">Aktiviti Terkini</h3>
-                    <ul class="activity-list">
-                        <% if (applications != null && !applications.isEmpty()) {
-                            int activityShown = 0;
-                            for (Map<String, Object> activityRow : applications) {
-                                if (activityShown >= 5) { break; }
-                                activityShown++;
-                                Timestamp activityTime = (Timestamp) activityRow.get("submitted_at");
-                        %>
-                        <li class="activity-item">
-                            <strong><%= escapeHtml(String.valueOf(activityRow.get("full_name"))) %></strong> mengemaskini permohonan
-                            <span class="muted"><%= activityTime != null ? escapeHtml(activityTime.toString()) : "Masa tidak tersedia" %></span>
-                        </li>
-                        <%      }
-                           } else { %>
-                        <li class="activity-item">Tiada aktiviti terkini buat masa ini.</li>
-                        <% } %>
-                    </ul>
+
+                <div class="panel workflow-panel review-panel" id="profileReviewPanel">
+                    <button type="button" class="panel-fold-header js-workflow-fold-btn" data-target="profileReviewPanelBody" aria-expanded="false">
+                        <span>
+                            <h3>Semakan Pemohon Baharu<% if (_profileCnt > 0) { %><span class="attention-dot" style="display:inline-block;margin-left:7px;vertical-align:middle;" title="Ada pemohon baharu menunggu semakan"></span><% } %></h3>
+                            <small><%= _profileCnt %> rekod menunggu semakan profil</small>
+                        </span>
+                        <span class="panel-fold-icon" aria-hidden="true">&#9662;</span>
+                    </button>
+                    <div class="panel-fold-body" id="profileReviewPanelBody">
+                        <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Maklumat Pemohon</th>
+                                        <th>Fail Semakan</th>
+                                        <th>Status</th>
+                                        <th>Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (profileReviewRequests == null || profileReviewRequests.isEmpty()) { %>
+                                    <tr>
+                                        <td colspan="5" class="empty">Tiada pemohon baharu menunggu semakan profil.</td>
+                                    </tr>
+                                    <% } else {
+                                        for (Map<String, Object> profileRow : profileReviewRequests) {
+                                            int profileUserId = profileRow.get("id") instanceof Number ? ((Number) profileRow.get("id")).intValue() : 0;
+                                            String profileUserCode = String.format("P%03d", profileUserId);
+                                            String reviewStatus = String.valueOf(profileRow.get("profile_review_status") == null ? "DRAFT" : profileRow.get("profile_review_status"));
+                                            String profileSubmittedAt = profileRow.get("profile_submitted_at") == null ? "-" : formatDateTimeValue(profileRow.get("profile_submitted_at"));
+                                            String profileNotes = profileRow.get("profile_review_notes") == null ? "" : String.valueOf(profileRow.get("profile_review_notes"));
+                                    %>
+                                    <tr>
+                                        <td><strong><%= profileUserCode %></strong></td>
+                                        <td>
+                                            <strong><%= escapeHtml(String.valueOf(profileRow.get("full_name") == null ? "-" : profileRow.get("full_name"))) %></strong><br>
+                                            <span class="subtle">
+                                                Username: <%= escapeHtml(String.valueOf(profileRow.get("username") == null ? "-" : profileRow.get("username"))) %><br>
+                                                Email: <%= escapeHtml(String.valueOf(profileRow.get("email") == null ? "-" : profileRow.get("email"))) %><br>
+                                                Telefon: <%= escapeHtml(String.valueOf(profileRow.get("phone_number") == null ? "-" : profileRow.get("phone_number"))) %><br>
+                                                Dihantar: <%= profileSubmittedAt %>
+                                            </span>
+                                            <% if (profileNotes != null && !profileNotes.isBlank()) { %>
+                                            <div class="review-meta" style="margin-top:8px;">
+                                                <strong>Catatan</strong>
+                                                <span><%= escapeHtml(profileNotes) %></span>
+                                            </div>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div class="review-assets">
+                                                <a class="review-asset-link" href="${pageContext.request.contextPath}/profile-assets/view?kind=avatar&user_id=<%= profileUserId %>" target="_blank" rel="noopener noreferrer">Lihat Gambar Wajah</a>
+                                                <a class="review-asset-link" href="${pageContext.request.contextPath}/profile-assets/view?kind=document&user_id=<%= profileUserId %>" target="_blank" rel="noopener noreferrer">Lihat Dokumen Sokongan</a>
+                                            </div>
+                                        </td>
+                                        <td><span class="status-pill <%= profileReviewStatusCss(reviewStatus) %>"><%= profileReviewStatusLabel(reviewStatus) %></span></td>
+                                        <td>
+                                            <div class="review-actions">
+                                                <form method="post" action="${pageContext.request.contextPath}/dashboard">
+                                                    <input type="hidden" name="_csrf" value="${csrf_token}">
+                                                    <input type="hidden" name="profile_review_action" value="approve">
+                                                    <input type="hidden" name="profile_user_id" value="<%= profileUserId %>">
+                                                    <button type="submit" class="btn btn-primary">Terima / Aktifkan Akaun</button>
+                                                </form>
+                                                <form method="post" action="${pageContext.request.contextPath}/dashboard">
+                                                    <input type="hidden" name="_csrf" value="${csrf_token}">
+                                                    <input type="hidden" name="profile_review_action" value="reject">
+                                                    <input type="hidden" name="profile_user_id" value="<%= profileUserId %>">
+                                                    <input type="text" name="profile_review_notes" class="review-note-input" placeholder="Sebab penolakan" required>
+                                                    <button type="submit" class="btn btn-danger">Tolak</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <%   }
+                                       } %>
+                                </tbody>
+                            </table>
+                    </div>
+                </div>
+
+                <div class="panel presentation-invite-panel" id="presentationInvitePanel">
+                    <div class="table-card-header" style="margin-bottom:0;">
+                        <h3 class="section-title">Urus Maklum Balas Jemputan Pembentangan</h3>
+                        <button type="button" class="panel-expand-btn" id="togglePresentationInvitePanelBtn" aria-label="Besarkan panel urus maklum balas jemputan pembentangan" title="Expand / Collapse">
+                            <span class="panel-expand-icon" aria-hidden="true">&#9662;</span>
+                        </button>
+                    </div>
+                    <div class="presentation-invite-wrap" style="margin-top:10px;">
+                        <table class="presentation-invite-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama Pemohon</th>
+                                    <th>Nama Produk/Permohonan</th>
+                                    <th>Tarikh Pembentangan</th>
+                                    <th>Masa Pembentangan</th>
+                                    <th>Tempat Pembentangan</th>
+                                    <th>Status Jemputan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <%
+                                    List<Map<String, Object>> presentationInvites = (List<Map<String, Object>>) request.getAttribute("presentation_invites");
+                                    if (presentationInvites == null || presentationInvites.isEmpty()) {
+                                %>
+                                <tr>
+                                    <td colspan="6" class="empty">Tiada rekod jemputan pembentangan buat masa ini.</td>
+                                </tr>
+                                <% } else {
+                                    for (Map<String, Object> inviteRow : presentationInvites) {
+                                        String appCode = inviteRow.get("application_id") instanceof Number
+                                            ? String.format("PPP%03d", ((Number) inviteRow.get("application_id")).intValue())
+                                            : "PPP---";
+                                        String productLabel = String.valueOf(inviteRow.get("product_name") == null ? "-" : inviteRow.get("product_name"));
+                                %>
+                                <tr>
+                                    <td>
+                                        <strong><%= escapeHtml(String.valueOf(inviteRow.get("applicant_name") == null ? "-" : inviteRow.get("applicant_name"))) %></strong><br>
+                                        <span class="subtle"><%= escapeHtml(String.valueOf(inviteRow.get("applicant_email") == null ? "-" : inviteRow.get("applicant_email"))) %></span>
+                                    </td>
+                                    <td>
+                                        <strong><%= appCode %></strong><br>
+                                        <span class="subtle"><%= escapeHtml(productLabel) %></span>
+                                    </td>
+                                    <td><%= formatDateValue(inviteRow.get("presentation_date")) %></td>
+                                    <td><%= escapeHtml(String.valueOf(inviteRow.get("presentation_time") == null ? "-" : inviteRow.get("presentation_time"))) %></td>
+                                    <td><%= escapeHtml(String.valueOf(inviteRow.get("presentation_venue") == null ? "-" : inviteRow.get("presentation_venue"))) %></td>
+                                    <td>
+                                        <span class="status-pill <%= presentationInviteStatusCss(inviteRow.get("invite_status")) %>"><%= presentationInviteStatusLabel(inviteRow.get("invite_status")) %></span>
+                                        <% if (inviteRow.get("applicant_response") != null) { %>
+                                        <div class="subtle" style="margin-top:6px;">
+                                            Maklum balas: <%= escapeHtml(presentationInviteStatusLabel(inviteRow.get("applicant_response"))) %>
+                                        </div>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                                <%   }
+                                   } %>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="panel">
                     <div class="audit-panel-header">
                         <h3 class="section-title">Rekod Tindakan Admin</h3>
                         <button type="button" class="audit-toggle-btn" id="toggleAuditBtnDashboard" aria-expanded="true" aria-controls="adminAuditContentDashboard" title="Sembunyi rekod tindakan admin">
-                            <img id="toggleAuditIconDashboard" src="${pageContext.request.contextPath}/icon/hide.png" alt="Sembunyikan rekod tindakan admin">
+                            <span id="toggleAuditIconDashboard" class="icon-inline" aria-hidden="true">&#8722;</span>
                         </button>
                     </div>
                     <div id="adminAuditContentDashboard" class="audit-content">
@@ -1859,7 +2660,7 @@
                             <strong><%= escapeHtml(actorName) %> (<%= escapeHtml(actorDisplayId) %>) <%= escapeHtml(actionDisplay) %></strong>
                             <p><%= escapeHtml(details) %></p>
                             <div class="audit-meta">
-                                <span><%= actionAt == null ? "Masa tidak direkod" : escapeHtml(String.valueOf(actionAt)) %></span>
+                                <span><%= actionAt == null ? "Masa tidak direkod" : escapeHtml(formatDateTimeValue(actionAt)) %></span>
                             </div>
                         </li>
                         <%      }
@@ -1895,7 +2696,7 @@
                         %>
                         <li class="notification-item notif-recent">
                             <strong><%= escapeHtml(String.valueOf(appNotice.get("company_name"))) %></strong>
-                            <span>Status: <%= escapeHtml(String.valueOf(appNotice.get("status"))) %></span>
+                            <span>Status: <%= escapeHtml(displayStatusLabel(String.valueOf(appNotice.get("status")), statusLabelMap)) %></span>
                         </li>
                         <%      }
                            } %>
@@ -1914,7 +2715,7 @@
                         %>
                         <li class="activity-item">
                             <strong><%= escapeHtml(String.valueOf(activityRow.get("full_name"))) %></strong> mengemaskini permohonan
-                            <span class="muted"><%= activityTime != null ? escapeHtml(activityTime.toString()) : "Masa tidak tersedia" %></span>
+                            <span class="muted"><%= activityTime != null ? escapeHtml(formatDateTimeValue(activityTime)) : "Masa tidak tersedia" %></span>
                         </li>
                         <%      }
                            } else { %>
@@ -1923,86 +2724,16 @@
                     </ul>
                 </div>
 
-                <div class="panel smtp-settings-panel" id="smtpSettingsPanel">
-                    <div class="announcement-head">
-                        <div class="title-wrap">
-                            <img src="${pageContext.request.contextPath}/icon/email.png" alt="Tetapan Email">
-                            <h3 class="section-title" style="margin:0;">Tetapan Email Pengirim KPP</h3>
-                        </div>
-                    </div>
 
-                    <% if (request.getAttribute("smtp_success") != null) { %>
-                        <div class="announce-alert announce-success"><%= request.getAttribute("smtp_success") %></div>
-                    <% } %>
-                    <% if (request.getAttribute("smtp_error") != null) { %>
-                        <div class="announce-alert announce-error"><%= request.getAttribute("smtp_error") %></div>
-                    <% } %>
-
-                    <form method="post" action="${pageContext.request.contextPath}/dashboard" class="smtp-form">
-                        <input type="hidden" name="_csrf" value="${csrf_token}">
-                        <input type="hidden" name="smtp_action" value="update_sender">
-
-                        <div>
-                            <label for="smtp_host">SMTP Host</label>
-                            <input id="smtp_host" name="smtp_host" type="text" required
-                                   value="<%= escapeHtml(String.valueOf(request.getAttribute("smtp_setting_host") == null ? "" : request.getAttribute("smtp_setting_host"))) %>">
-                        </div>
-
-                        <div>
-                            <label for="smtp_port">SMTP Port</label>
-                            <input id="smtp_port" name="smtp_port" type="number" min="1" required
-                                   value="<%= escapeHtml(String.valueOf(request.getAttribute("smtp_setting_port") == null ? "587" : request.getAttribute("smtp_setting_port"))) %>">
-                        </div>
-
-                        <div>
-                            <label for="smtp_username">SMTP Username</label>
-                            <input id="smtp_username" name="smtp_username" type="text"
-                                   value="<%= escapeHtml(String.valueOf(request.getAttribute("smtp_setting_username") == null ? "" : request.getAttribute("smtp_setting_username"))) %>">
-                        </div>
-
-                        <div>
-                            <label for="smtp_password">SMTP Password Baharu</label>
-                            <input id="smtp_password" name="smtp_password" type="password" autocomplete="new-password" placeholder="Kosongkan jika tidak mahu ubah">
-                            <div class="smtp-form-help">Biarkan kosong untuk kekalkan password semasa.</div>
-                        </div>
-
-                        <div>
-                            <label for="smtp_from">From Address</label>
-                            <input id="smtp_from" name="smtp_from" type="email"
-                                   value="<%= escapeHtml(String.valueOf(request.getAttribute("smtp_setting_from") == null ? "" : request.getAttribute("smtp_setting_from"))) %>">
-                        </div>
-
-                        <div>
-                            <label for="smtp_auth">SMTP Auth</label>
-                            <select id="smtp_auth" name="smtp_auth">
-                                <option value="true" <%= "true".equalsIgnoreCase(String.valueOf(request.getAttribute("smtp_setting_auth") == null ? "true" : request.getAttribute("smtp_setting_auth"))) ? "selected" : "" %>>Aktif</option>
-                                <option value="false" <%= "false".equalsIgnoreCase(String.valueOf(request.getAttribute("smtp_setting_auth") == null ? "true" : request.getAttribute("smtp_setting_auth"))) ? "selected" : "" %>>Tidak Aktif</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="smtp_tls">STARTTLS</label>
-                            <select id="smtp_tls" name="smtp_tls">
-                                <option value="true" <%= "true".equalsIgnoreCase(String.valueOf(request.getAttribute("smtp_setting_tls") == null ? "true" : request.getAttribute("smtp_setting_tls"))) ? "selected" : "" %>>Aktif</option>
-                                <option value="false" <%= "false".equalsIgnoreCase(String.valueOf(request.getAttribute("smtp_setting_tls") == null ? "true" : request.getAttribute("smtp_setting_tls"))) ? "selected" : "" %>>Tidak Aktif</option>
-                            </select>
-                        </div>
-
-                        <div class="smtp-span-2 smtp-form-actions">
-                            <button class="btn btn-primary" type="submit">Simpan Tetapan Email</button>
-                            <span class="smtp-form-note">Perubahan akan terus digunakan untuk hantar email Tindakan KPP.</span>
-                        </div>
-                    </form>
-                </div>
 
                 <div class="panel announcement-panel" id="announcementPanel">
                     <div class="announcement-head">
                         <div class="title-wrap">
-                            <img src="${pageContext.request.contextPath}/assets/images/icon-announcement.png" alt="Pengumuman">
+                            <span class="icon-inline" aria-hidden="true">&#128227;</span>
                             <h3 class="section-title" style="margin:0;">Pengurusan Pengumuman</h3>
                         </div>
                         <button type="button" class="panel-expand-btn" id="toggleAnnouncementPanelBtn" aria-label="Besarkan panel pengumuman" title="Expand / Collapse">
-                            <img src="${pageContext.request.contextPath}/assets/images/expand.png" alt="Expand" onerror="this.style.display='none';">
+                            <span class="panel-expand-icon" aria-hidden="true">&#9662;</span>
                         </button>
                     </div>
 
@@ -2019,7 +2750,7 @@
                         if (announcementList == null) announcementList = java.util.Collections.emptyList();
                     %>
                     <% if (!announcementList.isEmpty()) { %>
-                    <div style="overflow-x:auto; margin-bottom:18px;">
+                    <div class="announcement-table-wrap">
                         <table class="app-table announcement-table" style="width:100%;">
                             <thead>
                                 <tr>
@@ -2037,7 +2768,7 @@
                                 String annId = String.valueOf(ann.get("id"));
                                 String annTitle = escapeHtml(String.valueOf(ann.get("title")));
                                 Object annCreated = ann.get("created_at");
-                                String annDate = annCreated == null ? "-" : String.valueOf(annCreated).substring(0, Math.min(10, String.valueOf(annCreated).length()));
+                                String annDate = annCreated == null ? "-" : formatDateValue(annCreated);
                                 String annStatusClass = annActive ? "announce-status announce-active" : "announce-status announce-inactive";
                                 String annStatusText = annActive ? "Aktif" : "Tidak Aktif";
                             %>
@@ -2054,7 +2785,7 @@
                                         <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                             <a class="btn btn-secondary" style="padding:4px 10px; font-size:12px;"
                                                href="${pageContext.request.contextPath}/dashboard?announcement_id=<%= annId %>#announcementPanel">
-                                                <img src="${pageContext.request.contextPath}/assets/images/icon-edit.png" class="icon-btn" alt="Edit" style="width:12px;height:12px;"> Edit
+                                                <span class="icon-btn" aria-hidden="true">&#9998;</span> Edit
                                             </a>
                                             <% if (isAdminRole) { %>
                                             <form method="post" action="${pageContext.request.contextPath}/dashboard" style="margin:0;" onsubmit="return confirm('Padam pengumuman ini?');">
@@ -2062,7 +2793,7 @@
                                                 <input type="hidden" name="announcement_action" value="delete_announcement">
                                                 <input type="hidden" name="announcement_id" value="<%= annId %>">
                                                 <button type="submit" class="btn btn-danger" style="padding:4px 10px; font-size:12px;">
-                                                    <img src="${pageContext.request.contextPath}/assets/images/icon-delete.png" class="icon-btn" alt="Padam" style="width:12px;height:12px;" onerror="this.style.display='none'"> Padam
+                                                    <span class="icon-btn" aria-hidden="true">&#128465;</span> Padam
                                                 </button>
                                             </form>
                                             <% } %>
@@ -2134,9 +2865,9 @@
                         <div class="announcement-actions">
                             <button class="btn btn-primary" type="submit">
                                 <% if (announcementEditing != null && !announcementEditing.isEmpty()) { %>
-                                    <img src="${pageContext.request.contextPath}/assets/images/icon-edit.png" class="icon-btn" alt="Edit"> Kemas Kini
+                                    <span class="icon-btn" aria-hidden="true">&#9998;</span> Kemas Kini
                                 <% } else { %>
-                                    <img src="${pageContext.request.contextPath}/assets/images/icon-add.png" class="icon-btn" alt="Tambah"> Tambah
+                                    <span class="icon-btn" aria-hidden="true">+</span> Tambah
                                 <% } %>
                             </button>
                             <% if (announcementEditing != null && !announcementEditing.isEmpty()) { %>
@@ -2151,13 +2882,13 @@
 
         <div class="container" style="padding-top:0;">
             <div class="jans-contact-section">
-                <h3><img class="contact-icon" src="${pageContext.request.contextPath}/icon/contact.png" alt="Hubungi JAS"> Hubungi JAS</h3>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/address.png" alt="Alamat"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
+                <h3>Hubungi Jabatan Air Sabah</h3>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#128205;</span><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">SABAH WATER DEPARTMENT</a></p>
                 <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Tingkat 6, Blok A, Wisma MUIS, Beg Berkunci No. 210, 88825</a></p>
                 <p class="contact-line contact-line-hanging"><a class="contact-address-link" href="https://www.google.com/maps/place/Jabatan+Air+Negeri+Sabah/data=!4m7!3m6!1s0x323b69b770552161:0x46ddcd3e362b7115!8m2!3d5.9610727!4d116.0687216!16s%2Fg%2F1pzrm3yct!19sChIJYSFVcLdpOzIRFXErNj7N3UY?authuser=0&hl=en&rclk=1" target="_blank" rel="noopener noreferrer">Kota Kinabalu, Sabah, Malaysia</a></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/phone.png" alt="Tel"><span>Tel: +60-88-232364 (HQ)</span></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/fax.png" alt="Fax"><span>Fax: +60-88-232396</span></p>
-                <p class="contact-line"><img class="contact-icon" src="${pageContext.request.contextPath}/icon/email.png" alt="Email"><span>Email: jans.hq@sabah.gov.my</span></p></div>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#9742;</span><span>Tel: +60-88-232364 (HQ)</span></p>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#128224;</span><span>Faks: +60-88-232396</span></p>
+                <p class="contact-line"><span class="contact-icon" aria-hidden="true">&#9993;</span><span>Emel: produk.air@sabah.gov.my</span></p></div>
         </div>
     </div>
     <div class="expand-overlay" id="expandOverlay" aria-hidden="true"></div>
@@ -2172,19 +2903,19 @@
         </div>
     </div>
     <div class="archive-toast" id="archiveToast" role="status" aria-live="polite">
-        <img src="${pageContext.request.contextPath}/assets/images/icon-archive.png" alt="Notifikasi arkib" id="archiveToastIcon">
+        <span id="archiveToastIcon" class="icon-inline" aria-hidden="true">&#128451;</span>
         <span id="archiveToastText">Berjaya.</span>
     </div>
     <div class="sent-popup" id="sentPopup" aria-hidden="true">
         <div class="sent-popup-card" role="dialog" aria-modal="true" aria-labelledby="sentPopupTitle">
-            <img src="${pageContext.request.contextPath}/assets/images/sent-mail.gif" alt="Berjaya dihantar" class="sent-popup-icon">
+            <span class="sent-popup-icon" aria-hidden="true">&#9993;</span>
             <h4 class="sent-popup-title" id="sentPopupTitle">Berjaya Dihantar</h4>
             <button type="button" class="sent-popup-ok" id="sentPopupOkBtn">OK</button>
         </div>
     </div>
     <div class="maintenance-popup" id="maintenancePopup" aria-hidden="true">
         <div class="maintenance-popup-card" role="dialog" aria-modal="true" aria-labelledby="maintenancePopupTitle">
-            <img src="${pageContext.request.contextPath}/icon/quiz.gif" alt="Pengesahan tindakan" class="maintenance-popup-icon">
+            <span class="maintenance-popup-icon" aria-hidden="true">&#10067;</span>
             <h4 class="maintenance-popup-title" id="maintenancePopupTitle">Pengesahan Penyelenggaraan</h4>
             <p class="maintenance-popup-text" id="maintenancePopupText">Teruskan tindakan penyelenggaraan?</p>
             <div class="maintenance-popup-actions">
@@ -2193,32 +2924,22 @@
             </div>
         </div>
     </div>
-    <div class="aduan-password-popup" id="aduanPasswordPopup" aria-hidden="true">
-        <div class="aduan-password-popup-card" role="dialog" aria-modal="true" aria-labelledby="aduanPasswordPopupTitle">
-            <img src="${pageContext.request.contextPath}/icon/password.gif" alt="Masukkan kata laluan" class="aduan-password-popup-icon">
-            <h4 class="aduan-password-popup-title" id="aduanPasswordPopupTitle">Penerimaan Borang Aduan</h4>
-            <p class="aduan-password-popup-text">Sila masukkan kata laluan admin <%= escapeHtml(aduanPasswordPromptLabel) %> untuk akses modul penerimaan aduan.</p>
-            <input type="password" id="aduanPasswordPopupInput" class="aduan-password-popup-input" autocomplete="current-password" placeholder="Masukkan kata laluan">
-            <div class="aduan-password-popup-actions">
-                <button type="button" class="aduan-password-popup-btn aduan-password-popup-btn-cancel" id="aduanPasswordPopupCancelBtn">Batal</button>
-                <button type="button" class="aduan-password-popup-btn aduan-password-popup-btn-confirm" id="aduanPasswordPopupConfirmBtn">Teruskan</button>
+    <div class="admin-guide-modal" id="adminGuideModal" aria-hidden="true">
+        <div class="admin-guide-modal-card" role="dialog" aria-modal="true" aria-labelledby="adminGuideModalTitle">
+            <div class="admin-guide-modal-head">
+                <h4 class="admin-guide-modal-title" id="adminGuideModalTitle">Panduan Admin Portal</h4>
+                <button type="button" class="admin-guide-modal-close" id="adminGuideCloseBtn">Tutup</button>
+            </div>
+            <div class="admin-guide-modal-body">
+                <iframe
+                    class="admin-guide-modal-frame"
+                    id="adminGuideFrame"
+                    title="Panduan Admin Portal"
+                    loading="lazy"
+                    referrerpolicy="same-origin"
+                    src="about:blank"></iframe>
             </div>
         </div>
-    </div>
-    <div class="expand-overlay" id="expandOverlay" aria-hidden="true"></div>
-    <div class="kpp-modal" id="kppSubmissionModal" aria-hidden="true">
-        <div class="kpp-modal-card" role="dialog" aria-modal="true" aria-labelledby="kppSubmissionModalTitle">
-            <div class="kpp-modal-head">
-                <h4 id="kppSubmissionModalTitle">Borang Dihantar KPP</h4>
-                <button class="kpp-modal-close" type="button" id="kppSubmissionCloseBtn">Tutup</button>
-            </div>
-            <p class="kpp-modal-meta" id="kppSubmissionMeta"></p>
-            <div class="kpp-modal-grid" id="kppSubmissionContent"></div>
-        </div>
-    </div>
-    <div class="archive-toast" id="archiveToast" role="status" aria-live="polite">
-        <img src="${pageContext.request.contextPath}/assets/images/icon-archive.png" alt="Notifikasi arkib" id="archiveToastIcon">
-        <span id="archiveToastText">Berjaya.</span>
     </div>
 <script>
     (function () {
@@ -2247,10 +2968,11 @@
         var bulkFirstId = document.getElementById('bulkFirstId');
         var bulkActionForm = document.getElementById('bulkActionForm');
         var layoutGrid = document.querySelector('.layout');
-        var latestPanel = document.querySelector('.table-card');
-        var toggleLatestPanelBtn = document.getElementById('toggleLatestPanelBtn');
-        var announcementPanelCard = document.getElementById('announcementPanel');
-        var toggleAnnouncementPanelBtn = document.getElementById('toggleAnnouncementPanelBtn');
+        var expandButtons = Array.prototype.slice.call(document.querySelectorAll('.panel-expand-btn, .js-workflow-fold-btn'));
+        var expandableItems = [];
+        var toggleAllWorkflowPanelsBtn = document.getElementById('toggleAllWorkflowPanelsBtn');
+        var workflowFoldButtons = Array.prototype.slice.call(document.querySelectorAll('.js-workflow-fold-btn'));
+        var workflowPanels = Array.prototype.slice.call(document.querySelectorAll('.workflow-panel'));
         var expandOverlay = document.getElementById('expandOverlay');
         var archiveForms = Array.prototype.slice.call(document.querySelectorAll('.js-archive-form'));
         var archiveToast = document.getElementById('archiveToast');
@@ -2277,93 +2999,19 @@
         var kppSubmissionMeta = document.getElementById('kppSubmissionMeta');
         var kppSubmissionContent = document.getElementById('kppSubmissionContent');
         var kppSubmissionsBox = document.getElementById('kpp-submissions');
-        var aduanSecureForm = document.getElementById('aduanSecureForm');
-        var aduanSecureBtn = document.getElementById('aduanSecureBtn');
-        var aduanSecurePassword = document.getElementById('aduanSecurePassword');
-        var aduanPasswordPopup = document.getElementById('aduanPasswordPopup');
-        var aduanPasswordPopupInput = document.getElementById('aduanPasswordPopupInput');
-        var aduanPasswordPopupCancelBtn = document.getElementById('aduanPasswordPopupCancelBtn');
-        var aduanPasswordPopupConfirmBtn = document.getElementById('aduanPasswordPopupConfirmBtn');
-
         var appDetailModal = document.getElementById('appDetailModal');
         var appModalCloseBtn = document.getElementById('appModalCloseBtn');
         var modalReviewLink = document.getElementById('modalReviewLink');
         var modalAttachmentViewer = document.getElementById('modalAttachmentViewer');
+        var adminGuideTrigger = document.getElementById('adminGuideTrigger');
+        var adminGuideModal = document.getElementById('adminGuideModal');
+        var adminGuideCloseBtn = document.getElementById('adminGuideCloseBtn');
+        var adminGuideFrame = document.getElementById('adminGuideFrame');
+        var adminGuideUrl = '<%= request.getContextPath() %>/admin-portal-guide.html';
         var userRoleClient = '<%= String.valueOf(session.getAttribute("role")) %>';
         var isAdminRoleClient = userRoleClient === 'ADMIN';
 
         var contextPath = '<%= request.getContextPath() %>';
-
-        function closeAduanPasswordPopup() {
-            if (!aduanPasswordPopup) {
-                return;
-            }
-            aduanPasswordPopup.classList.remove('show');
-            aduanPasswordPopup.setAttribute('aria-hidden', 'true');
-            if (aduanPasswordPopupInput) {
-                aduanPasswordPopupInput.value = '';
-            }
-        }
-
-        if (aduanSecureForm && aduanSecureBtn && aduanSecurePassword) {
-            aduanSecureBtn.addEventListener('click', function () {
-                var isAllowed = aduanSecureBtn.getAttribute('data-allowed') === '1';
-                if (!isAllowed) {
-                    window.alert('Akses modul Aduan hanya untuk admin ID ADM001.');
-                    return;
-                }
-
-                if (!aduanPasswordPopup || !aduanPasswordPopupInput) {
-                    window.alert('Paparan kata laluan tidak tersedia. Sila muat semula halaman.');
-                    return;
-                }
-
-                aduanPasswordPopup.classList.add('show');
-                aduanPasswordPopup.setAttribute('aria-hidden', 'false');
-                aduanPasswordPopupInput.focus();
-            });
-        }
-
-        if (aduanPasswordPopupCancelBtn) {
-            aduanPasswordPopupCancelBtn.addEventListener('click', closeAduanPasswordPopup);
-        }
-
-        if (aduanPasswordPopup) {
-            aduanPasswordPopup.addEventListener('click', function (event) {
-                if (event.target === aduanPasswordPopup) {
-                    closeAduanPasswordPopup();
-                }
-            });
-        }
-
-        if (aduanPasswordPopupConfirmBtn && aduanPasswordPopupInput && aduanSecurePassword && aduanSecureForm) {
-            aduanPasswordPopupConfirmBtn.addEventListener('click', function () {
-                var passwordInput = aduanPasswordPopupInput.value || '';
-
-                if (!passwordInput.trim()) {
-                    window.alert('Kata laluan diperlukan untuk meneruskan akses modul Aduan.');
-                    aduanPasswordPopupInput.focus();
-                    return;
-                }
-
-                aduanSecurePassword.value = passwordInput;
-                closeAduanPasswordPopup();
-                aduanSecureForm.submit();
-            });
-        }
-
-        if (aduanPasswordPopupInput && aduanPasswordPopupConfirmBtn) {
-            aduanPasswordPopupInput.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    aduanPasswordPopupConfirmBtn.click();
-                }
-                if (event.key === 'Escape') {
-                    event.preventDefault();
-                    closeAduanPasswordPopup();
-                }
-            });
-        }
 
         function keepKppPanelOnScreen() {
             try {
@@ -2478,6 +3126,9 @@
             if (actionType === 'KSPP_UJPPP') {
                 return 'Borang KSPP dan Borang UJPPP';
             }
+            if (actionType === 'SIASATAN_ADUAN') {
+                return 'Borang Siasatan Aduan Pembekal dan Produk Air';
+            }
             return 'Borang Kaji Selidik Prestasi Pembekal dan Produk Bekalan Air (KSPP)';
         }
 
@@ -2564,6 +3215,8 @@
             } else if (actionType === 'KSPP_UJPPP') {
                 actionLine = '1) Sila isi Borang Kaji Selidik Prestasi Pembekal dan Produk Bekalan Air (KSPP).\n'
                     + '2) Sila isi Borang Ulasan Jawatankuasa Pendaftaran Pembekal dan Produk Bekalan Air (UJPPP).';
+            } else if (actionType === 'SIASATAN_ADUAN') {
+                actionLine = '1) Sila isi Borang Siasatan Aduan Pembekal dan Produk Air.';
             } else {
                 actionLine = '1) Sila isi Borang Kaji Selidik Prestasi Pembekal dan Produk Bekalan Air (KSPP).';
             }
@@ -2572,9 +3225,7 @@
                 ? ('Borang permohonan dirujuk: ' + applicationLabel + '\n\n')
                 : '';
 
-            return 'Assalamualaikum dan salam sejahtera ' + recipientLabel + ',\n\n'
-                + 'Admin SPPPA memaklumkan bahawa terdapat tindakan tuan/puan berkenaan proses Pendaftaran Produk Air.\n'
-                + applicationLine
+            return applicationLine
                 + 'Tindakan diperlukan:\n'
                 + actionLine + '\n\n'
                 + 'Sila tekan pautan khas di bawah untuk semakan dan tindakan lanjut:\n'
@@ -2608,6 +3259,7 @@
             });
         }
 
+        // Dipanggil oleh butang "Hantar Email" dalam panel tindakan KPP untuk hantar batch email ke backend /dashboard.
         function sendKppEmails(emailRequests) {
             return fetch(contextPath + '/dashboard', {
                 method: 'POST',
@@ -2633,6 +3285,7 @@
             });
         }
 
+        // Fallback bila SMTP tidak tersedia: buka popup dan sediakan draf mailto setiap penerima KPP.
         function openKppDraftPicker(emailRequests) {
             if (!Array.isArray(emailRequests) || emailRequests.length === 0) {
                 return;
@@ -2664,6 +3317,7 @@
             popup.document.close();
         }
 
+        // Ambil senarai penerima KPP yang ditanda dalam pemilih multi-pilih pada panel tindakan KPP.
         function getSelectedKppRecipients() {
             return kppRecipientChecks
                 .filter(function(input) {
@@ -2681,6 +3335,7 @@
                 });
         }
 
+        // Selaraskan paparan ringkasan penerima (nama, email, label butang) selepas pilihan checkbox berubah.
         function updateKppPickerSummary() {
             var selected = getSelectedKppRecipients();
             var names = selected.map(function(recipient) {
@@ -2703,6 +3358,7 @@
             }
         }
 
+        // Jana semula subjek dan badan draf email bila tindakan KPP/penerima/borang rujukan berubah.
         function updateKppDraft() {
             if (!kppEmailSubject || !kppEmailBody) {
                 return;
@@ -2736,6 +3392,7 @@
             });
         }
 
+        // Tukar template mentah kepada kandungan akhir per penerima (placeholder -> nilai sebenar termasuk pautan khas).
         function buildEditableKppEmailDraft(subjectTemplate, bodyTemplate, recipient, guestLink, actionType, applicationLabel) {
             var recipientName = (recipient && recipient.name ? recipient.name : '').trim() || 'tuan/puan';
             var guestLinkText = String(guestLink || '').trim();
@@ -2801,8 +3458,7 @@
                 content.classList.toggle('is-hidden', hidden);
                 button.setAttribute('aria-expanded', hidden ? 'false' : 'true');
                 button.setAttribute('title', hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyi rekod tindakan admin');
-                icon.src = hidden ? '${pageContext.request.contextPath}/icon/unhide.png' : '${pageContext.request.contextPath}/icon/hide.png';
-                icon.alt = hidden ? 'Paparkan rekod tindakan admin' : 'Sembunyikan rekod tindakan admin';
+                icon.textContent = hidden ? '+' : '\u2212';
             }
 
             button.addEventListener('click', function() {
@@ -2894,6 +3550,7 @@
             return { text: 'Status: -', css: 'kpp-status-neutral' };
         }
 
+        // Render lencana status KPP atas setiap row berdasarkan payload terkini yang dibekalkan oleh backend.
         function renderKppSubmissionStatuses() {
             kppStatusBadgeBoxes.forEach(function(box) {
                 if (!box) {
@@ -2918,13 +3575,50 @@
             button.setAttribute('title', expanded ? 'Kecilkan panel' : 'Besarkan panel');
         }
 
+        function resolveExpandablePanel(button) {
+            if (!button || typeof button.closest !== 'function') {
+                return null;
+            }
+            return button.closest('.panel, .table-card');
+        }
+
+        function setWorkflowPanelCollapsed(panelId, collapsed) {
+            if (!panelId) {
+                return;
+            }
+            var body = document.getElementById(panelId);
+            if (!body) {
+                return;
+            }
+            var panel = body.closest('.workflow-panel');
+            if (!panel) {
+                return;
+            }
+            var foldBtn = panel.querySelector('.js-workflow-fold-btn');
+            panel.classList.toggle('is-collapsed', collapsed);
+            body.style.display = 'block';
+            if (foldBtn) {
+                foldBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            }
+        }
+
+        function setAllWorkflowPanelsCollapsed(collapsed) {
+            workflowFoldButtons.forEach(function(btn) {
+                setWorkflowPanelCollapsed(btn.getAttribute('data-target'), collapsed);
+            });
+            if (toggleAllWorkflowPanelsBtn) {
+                toggleAllWorkflowPanelsBtn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+                toggleAllWorkflowPanelsBtn.setAttribute('title', collapsed ? 'Expand semua panel' : 'Collapse semua panel');
+            }
+        }
+
         function showArchiveToast(message, iconUrl) {
             if (!archiveToast || !archiveToastText || !archiveToastIcon) {
                 return;
             }
             archiveToastText.textContent = message;
             if (iconUrl) {
-                archiveToastIcon.src = iconUrl;
+                archiveToastIcon.textContent = iconUrl.indexOf('archive') >= 0 ? '\uD83D\uDCC1' : '\u2139';
             }
             archiveToast.classList.add('show');
             if (toastTimer) {
@@ -2981,15 +3675,11 @@
         }
 
         function closeExpandPopup() {
-            if (latestPanel) {
-                latestPanel.classList.remove('popup-active');
-            }
-            if (announcementPanelCard) {
-                announcementPanelCard.classList.remove('popup-active');
-            }
+            expandableItems.forEach(function(item) {
+                item.panel.classList.remove('popup-active');
+                setExpandState(item.button, false);
+            });
             document.body.classList.remove('popup-open');
-            setExpandState(toggleLatestPanelBtn, false);
-            setExpandState(toggleAnnouncementPanelBtn, false);
         }
 
         function closeKppSubmissionModal() {
@@ -3001,6 +3691,28 @@
             if (kppSubmissionContent) {
                 kppSubmissionContent.innerHTML = '';
             }
+        }
+
+        function openAdminGuideModal() {
+            if (!adminGuideModal || !adminGuideFrame) {
+                window.location.href = adminGuideUrl;
+                return;
+            }
+            if (!adminGuideFrame.getAttribute('src') || adminGuideFrame.getAttribute('src') === 'about:blank') {
+                adminGuideFrame.setAttribute('src', adminGuideUrl);
+            }
+            adminGuideModal.classList.add('show');
+            adminGuideModal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('admin-guide-modal-open');
+        }
+
+        function closeAdminGuideModal() {
+            if (!adminGuideModal) {
+                return;
+            }
+            adminGuideModal.classList.remove('show');
+            adminGuideModal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('admin-guide-modal-open');
         }
 
         function showSentPopup() {
@@ -3245,46 +3957,109 @@
             if (!panelElement) {
                 return;
             }
-            if (latestPanel && panelElement !== latestPanel) {
-                latestPanel.classList.remove('popup-active');
-            }
-            if (announcementPanelCard && panelElement !== announcementPanelCard) {
-                announcementPanelCard.classList.remove('popup-active');
-            }
 
-            panelElement.classList.add('popup-active');
-            document.body.classList.add('popup-open');
-            setExpandState(toggleLatestPanelBtn, panelElement === latestPanel);
-            setExpandState(toggleAnnouncementPanelBtn, panelElement === announcementPanelCard);
-        }
-
-        if (toggleLatestPanelBtn && layoutGrid && latestPanel) {
-            setExpandState(toggleLatestPanelBtn, false);
-            toggleLatestPanelBtn.addEventListener('click', function() {
-                var isOpen = latestPanel.classList.contains('popup-active') && document.body.classList.contains('popup-open');
-                if (isOpen) {
-                    closeExpandPopup();
-                    return;
+            // Ensure folded workflow content is visible when opened as centered popup.
+            var workflowExpandBtn = panelElement.querySelector('.js-workflow-fold-btn[data-target]');
+            if (workflowExpandBtn) {
+                var workflowTargetId = workflowExpandBtn.getAttribute('data-target');
+                if (workflowTargetId) {
+                    setWorkflowPanelCollapsed(workflowTargetId, false);
                 }
-                openExpandPopup(latestPanel);
+            }
+
+            expandableItems.forEach(function(item) {
+                var isTarget = item.panel === panelElement;
+                item.panel.classList.toggle('popup-active', isTarget);
+                setExpandState(item.button, isTarget);
             });
+            document.body.classList.add('popup-open');
         }
 
-        if (toggleAnnouncementPanelBtn && layoutGrid && announcementPanelCard) {
-            setExpandState(toggleAnnouncementPanelBtn, false);
-            toggleAnnouncementPanelBtn.addEventListener('click', function() {
-                var isOpen = announcementPanelCard.classList.contains('popup-active') && document.body.classList.contains('popup-open');
-                if (isOpen) {
-                    closeExpandPopup();
+        if (layoutGrid && expandButtons.length > 0) {
+            expandButtons.forEach(function(button) {
+                var panel = resolveExpandablePanel(button);
+                if (!panel) {
                     return;
                 }
-                openExpandPopup(announcementPanelCard);
+
+                expandableItems.push({
+                    button: button,
+                    panel: panel
+                });
+                setExpandState(button, false);
+
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    if (typeof event.stopImmediatePropagation === 'function') {
+                        event.stopImmediatePropagation();
+                    } else {
+                        event.stopPropagation();
+                    }
+                    var isOpen = panel.classList.contains('popup-active') && document.body.classList.contains('popup-open');
+                    if (isOpen) {
+                        closeExpandPopup();
+                        return;
+                    }
+                    openExpandPopup(panel);
+                });
             });
         }
 
         if (expandOverlay) {
             expandOverlay.addEventListener('click', function() {
                 closeExpandPopup();
+            });
+        }
+
+        // Fallback: klik mana-mana ruang skrin di luar panel aktif akan tutup popup.
+        document.addEventListener('click', function(event) {
+            if (!document.body.classList.contains('popup-open')) {
+                return;
+            }
+
+            var activePanel = document.querySelector('.popup-active');
+            if (!activePanel) {
+                return;
+            }
+
+            var clickedExpandButton = event.target.closest('.panel-expand-btn, .js-workflow-fold-btn');
+            if (clickedExpandButton) {
+                return;
+            }
+
+            if (activePanel.contains(event.target)) {
+                return;
+            }
+
+            closeExpandPopup();
+        });
+
+        if (workflowFoldButtons.length > 0) {
+            workflowFoldButtons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var targetId = btn.getAttribute('data-target');
+                    var targetBody = targetId ? document.getElementById(targetId) : null;
+                    if (!targetBody) {
+                        return;
+                    }
+                    var panel = targetBody.closest('.workflow-panel');
+                    var collapsed = panel ? panel.classList.contains('is-collapsed') : false;
+                    setWorkflowPanelCollapsed(targetId, !collapsed);
+                });
+            });
+
+            // Default all workflow panels to folded state
+            setAllWorkflowPanelsCollapsed(true);
+            // Keep KPP panel open by default so form options are always visible.
+            setWorkflowPanelCollapsed('workflowPanelKppBody', false);
+        }
+
+        if (toggleAllWorkflowPanelsBtn) {
+            toggleAllWorkflowPanelsBtn.addEventListener('click', function() {
+                var hasExpanded = workflowPanels.some(function(panel) {
+                    return panel && !panel.classList.contains('is-collapsed');
+                });
+                setAllWorkflowPanelsCollapsed(hasExpanded);
             });
         }
 
@@ -3298,6 +4073,27 @@
             kppSubmissionModal.addEventListener('click', function(event) {
                 if (event.target === kppSubmissionModal) {
                     closeKppSubmissionModal();
+                }
+            });
+        }
+
+        if (adminGuideTrigger) {
+            adminGuideTrigger.addEventListener('click', function(event) {
+                event.preventDefault();
+                openAdminGuideModal();
+            });
+        }
+
+        if (adminGuideCloseBtn) {
+            adminGuideCloseBtn.addEventListener('click', function() {
+                closeAdminGuideModal();
+            });
+        }
+
+        if (adminGuideModal) {
+            adminGuideModal.addEventListener('click', function(event) {
+                if (event.target === adminGuideModal) {
+                    closeAdminGuideModal();
                 }
             });
         }
@@ -3344,6 +4140,10 @@
             }
             if (event.key === 'Escape' && kppSubmissionModal && kppSubmissionModal.classList.contains('show')) {
                 closeKppSubmissionModal();
+                return;
+            }
+            if (event.key === 'Escape' && adminGuideModal && adminGuideModal.classList.contains('show')) {
+                closeAdminGuideModal();
             }
         });
 
@@ -3541,7 +4341,8 @@
                                 subject: subject,
                                 body: body,
                                 actionType: actionType,
-                                applicationRef: applicationRef
+                                applicationRef: applicationRef,
+                                recipientName: (item.recipient && item.recipient.name ? item.recipient.name : '')
                             };
                         });
                         preparedEmailRequests = emailRequests;
@@ -3565,7 +4366,7 @@
                         var isSmtpNotConfigured = normalizedMessage.indexOf('smtp belum dikonfigurasi') >= 0;
                         var isAllSendFailed = normalizedMessage.indexOf('semua email kpp gagal dihantar') >= 0;
                         if (isSmtpNotConfigured) {
-                            alert('SMTP belum dikonfigurasi dengan betul. Sila semak tetapan smtp di web.xml dan cuba semula.');
+                            alert('SMTP belum dikonfigurasi dengan betul. Sila klik butang Tetapan Pengirim dalam panel Tindakan Ketua Penolong Pengarah dan cuba semula.');
                             return;
                         }
                         if (isAllSendFailed) {
@@ -3582,6 +4383,7 @@
         }
     })();
 
+    // Helper AJAX untuk tindakan arkib/nyah-arkib dari kad jadual admin tanpa submit form penuh.
     function doArchiveRequest(appId, actionValue, csrfToken, ctxPath) {
         var body = 'id=' + encodeURIComponent(appId) +
                    '&action=' + encodeURIComponent(actionValue) +
@@ -3607,6 +4409,7 @@
         });
     }
 
+    // Dipanggil oleh butang UI arkib: sahkan tindakan, panggil request AJAX, kemudian refresh paparan.
     function doArchive(appId, actionValue, confirmText, csrfToken, ctxPath) {
         if (!window.confirm(confirmText)) { return; }
         doArchiveRequest(appId, actionValue, csrfToken, ctxPath).then(function() {
@@ -3655,6 +4458,72 @@
         });
     })();
 </script>
+<script>
+    (function () {
+        function hasSuccessFlag() {
+            var params = new URLSearchParams(window.location.search || '');
+            for (var pair of params.entries()) {
+                var key = (pair[0] || '').toLowerCase();
+                var value = (pair[1] || '').toLowerCase();
+                if (key.indexOf('success') >= 0 || key.indexOf('saved') >= 0 || key.indexOf('updated') >= 0) {
+                    if (value === '1' || value === 'true' || value === 'ok' || value === '') {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function resolveSuccessMessage() {
+            var notice = document.querySelector('.announce-alert.announce-success');
+            if (notice) {
+                var text = (notice.textContent || '').trim();
+                if (text) {
+                    return text;
+                }
+            }
+            return '';
+        }
+
+        function showSuccessPopup(message) {
+            var popup = document.createElement('div');
+            popup.setAttribute('role', 'status');
+            popup.setAttribute('aria-live', 'polite');
+            popup.style.position = 'fixed';
+            popup.style.top = '20px';
+            popup.style.right = '20px';
+            popup.style.zIndex = '9999';
+            popup.style.maxWidth = '360px';
+            popup.style.padding = '14px 16px';
+            popup.style.borderRadius = '12px';
+            popup.style.border = '1px solid #a7f3d0';
+            popup.style.background = '#ecfdf5';
+            popup.style.color = '#065f46';
+            popup.style.boxShadow = '0 12px 28px rgba(6, 95, 70, 0.18)';
+            popup.style.fontSize = '14px';
+            popup.style.lineHeight = '1.5';
+            popup.innerHTML = '<strong style="display:block;margin-bottom:4px;">Berjaya!</strong>'
+                + '<span>' + message.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';
+
+            document.body.appendChild(popup);
+            setTimeout(function () {
+                if (popup && popup.parentNode) {
+                    popup.parentNode.removeChild(popup);
+                }
+            }, 3200);
+        }
+
+        var message = resolveSuccessMessage();
+        if (!message && !hasSuccessFlag()) {
+            return;
+        }
+        if (!message) {
+            message = 'Tindakan anda telah berjaya direkodkan.';
+        }
+        showSuccessPopup(message);
+    })();
+</script>
 </body>
 </html>
+
 

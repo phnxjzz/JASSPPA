@@ -1,5 +1,11 @@
 package com.sistemppa.servlet;
 
+/**
+ * NOTA ALIRAN KOD:
+ * Fail ini pegang logik utama untuk kelas CertificatePdfServlet.
+ * Dipanggil melalui URL:  /certificate/pdf (rujuk WEB-INF/web.xml).
+ * Tujuan komen ini: bagi orang seterusnya cepat faham aliran tanpa perlu teka dari mana code ni masuk.
+ */
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 import com.sistemppa.config.DatabaseConfig;
@@ -44,7 +50,7 @@ public class CertificatePdfServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // ── authentication ────────────────────────────────────────────
+        // â”€â”€ authentication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user_id") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
@@ -54,7 +60,7 @@ public class CertificatePdfServlet extends HttpServlet {
         String  role          = (String)  session.getAttribute("role");
         boolean isAdmin       = "ADMIN".equals(role);
 
-        // ── validate id param ─────────────────────────────────────────
+        // â”€â”€ validate id param â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         String idParam = request.getParameter("id");
         int applicationId;
         try {
@@ -75,7 +81,7 @@ public class CertificatePdfServlet extends HttpServlet {
                 return;
             }
 
-            // ── access control ────────────────────────────────────────
+            // â”€â”€ access control â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             int appUserId = ((Number) app.get("user_id")).intValue();
             if (!isAdmin && !sessionUserId.equals(appUserId)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Akses ditolak");
@@ -88,7 +94,7 @@ public class CertificatePdfServlet extends HttpServlet {
                 return;
             }
 
-            // ── stream PDF ────────────────────────────────────────────
+            // â”€â”€ stream PDF â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             String certNum   = str(app.get("certificate_number"));
             String safeNum   = certNum.replace("/", "-");
             String fileName  = "Perakuan_JANS_" + safeNum + ".pdf";
@@ -105,15 +111,15 @@ public class CertificatePdfServlet extends HttpServlet {
         } catch (SQLException e) {
             LOGGER.severe("DB error generating certificate PDF: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Ralat pangkalan data – gagal menjana sijil");
+                    "Ralat pangkalan data â€“ gagal menjana sijil");
         } catch (DocumentException e) {
             LOGGER.severe("OpenPDF error: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Ralat PDF – gagal menjana sijil");
+                    "Ralat PDF â€“ gagal menjana sijil");
         }
     }
 
-    // ── PDF generation ────────────────────────────────────────────────────────
+    // â”€â”€ PDF generation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void generatePdf(Map<String, Object> app, OutputStream out)
             throws DocumentException, IOException {
@@ -121,7 +127,7 @@ public class CertificatePdfServlet extends HttpServlet {
         // Avoid filesystem temp-cache dependency when decoding PNG in server runtime.
         ImageIO.setUseCache(false);
 
-        // ── extract data ─────────────────────────────────────────────
+        // â”€â”€ extract data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         String certNum     = str(app.get("certificate_number"));
         String supplierNm  = str(app.get("supplier_name"));
         String mfrNm       = str(app.get("manufacturer_name"));
@@ -173,7 +179,7 @@ public class CertificatePdfServlet extends HttpServlet {
         String issuedStr = issued.format(fmt);
         String validStr  = validUntil.format(fmt);
 
-        // ── document ──────────────────────────────────────────────────
+        // â”€â”€ document â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Left margin slightly wider to give field labels room
         Document doc = new Document(PageSize.A4, 50, 45, 45, 40);
         PdfWriter writer = PdfWriter.getInstance(doc, out);
@@ -182,19 +188,19 @@ public class CertificatePdfServlet extends HttpServlet {
         float pw = doc.getPageSize().getWidth();    // 595.28
         float ph = doc.getPageSize().getHeight();   // 841.89
 
-        // ── double border ─────────────────────────────────────────────
+        // â”€â”€ double border â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         PdfContentByte cb = writer.getDirectContent();
-        // outer – 2.5pt navy
+        // outer â€“ 2.5pt navy
         cb.setLineWidth(2.5f);
         cb.setColorStroke(JANS_BLUE);
         cb.rectangle(18, 18, pw - 36, ph - 36);
         cb.stroke();
-        // inner – 1pt navy, 7pt inset
+        // inner â€“ 1pt navy, 7pt inset
         cb.setLineWidth(1f);
         cb.rectangle(26, 26, pw - 52, ph - 52);
         cb.stroke();
 
-        // ── watermark: circular JABATAN AIR SABAH badge ───────────────
+        // â”€â”€ watermark: circular JABATAN AIR SABAH badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         String logoPath = resolveLogoPath();
         if (logoPath != null) {
             PdfContentByte cbUnder = writer.getDirectContentUnder();
@@ -214,7 +220,7 @@ public class CertificatePdfServlet extends HttpServlet {
             }
         }
 
-        // ── fonts ─────────────────────────────────────────────────────
+        // â”€â”€ fonts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         BaseFont bfBold = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.WINANSI, false);
         BaseFont bfReg  = BaseFont.createFont(BaseFont.HELVETICA,      BaseFont.WINANSI, false);
 
@@ -225,7 +231,7 @@ public class CertificatePdfServlet extends HttpServlet {
         Font fTblHdr   = new Font(bfBold, 10, Font.NORMAL, Color.BLACK);
         Font fTblCell  = new Font(bfReg,  10, Font.NORMAL, Color.BLACK);
 
-        // ── top logo ──────────────────────────────────────────────────
+        // â”€â”€ top logo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if (logoPath != null) {
             try {
                 Image logo = Image.getInstance(logoPath);
@@ -238,7 +244,7 @@ public class CertificatePdfServlet extends HttpServlet {
             }
         }
 
-        // ── header text ───────────────────────────────────────────────
+        // â”€â”€ header text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         Paragraph orgPara = new Paragraph("JABATAN AIR SABAH", fOrgName);
         orgPara.setAlignment(Element.ALIGN_CENTER);
         orgPara.setSpacingBefore(4);
@@ -250,7 +256,7 @@ public class CertificatePdfServlet extends HttpServlet {
         subPara.setSpacingAfter(14);
         doc.add(subPara);
 
-        // ── fields ────────────────────────────────────────────────────
+        // â”€â”€ fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Exactly as shown in the reference image
         String[][] fields = {
             { "No Sijil",                 certNum     },
@@ -299,7 +305,7 @@ public class CertificatePdfServlet extends HttpServlet {
         }
         doc.add(ftbl);
 
-        // ── product table ─────────────────────────────────────────────
+        // â”€â”€ product table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         PdfPTable ptbl = new PdfPTable(new float[]{ 28, 23, 17, 32 });
         ptbl.setWidthPercentage(88);
         ptbl.setSpacingBefore(0);
@@ -337,7 +343,7 @@ public class CertificatePdfServlet extends HttpServlet {
         doc.close();
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
+    // â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /** Resolve the circular JABATAN AIR SABAH badge logo from webapp assets. */
     private String resolveLogoPath() {
@@ -355,7 +361,7 @@ public class CertificatePdfServlet extends HttpServlet {
         return null;
     }
 
-    // ── DB query ──────────────────────────────────────────────────────────────
+    // â”€â”€ DB query â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private Map<String, Object> loadCertData(Connection conn, int applicationId)
             throws SQLException {
@@ -701,3 +707,4 @@ public class CertificatePdfServlet extends HttpServlet {
         return "-".equals(cleaned) ? "" : cleaned;
     }
 }
+

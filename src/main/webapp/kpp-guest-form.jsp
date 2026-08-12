@@ -1,3 +1,4 @@
+﻿<%-- NOTA ALIRAN KOD: Fail kpp-guest-form.jsp. Halaman ini biasa dipanggil terus melalui UI atau navigation ke /kpp-guest-form.jsp. Tujuan nota ni supaya orang seterusnya terus nampak konteks fail ni. --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.lang.String" %>
 <%@ page import="java.util.Map" %>
@@ -570,3 +571,4 @@
 </script>
 </body>
 </html>
+

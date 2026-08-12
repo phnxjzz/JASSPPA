@@ -1,3 +1,4 @@
+﻿<%-- NOTA ALIRAN KOD: Fail staff-dashboard.jsp. Halaman ini dipaparkan oleh aliran /dashboard untuk pengguna role STAFF. Tujuan nota ni supaya orang seterusnya terus nampak konteks fail ni. --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="ms">
@@ -42,14 +43,41 @@
             font-weight: 700;
             color: #0e5f8f;
         }
-        .topbar-title img {
+        .topbar-title .icon-glyph {
             width: 24px;
             height: 24px;
-            object-fit: contain;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            line-height: 1;
         }
         .topbar-actions {
             display: flex;
             gap: 10px;
+        }
+        .nav-icon-link {
+            width: 54px;
+            height: 54px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #0b3f72;
+            background: #0f4f8f;
+            color: #ffffff;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+            transition: background 0.18s ease;
+        }
+        .nav-icon-link:hover {
+            background: #1263b5;
+        }
+        .nav-icon-svg {
+            width: 30px;
+            height: 30px;
+            display: block;
+            color: #ffffff;
         }
         .btn {
             display: inline-flex;
@@ -76,11 +104,15 @@
             padding: 0;
             border-radius: 999px;
         }
-        .btn-icon img {
-            width: 20px;
-            height: 20px;
-            object-fit: contain;
-        }
+            .btn-icon .icon-glyph {
+                width: 18px;
+                height: 18px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                line-height: 1;
+            }
         .container {
             max-width: 1000px;
             margin: 0 auto;
@@ -315,8 +347,12 @@
         .sent-popup-icon {
             width: 84px;
             height: 84px;
-            object-fit: contain;
-            display: block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            line-height: 1;
+            color: #0a7fbf;
             margin: 0 auto 10px;
         }
         .sent-popup-title {
@@ -343,7 +379,7 @@
             .aduan-grid { grid-template-columns: 1fr; }
             .topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
             .topbar-actions { width: 100%; }
-            .topbar-actions .btn { flex: 1; }
+            .topbar-actions .nav-icon-link { width: 54px; height: 54px; }
             .section-e-table .catatan-col { width: auto; }
         }
     </style>
@@ -351,14 +387,20 @@
 <body>
     <header class="topbar">
         <div class="topbar-title">
-            <img src="${pageContext.request.contextPath}/icon/Staff.png" alt="Portal Staff">
+            <span class="icon-glyph" aria-hidden="true">&#128188;</span>
             <span>Portal Staff</span>
         </div>
         <div class="topbar-actions">
-            <a class="btn btn-secondary btn-icon" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama">
-                <img src="${pageContext.request.contextPath}/icon/home.png" alt="Laman Utama">
+            <a class="nav-icon-link" href="${pageContext.request.contextPath}/" title="Laman Utama" aria-label="Laman Utama">
+                <svg class="nav-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M3 10.5L12 3l9 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V21h13V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </a>
-            <a class="btn btn-primary" href="${pageContext.request.contextPath}/logout">Log Keluar</a>
+            <a class="nav-icon-link" href="${pageContext.request.contextPath}/logout" title="Log Keluar" aria-label="Log Keluar">
+                <svg class="nav-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M10 5H5v14h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 12h8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
         </div>
     </header>
 
@@ -558,7 +600,7 @@
 
     <div class="sent-popup<%= "submitted".equals(complaintState) ? " show" : "" %>" id="staffSentPopup" aria-hidden="<%= "submitted".equals(complaintState) ? "false" : "true" %>">
         <div class="sent-popup-card" role="dialog" aria-modal="true" aria-labelledby="staffSentPopupTitle">
-            <img src="${pageContext.request.contextPath}/icon/send.gif" alt="Berjaya dihantar" class="sent-popup-icon">
+            <span class="sent-popup-icon" aria-hidden="true">&#9993;</span>
             <h4 class="sent-popup-title" id="staffSentPopupTitle">Borang Berjaya Dihantar!</h4>
             <button type="button" class="sent-popup-ok" id="staffSentPopupOkBtn">OK</button>
         </div>
@@ -595,3 +637,4 @@
     </script>
 </body>
 </html>
+

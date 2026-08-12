@@ -1,3 +1,4 @@
+﻿<%-- NOTA ALIRAN KOD: Fail admin-complaints.jsp. Halaman ini biasa dipanggil terus melalui UI atau navigation ke /admin-complaints.jsp. Tujuan nota ni supaya orang seterusnya terus nampak konteks fail ni. --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
@@ -200,10 +201,14 @@
             padding: 0;
             border-radius: 999px;
         }
-        .btn-icon img {
-            width: 22px;
-            height: 22px;
-            object-fit: contain;
+        .btn-icon .icon-glyph {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            line-height: 1;
         }
         .container {
             max-width: 1180px;
@@ -412,7 +417,7 @@
             </div>
         </div>
         <a class="btn btn-icon" href="${pageContext.request.contextPath}/dashboard" title="Kembali ke Dashboard" aria-label="Kembali ke Dashboard">
-            <img src="${pageContext.request.contextPath}/icon/dashboard.png" alt="Kembali ke Dashboard">
+            <span class="icon-glyph" aria-hidden="true">&#9638;</span>
         </a>
     </div>
 
@@ -609,3 +614,4 @@
     </script>
 </body>
 </html>
+
